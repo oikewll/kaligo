@@ -1,10 +1,10 @@
 package epooll
 
-import(
-    "epooll/control"
-    "testing"
-)
+//import(
+    //"epooll/control"
+    //"testing"
+//)
 
-func Test_Router(t *testing.T) {
-    Router("index", &control.Index{})
-}
+//func Test_Router(t *testing.T) {
+    //Router("index", &control.Index{})
+//}

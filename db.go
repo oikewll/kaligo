@@ -24,8 +24,6 @@ type DB struct {
 
 // (读+写)连接数据库+选择数据库
 func (this *DB) Init(host string, user string, pass string, name string) (error){
-    this.logSlowQuery = true
-    this.logSlowTime = 1
     this.conn = mysql.New("tcp", "", host, user, pass, name) 
 
     this.err = this.conn.Connect() 
