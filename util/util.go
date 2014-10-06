@@ -3,41 +3,8 @@ package util
 import (
 	"log"
     "os"
-    "reflect"
     "io/ioutil"
-    "github.com/garyburd/redigo/redis"
 )
-
-// 反射调用函数, 注意被调用的类要带 &
-// util.Invoke(&control.Home{}, ct, w, r)
-func Invoke(any interface{}, name string, args ...interface{}) {
-    inputs := make([]reflect.Value, len(args))
-    for i, _ := range args {
-        inputs[i] = reflect.ValueOf(args[i])
-    }
-    method := reflect.ValueOf(any).MethodByName(name)
-    if method.IsValid() {
-        method.Call(inputs)
-    } else {
-        panic("Method "+name+" is not exists!")
-    }
-}
-
-func newRedisPool() *redis.Pool {
-    return &redis.Pool{
-        MaxIdle: 80,
-        MaxActive: 12000, // max number of connections
-        Dial: func() (redis.Conn, error) {
-            c, err := redis.Dial("tcp", "127.0.0.1:6379")
-            if err != nil {
-                panic(err.Error())
-            }
-            return c, err
-        },
-    } 
-}
-
-var RedisPool = newRedisPool()
 
 /**
  *  使用方法
