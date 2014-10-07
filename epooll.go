@@ -19,8 +19,6 @@ var (
 func Run() {
     runtime.GOMAXPROCS(runtime.NumCPU());
     http.HandleFunc("/", loadController)
-    //http.Handle("/static/", http.FileServer(http.Dir("./")))
-    //http.HandleFunc("/static/", staticServer)
     http.ListenAndServe(":9527", nil)
 }
 
@@ -28,7 +26,7 @@ func Router(ct string, control interface{}) {
     if controlMapping == nil {
         controlMapping = make(map[string]interface{})
     }
-    controlMapping[ct] = control   
+    controlMapping[ct] = control
 }
 
 func SetStaticPath(key string, value string) {

@@ -23,17 +23,26 @@ type DB struct {
 }
 
 // (读+写)连接数据库+选择数据库
-func (this *DB) Init(host string, user string, pass string, name string) (error){
-    this.conn = mysql.New("tcp", "", host, user, pass, name) 
+func InitDB() *DB{
 
-    this.err = this.conn.Connect() 
-    if this.err != nil { 
-        panic(this.err) 
+    conf := InitConfig()
+    host := conf.GetValue("db", "host")+":"+conf.GetValue("db", "port")
+	user := conf.GetValue("db", "user")
+	pass := conf.GetValue("db", "pass")
+	name := conf.GetValue("db", "name")
+
+    db := new(DB)
+    conn := mysql.New("tcp", "", host, user, pass, name) 
+
+    err := conn.Connect() 
+    if err != nil { 
+        panic(err) 
     }
 
-    this.conn.Query("set names utf8") 
+    conn.Query("set names utf8") 
 
-    return this.err
+    db.conn = conn
+    return db
 }
 
 // 记录慢查询日志

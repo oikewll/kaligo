@@ -28,11 +28,11 @@ v1.0.0: 初始化类库
 
 ## To do
 
-1. http header处理、cookie、session
-1. 读取配置文件类
-2. 测试cpu、内存使用率
-3. 完善使用文档
-4. 基于此框架开发一个CMS
+1. http header处理、cookie、session、isAjax
+2. 数据库分页
+3. 测试cpu、内存使用率
+4. 完善使用文档
+5. 基于此框架开发一个CMS
 
 ## Known bugs
 
