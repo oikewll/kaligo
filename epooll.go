@@ -10,7 +10,7 @@ import (
 )
 
 var (
-    controlMap map[string]interface{} 
+    controlMapping map[string]interface{} 
 )
 
 func Run() {
@@ -22,10 +22,10 @@ func Run() {
 }
 
 func Router(ct string, control interface{}) {
-    if controlMap == nil {
-        controlMap = make(map[string]interface{})
+    if controlMapping == nil {
+        controlMapping = make(map[string]interface{})
     }
-    controlMap[ct] = control   
+    controlMapping[ct] = control   
 }
 
 // 处理静态文件
@@ -60,7 +60,7 @@ func loadController(w http.ResponseWriter, r *http.Request) {
         }
     }()
 
-    // 处理控制器和方法
+    // the default control、action
     var ct, ac string
     if ct = r.FormValue("ct"); ct == "" {
         ct = "index"
@@ -70,25 +70,24 @@ func loadController(w http.ResponseWriter, r *http.Request) {
     }
     // 首字母转大写
     ac = strings.Title(ac)
-    if v, ok := controlMap[ct]; ok {
+    if v, ok := controlMapping[ct]; ok {
         callMethod(v, ac, w, r)
     } else {
         panic("Control "+ct+" is not exists!")
     }
 }
 
-// 反射调用函数, 注意被调用的类要带 &
-// util.Invoke(&control.Home{}, ct, w, r)
-func callMethod(any interface{}, name string, args ...interface{}) {
-    inputs := make([]reflect.Value, len(args))
+// 反射调用函数, 注意被调用的类要带 &，表示对象
+func callMethod(object interface{}, methodName string, args ...interface{}) {
+    params := make([]reflect.Value, len(args))
     for i, _ := range args {
-        inputs[i] = reflect.ValueOf(args[i])
+        params[i] = reflect.ValueOf(args[i])
     }
-    method := reflect.ValueOf(any).MethodByName(name)
+    method := reflect.ValueOf(object).MethodByName(methodName)
     if method.IsValid() {
-        method.Call(inputs)
+        method.Call(params)
     } else {
-        panic("Method "+name+" is not exists!")
+        panic("Method "+methodName+" is not exists!")
     }
 }
 
