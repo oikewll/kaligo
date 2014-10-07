@@ -6,6 +6,16 @@ import (
     "io/ioutil"
 )
 
+// FileExists reports whether the named file or directory exists.
+func FileExists(name string) bool {
+	if _, err := os.Stat(name); err != nil {
+		if os.IsNotExist(err) {
+			return false
+		}
+	}
+	return true
+}
+
 /**
  *  使用方法
     if ok, err := util.WriteLog("/data/golang/log/go.txt", "Just a test\n"); !ok {

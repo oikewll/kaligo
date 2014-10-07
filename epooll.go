@@ -7,17 +7,20 @@ import (
     "strings"
     "reflect"
     "runtime"
+    "path"
+    "github.com/owner888/epooll/util"
 )
 
 var (
     controlMapping map[string]interface{} 
+    StaticDir map[string]string 
 )
 
 func Run() {
     runtime.GOMAXPROCS(runtime.NumCPU());
     http.HandleFunc("/", loadController)
     //http.Handle("/static/", http.FileServer(http.Dir("./")))
-    http.HandleFunc("/static/", staticServer)
+    //http.HandleFunc("/static/", staticServer)
     http.ListenAndServe(":9527", nil)
 }
 
@@ -28,23 +31,54 @@ func Router(ct string, control interface{}) {
     controlMapping[ct] = control   
 }
 
+func SetStaticPath(key string, value string) {
+    StaticDir = make(map[string]string)
+    StaticDir[key] = value
+}
+
 // 处理静态文件
 func staticServer(w http.ResponseWriter, r *http.Request) {
-    // 千万不要设置到 ./static ，直接设置 ./ 就好
-    staticHandler := http.FileServer(http.Dir("./"))
-    staticHandler.ServeHTTP(w, r)
-    return
+
+    // 获取请求路径
+    requestPath := path.Clean(r.URL.Path)
+    for prefix, staticDir := range StaticDir {
+		if len(prefix) == 0 {
+			continue
+		}
+        // 浏览器每次访问都会请求多一次favicon.ico，这里要把它拦截下来,不然后面的代码会执行两次
+        // 如果有数据库写入，就会写入两次，后果非常严重
+        if requestPath == "/favicon.ico" || requestPath == "/robots.txt" {
+            file := path.Join(staticDir, requestPath)
+            if util.FileExists(file) {
+                http.ServeFile(w, r, file)
+                return
+            } else {
+                http.NotFound(w, r)
+                return
+            }
+        }
+        // 如果设置的静态文件目录包含在url 路径信息中
+        if strings.HasPrefix(requestPath, prefix) {
+            if len(requestPath) > len(prefix) && requestPath[len(prefix)] != '/' {
+                continue
+            }
+            file := path.Join(staticDir, requestPath[len(prefix):])
+            fmt.Println(file)
+            if util.FileExists(file) {
+                http.ServeFile(w, r, file)
+                return
+            } else {
+                http.NotFound(w, r)
+                return
+            }
+        }
+    }
 }
 
 func loadController(w http.ResponseWriter, r *http.Request) { 
 
-    path := r.URL.Path[1:]
-    // 浏览器每次访问都会请求多一次favicon.ico，这里要把它拦截下来,不然后面的代码会执行两次
-    // 如果有数据库写入，就会写入两次，后果非常严重
-    if path == "favicon.ico"  {
-        http.NotFound(w, r)
-        return
-    }
+    // 拦截静态文件
+    staticServer(w, r)
 
     //r.ParseForm()
     //forms := make(map[string]string)
