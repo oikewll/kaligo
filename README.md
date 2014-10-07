@@ -38,6 +38,6 @@ v1.0.0: 初始化类库
 
 
 ## Documentation
-[control](http://www.godoc.org/pkg/github.com/owner888/epooll/control)
-[db](http://www.godoc.org/pkg/github.com/owner888/epooll/db)
-[redis](http://www.godoc.org/pkg/github.com/owner888/epooll/redis)
+* [control](http://www.godoc.org/pkg/github.com/owner888/epooll/control)
+* [db](http://www.godoc.org/pkg/github.com/owner888/epooll/db)
+* [redis](http://www.godoc.org/pkg/github.com/owner888/epooll/redis)
