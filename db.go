@@ -22,9 +22,12 @@ type DB struct {
     err error
 }
 
+// 程序一启动就会执行这一句，也就是初始化一个单例的数据库连接
+var DBConn = InitDB()
+
 // (读+写)连接数据库+选择数据库
 func InitDB() *DB{
-
+    fmt.Println("InitDB")
     conf := InitConfig()
     host := conf.GetValue("db", "host")+":"+conf.GetValue("db", "port")
 	user := conf.GetValue("db", "user")

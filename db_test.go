@@ -8,8 +8,7 @@ import(
 
 func Test_DB(t *testing.T) {
     //db := &DB{} 
-    db := &DB{logSlowQuery:true, logSlowTime:2} 
-    db.Init("127.0.0.1:3306", "root", "root", "test")
+    db := InitDB()
     
     data := map[string]string {
         "name": "nam'e111",
