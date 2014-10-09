@@ -4,9 +4,48 @@ import(
     "testing"
     "fmt"
     //"reflect"
+    //"github.com/ziutek/mymysql/mysql" 
+    "github.com/ziutek/mymysql/autorc" 
+    //_ "github.com/ziutek/mymysql/native" // Native engine 
+    // _ "github.com/ziutek/mymysql/thrsafe" // Thread safe engine 
 )
 
-func Test_DB(t *testing.T) {
+//func initConn() (*autorc.Conn, error) {
+func initConn() (interface{}, error) {
+    db := autorc.New("tcp", "", "localhost:3306", "root", "root", "test")
+    //rows, res, err := db.Query("Select * From `test` Limit 1")
+    //fmt.Println(rows)
+    //fmt.Println(res)
+    //fmt.Println(err)
+    return db, nil
+}
+
+var dbPool = new(ConnPool)
+var err = dbPool.InitPool(3, initConn)
+
+func Do() {
+
+    db := dbPool.Get().(*autorc.Conn)
+    //fmt.Println(db)
+    defer dbPool.Release(db)
+    //_, res, _ := db.Query("Select * From `test` Limit 1")
+    //fmt.Println(res)
+}
+
+func Test_Pool(t *testing.T) {
+    if err != nil {
+        fmt.Println(err)
+    }
+    for i := 0; i <= 10; i++ {
+        Do()
+    }
+
+    //count := len(dbPool.conn)
+    //for i := 0; i < count; i++ {
+        //fmt.Println(<-dbPool.conn)
+    //}
+}
+/*func Test_DB(t *testing.T) {
     //db := &DB{} 
     db := InitDB()
     
@@ -39,4 +78,4 @@ func Test_DB(t *testing.T) {
 
     //log.Print(db, err)
 
-}
+}*/

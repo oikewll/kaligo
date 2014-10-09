@@ -3,15 +3,18 @@ package epooll
 import (
     "fmt"
     "log"
+    //"container/list"
     "regexp"
-    "time"
     "strings"
+    //"sync"
+    "time"
     //"reflect"
     "github.com/owner888/epooll/util" 
     "github.com/ziutek/mymysql/mysql" 
     _ "github.com/ziutek/mymysql/native" // Native engine 
     // _ "github.com/ziutek/mymysql/thrsafe" // Thread safe engine 
 )
+
 
 type DB struct {
     logSlowQuery bool
