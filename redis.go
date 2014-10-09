@@ -1,12 +1,12 @@
 package epooll
 
 import (
-    //"fmt"
+    "fmt"
     "github.com/garyburd/redigo/redis"
 )
 
 func NewRedisPool() *redis.Pool {
-    //fmt.Println("newRedisPool")
+    fmt.Println("newRedisPool")
     return &redis.Pool{
         MaxIdle: 80,
         MaxActive: 12000, // max number of connections

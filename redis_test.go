@@ -1,12 +1,12 @@
 package epooll
 
-import(
-    "testing"
-)
+//import(
+    //"testing"
+//)
 
-func Test_Redis(t *testing.T) {
-    for i := 0; i < 1000; i++ {
-        //var _ = RedisConn
-        NewRedisPool().Get()
-    }
-}
+//func Test_Redis(t *testing.T) {
+    //for i := 0; i < 1000; i++ {
+        ////var _ = RedisConn
+        //NewRedisPool().Get()
+    //}
+//}
