@@ -3,9 +3,10 @@ package epooll
 import (
     "fmt"
     "github.com/garyburd/redigo/redis"
+    "github.com/ziutek/mymysql/autorc" 
 )
 
-func NewRedisPool() *redis.Pool {
+func newRedisPool() *redis.Pool {
     fmt.Println("newRedisPool")
     return &redis.Pool{
         MaxIdle: 80,
@@ -25,8 +26,25 @@ func NewRedisPool() *redis.Pool {
 }
 
 // 不是当前package 的，每次都会重新初始化
-//redisDB := epooll.NewRedisPool().Get()
-var RedisConn = NewRedisPool().Get()
+//redisDB := epooll.NewRedisPool()
+
 // 其他package的，用下面调用
-//redisDB := RedisConn
+//redisDB := RedisConn.Get()
+
+func newMysqlPool() *ConnPool {
+    fmt.Println("newMysqlPool")
+    return &ConnPool{
+        MaxActive: 2,
+        //Dial: func() (*autorc.Conn, error) {
+        Dial: func() (interface{}, error) {
+            conn := autorc.New("tcp", "", "localhost:3306", "root", "root", "test")
+            // Register initialisation commands
+            conn.Register("set names utf8")
+            return conn, nil
+        },
+    } 
+}
+
+var RedisConn = newRedisPool()
+var MysqlConn = newMysqlPool()
 
