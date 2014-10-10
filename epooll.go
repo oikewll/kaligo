@@ -8,7 +8,6 @@ import (
     "reflect"
     "runtime"
     "path"
-    "github.com/owner888/epooll/util"
 )
 
 var (
@@ -37,6 +36,7 @@ func SetStaticPath(key string, value string) {
 // 处理静态文件
 func staticServer(w http.ResponseWriter, r *http.Request) {
 
+    util := new(Util)
     // 获取请求路径
     requestPath := path.Clean(r.URL.Path)
     for prefix, staticDir := range StaticDir {

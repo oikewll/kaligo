@@ -1,13 +1,15 @@
-package util
+package epooll
 
 import (
 	"log"
     "os"
     "io/ioutil"
 )
+type Util struct {
+}
 
 // FileExists reports whether the named file or directory exists.
-func FileExists(name string) bool {
+func (this *Util) FileExists(name string) bool {
 	if _, err := os.Stat(name); err != nil {
 		if os.IsNotExist(err) {
 			return false
@@ -22,7 +24,7 @@ func FileExists(name string) bool {
         log.Print(err)
     }
  */
-func WriteLog(file string, format string) (bool, error) {
+func (this *Util) WriteLog(file string, format string) (bool, error) {
 
     f, err := os.OpenFile(file, os.O_RDWR | os.O_APPEND |  os.O_CREATE, 0777)
     if err != nil {
@@ -40,7 +42,7 @@ func WriteLog(file string, format string) (bool, error) {
         log.Print(err)
     }
  */
-func PutFile(file string, format string, args ...interface{}) (bool, error) {
+func (this *Util) PutFile(file string, format string, args ...interface{}) (bool, error) {
 
     f, err := os.OpenFile(file, os.O_RDWR | os.O_APPEND |  os.O_CREATE, 0777)
     // 上面的0777并不起作用
@@ -66,7 +68,7 @@ func PutFile(file string, format string, args ...interface{}) (bool, error) {
     //f.Write([]byte("Just a test!\r\n"))
 }
 
-func GetFile(file string) (string, error) {
+func (this *Util) GetFile(file string) (string, error) {
     
     f, err := os.Open(file)
     if err != nil {

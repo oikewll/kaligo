@@ -3,11 +3,10 @@ package epooll
 import (
     "fmt"
     "github.com/garyburd/redigo/redis"
-    "github.com/ziutek/mymysql/autorc" 
 )
 
 func newRedisPool() *redis.Pool {
-    fmt.Println("newRedisPool")
+    fmt.Println("初始化 Redis 连接池")
     return &redis.Pool{
         MaxIdle: 80,
         MaxActive: 12000, // max number of connections
@@ -32,15 +31,22 @@ func newRedisPool() *redis.Pool {
 //redisDB := RedisConn.Get()
 
 func newMysqlPool() *ConnPool {
-    fmt.Println("newMysqlPool")
+    fmt.Println("初始化 Mysql 连接池")
     return &ConnPool{
-        MaxActive: 2,
+        MaxActive: 3,
         //Dial: func() (*autorc.Conn, error) {
         Dial: func() (interface{}, error) {
-            conn := autorc.New("tcp", "", "localhost:3306", "root", "root", "test")
-            // Register initialisation commands
-            conn.Register("set names utf8")
-            return conn, nil
+            conf := InitConfig()
+            host := conf.GetValue("db", "host")
+            port := conf.GetValue("db", "port")
+            user := conf.GetValue("db", "user")
+            pass := conf.GetValue("db", "pass")
+            name := conf.GetValue("db", "name")
+
+            //conn := autorc.New("tcp", "", "localhost:3306", "root", "root", "test")
+            //conn.Register("set names utf8")
+            db, err := InitDB(host+":"+port, user, pass, name)
+            return db, err
         },
     } 
 }

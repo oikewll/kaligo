@@ -9,50 +9,34 @@ import (
     //"sync"
     "time"
     //"reflect"
-    "github.com/owner888/epooll/util" 
-    "github.com/ziutek/mymysql/mysql" 
-    _ "github.com/ziutek/mymysql/native" // Native engine 
-    // _ "github.com/ziutek/mymysql/thrsafe" // Thread safe engine 
+    "github.com/ziutek/mymysql/autorc" 
+	"github.com/ziutek/mymysql/mysql"
+    _ "github.com/ziutek/mymysql/native"    // 普通模式
+    //_ "github.com/ziutek/mymysql/thrsafe" // 用了连接池之后连接都是重复利用的，没必要用线程安全模式
 )
 
 
 type DB struct {
     logSlowQuery bool
     logSlowTime int64
-    conn mysql.Conn
-    row []mysql.Row
+    Conn *autorc.Conn
     res mysql.Result
-    err error
 }
 
-// 程序一启动就会执行这一句，也就是初始化一个单例的数据库连接
-var DBConn = InitDB()
-
 // (读+写)连接数据库+选择数据库
-func InitDB() *DB{
-    fmt.Println("InitDB")
-    conf := InitConfig()
-    host := conf.GetValue("db", "host")+":"+conf.GetValue("db", "port")
-	user := conf.GetValue("db", "user")
-	pass := conf.GetValue("db", "pass")
-	name := conf.GetValue("db", "name")
+func InitDB(address, user, pass, name string) (*DB, error){
+    //fmt.Println("InitDB")
 
     db := new(DB)
-    conn := mysql.New("tcp", "", host, user, pass, name) 
-
-    err := conn.Connect() 
-    if err != nil { 
-        panic(err) 
-    }
-
-    conn.Query("set names utf8") 
-
-    db.conn = conn
-    return db
+    conn := autorc.New("tcp", "", address, user, pass, name) 
+    conn.Register("set names utf8")
+    db.Conn = conn
+    return db, nil
 }
 
 // 记录慢查询日志
 func (this *DB) slowQueryLog(sql string, queryTime int64) {
+    util := new(Util)
     msg  := "Time: "+fmt.Sprintf("%s",queryTime)+" -- "+time.Now().Format("2006-01-02 15:04:05")+" -- "+sql+"\n";
     if ok, err := util.WriteLog("/data/golang/log/slow_query.log", msg); !ok {
         log.Print(err)
@@ -62,7 +46,7 @@ func (this *DB) slowQueryLog(sql string, queryTime int64) {
 // 执行一条语句(读 + 写)
 func (this *DB) Query(sql string) ([]mysql.Row, mysql.Result, error){
     startTime := time.Now().UnixNano()
-    rows, res, err := this.conn.Query(sql) 
+    rows, res, err := this.Conn.Query(sql) 
     //endTime := time.Now().Unix() - startTime
     //endTime := (time.Now().UnixNano() - 1412524713953787006) / 1000000000
     queryTime := (time.Now().UnixNano() - startTime) / 1000000000
@@ -183,12 +167,13 @@ func (this *DB) Insert(table string, data map[string]string) (bool, error) {
     keys_sql := "`"+strings.Join(keys, "`, `")+"`"
     vals_sql := "\""+strings.Join(vals, "\", \"")+"\""
     sql := "Insert Into `"+table+"`("+keys_sql+") Values ("+vals_sql+")"
-    _, this.res, this.err = this.Query(sql)
+    _, res, err := this.Query(sql)
     var ok bool = true
-    if this.err != nil {
+    if err != nil {
         ok = false
     }
-    return ok, this.err
+    this.res = res
+    return ok, err
 }
 
 // (写)拼凑一个sql语句修改一条记录数据
@@ -200,12 +185,13 @@ func (this *DB) Update(table string, data map[string]string, where string) (bool
     }
     sets_sql := strings.Join(sets, ", ")
     sql := "Update `"+table+"` Set "+sets_sql+" "+where
-    _, this.res, this.err = this.Query(sql)
+    _, res, err := this.Query(sql)
     var ok bool = true
-    if this.err != nil {
+    if err != nil {
         ok = false
     }
-    return ok, this.err
+    this.res = res
+    return ok, err
 }
 
 // 取得最后一次插入记录的自增ID值
