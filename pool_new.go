@@ -2,16 +2,18 @@ package epooll
 
 import (
     "fmt"
+    "strconv"
     "github.com/garyburd/redigo/redis"
 )
 
 func newRedisPool() *redis.Pool {
-    fmt.Println("初始化 Redis 连接池")
+    conf := InitConfig()
+    poolNum, _ := strconv.Atoi(conf.GetValue("pool", "redis")) 
+    fmt.Printf("初始化 Redis 连接池，连接数：%d \n", poolNum)
     return &redis.Pool{
         MaxIdle: 80,
-        MaxActive: 12000, // max number of connections
+        MaxActive: poolNum, // max number of connections
         Dial: func() (redis.Conn, error) {
-            conf := InitConfig()
             host := conf.GetValue("redis", "host")
             port := conf.GetValue("redis", "port")
 
@@ -31,9 +33,11 @@ func newRedisPool() *redis.Pool {
 //redisDB := RedisConn.Get()
 
 func newMysqlPool() *ConnPool {
-    fmt.Println("初始化 Mysql 连接池")
+    conf := InitConfig()
+    poolNum, _ := strconv.Atoi(conf.GetValue("pool", "mysql")) 
+    fmt.Printf("初始化 Mysql 连接池，连接数：%d \n", poolNum)
     return &ConnPool{
-        MaxActive: 3,
+        MaxActive: poolNum,
         //Dial: func() (*autorc.Conn, error) {
         Dial: func() (interface{}, error) {
             conf := InitConfig()
