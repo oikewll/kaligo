@@ -38,7 +38,7 @@ func InitDB(address, user, pass, name string) (*DB, error){
 func (this *DB) slowQueryLog(sql string, queryTime int64) {
     util := new(Util)
     msg  := "Time: "+fmt.Sprintf("%s",queryTime)+" -- "+time.Now().Format("2006-01-02 15:04:05")+" -- "+sql+"\n";
-    if ok, err := util.WriteLog("/data/golang/log/slow_query.log", msg); !ok {
+    if ok, err := util.WriteLog("./data/log/slow_query.log", msg); !ok {
         log.Print(err)
     }
 }
