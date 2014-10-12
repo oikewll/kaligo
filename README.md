@@ -16,7 +16,7 @@ More info [epooll.com](http://www.epooll.com)
 
 v1.2.4: 抽取http监听地址和端口、mysql连接参数，redis连接参数 等公用资源到配置文件
 
-v1.2.3: 采用channel实现的多功能连接池，只要是tcp连接方式都可以使用，并在此基础上实现Mysql连接池
+v1.2.3: 采用channel实现的多功能连接池，只要是tcp连接方式都可以使用，并在此基础上实现Mysql连接池，每秒处理并发读请求接近2W，写请求8K
 
 v1.2.2: 封装MyMysql实现的CRUD数据库类，GetOne()、GetAll()、Insert()、InsertBatch()、Update()
 
