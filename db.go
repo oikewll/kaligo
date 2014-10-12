@@ -177,7 +177,7 @@ func (this *DB) Insert(table string, data map[string]string) (bool, error) {
 }
 
 // (写)拼凑一个sql语句插入一条记录数据
-func (this *DB) InsertMulti(table string, data []map[string]string) (bool, error) {
+func (this *DB) InsertBatch(table string, data []map[string]string) (bool, error) {
 
     var keys = []string{}
     var vals = []string{}
