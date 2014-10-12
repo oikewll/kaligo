@@ -22,6 +22,26 @@ v1.0.0: 初始化类库
 
 ## Examples
 
+### tree
+
+    └── epoollprojects
+    ├── conf
+    │   └── app.ini
+    ├── control
+    │   └── ctl_index.go
+    ├── data
+    │   ├── cache
+    │   └── log
+    ├── main.go
+    ├── model
+    │   └── mod_common.go
+    ├── static
+    │   ├── css
+    │   ├── images
+    │   └── js
+    └── template
+        └── index.tpl
+
 ### 新建项目
 
     cd $GOPATH/src/
@@ -32,23 +52,23 @@ v1.0.0: 初始化类库
 
 ### Example 1: 路由设置
 
-// main.go
-package main
+    // main.go
+    package main
 
-import (
-    "epoollprojects/control"
-    "github.com/owner888/epooll"
-)
+    import (
+        "epoollprojects/control"
+        "github.com/owner888/epooll"
+    )
 
-func main() {
-    // 设置路由
-    // 当用户访问 /?ct=index&ac=login 的时候就是调用了 control/ctl_index.go 里面的login方法
-    epooll.Router("index", &control.Index{})
-    // 设置静态路径，当用户访问 /static 的时候，就访问 static 目录下面的静态文件
-    epooll.SetStaticPath("/static", "static")
-    // 解析配置文件、编译模板、启动epooll模块、监听服务端口
-    epooll.Run()
-}
+    func main() {
+        // 设置路由
+        // 当用户访问 /?ct=index&ac=login 的时候就是调用了 control/ctl_index.go 里面的login方法
+        epooll.Router("index", &control.Index{})
+        // 设置静态路径，当用户访问 /static 的时候，就访问 static 目录下面的静态文件
+        epooll.SetStaticPath("/static", "static")
+        // 解析配置文件、编译模板、启动epooll模块、监听服务端口
+        epooll.Run()
+    }
 
 ### Example 2:  Controller 编写
 
