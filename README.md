@@ -169,16 +169,22 @@ v1.0.0: 初始化类库
     }
 
 ### Example 5: 静态文件处理
-
+    
+    // 如何把刚才创建的应用如下目录当做静态来访问：
     ├── static
     │   ├── css
     │   ├── images
     │   └── js
 
-    // 设置静态文件处理目录
+    // 在项目初始文件 main.go 里面设置静态文件处理目录
     epooll.SetStaticPath("/static", "static")
 
     这样用户访问 URL http://localhost/static/123.txt 则会请求 static 目录下的 123.txt 文件
+
+### Example 6: 数据库操作
+
+#### 原生SQL查询
+#### CRUD 操作
 
 ## To do
 
