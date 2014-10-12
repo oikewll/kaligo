@@ -176,6 +176,37 @@ func (this *DB) Insert(table string, data map[string]string) (bool, error) {
     return ok, err
 }
 
+// (写)拼凑一个sql语句插入一条记录数据
+func (this *DB) InsertMulti(table string, data []map[string]string) (bool, error) {
+
+    var keys = []string{}
+    var vals = []string{}
+    var keys_sql string
+    var vals_sql string
+    var vals_arr = []string{}
+    for _, d := range data {
+        keys = []string{}
+        vals = []string{}
+        for k, v := range d {
+            keys = append(keys, k)
+            vals = append(vals, this.AddSlashes(this.StripSlashes(v)))
+        }
+        if keys_sql == "" {
+            keys_sql = "`"+strings.Join(keys, "`, `")+"`"
+        }
+        vals_arr = append(vals_arr, "(\""+strings.Join(vals, "\", \"")+"\")")
+    }
+    vals_sql = strings.Join(vals_arr, ", ")
+    sql := "Insert Into `"+table+"`("+keys_sql+") Values "+vals_sql
+    fmt.Println(sql)
+    _, res, err := this.Query(sql)
+    var ok bool = true
+    if err != nil {
+        ok = false
+    }
+    this.res = res
+    return ok, err
+}
 // (写)拼凑一个sql语句修改一条记录数据
 func (this *DB) Update(table string, data map[string]string, where string) (bool, error) {
     
