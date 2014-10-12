@@ -1,6 +1,8 @@
-# Epooll v1.0.0 (2014-10-01)
+## Epooll v1.0.0 (2014-10-01)
 
-这是一个Go语言的MVC框架。。。
+epooll is an open-source, high-performance, modularity, full-stack web framework.
+
+More info [epooll.com](http://www.epooll.com)
 
 * [Changelog](https://github.com/owner888/epooll/blob/master/README.md#changelog)
 * [Installing](https://github.com/owner888/epooll/blob/master/README.md#installing)
@@ -14,10 +16,9 @@
 
 v1.0.0: 初始化类库
 
-## Installing
+## Installation
+
     $ go get github.com/owner888/epooll
-    $ go get github.com/ziutek/mymysql
-    $ go get github.com/garyburd/redigo/redis
 
 ## Testing
 
@@ -25,6 +26,9 @@ v1.0.0: 初始化类库
 ## Examples
 
 ### Example 1
+    `func Test(name string) string {
+        return "ffff"
+    }`
 
 ## To do
 
@@ -41,3 +45,11 @@ v1.0.0: 初始化类库
 * [control](http://www.godoc.org/pkg/github.com/owner888/epooll/control)
 * [db](http://www.godoc.org/pkg/github.com/owner888/epooll/db)
 * [redis](http://www.godoc.org/pkg/github.com/owner888/epooll/redis)
+
+## Contact US
+QQ:525773145
+
+## LICENSE
+
+epooll is licensed under the Apache Licence, Version 2.0
+(http://www.apache.org/licenses/LICENSE-2.0.html).

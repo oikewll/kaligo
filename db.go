@@ -176,7 +176,7 @@ func (this *DB) Insert(table string, data map[string]string) (bool, error) {
     return ok, err
 }
 
-// (写)拼凑一个sql语句插入一条记录数据
+// (写)拼凑一个sql语句批量插入多条记录数据
 func (this *DB) InsertBatch(table string, data []map[string]string) (bool, error) {
 
     var keys = []string{}
