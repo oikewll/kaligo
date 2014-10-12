@@ -28,23 +28,22 @@ v1.0.0: 初始化类库
     $ mkdir epoollprojects
     $ cd epoollprojects
     $ tree
-
-    ├── conf
-    │   └── app.ini
-    ├── control
-    │   └── ctl_index.go
-    ├── data
-    │   ├── cache
-    │   └── log
-    ├── main.go
-    ├── model
-    │   └── mod_common.go
-    ├── static
-    │   ├── css
-    │   ├── images
-    │   └── js
-    └── template
-        └── index.tpl
+        ├── conf
+        │   └── app.ini
+        ├── control
+        │   └── ctl_index.go
+        ├── data
+        │   ├── cache
+        │   └── log
+        ├── main.go
+        ├── model
+        │   └── mod_common.go
+        ├── static
+        │   ├── css
+        │   ├── images
+        │   └── js
+        └── template
+            └── index.tpl
 
 ### Example 1: 路由设置
 
@@ -66,7 +65,7 @@ v1.0.0: 初始化类库
         epooll.Run()
     }
 
-### Example 2:  Controller 编写
+### Example 2: Controller 编写
 
     package control
 
@@ -83,10 +82,10 @@ v1.0.0: 初始化类库
     }
 
 
-### Example 3:  Model 编写
+### Example 3: Model 编写
 
-    write model
-    // mod_common.go
+#### model 编写 mod_common.go
+
     package model
 
     import (
@@ -96,9 +95,8 @@ v1.0.0: 初始化类库
         return "Hi"
     }
 
-    and then, use for control
+#### 在控制器ctl_index.go 中使用model 
 
-    // ctl_index.go
     import (
         "epoollprojects/model"
         "net/http"
@@ -112,9 +110,9 @@ v1.0.0: 初始化类库
         io.WriteString(w, str)
     }
 
-### Example 4:  View 编写
+### Example 4: View 编写
 
-#### index.tpl
+#### 模板文件：index.tpl
 
     <!DOCTYPE html>
     <html>
@@ -137,7 +135,7 @@ v1.0.0: 初始化类库
         </body>
     </html>
 
-#### ctl_index.go
+#### 在控制器ctl_index.go 中使用模板
 
     import (
         "net/http"
@@ -170,6 +168,17 @@ v1.0.0: 初始化类库
         t.Execute(w, args)
     }
 
+### Example 5: 静态文件处理
+
+    ├── static
+    │   ├── css
+    │   ├── images
+    │   └── js
+
+    // 设置静态文件处理目录
+    epooll.SetStaticPath("/static", "static")
+
+    这样用户访问 URL http://localhost/static/123.txt 则会请求 static 目录下的 123.txt 文件
 
 ## To do
 
