@@ -26,9 +26,24 @@ v1.0.0: 初始化类库
 ## Examples
 
 ### Example 1
-    `func Test(name string) string {
-        return "ffff"
-    }`
+
+├── conf
+│   └── app.ini
+├── control
+│   ├── ctl_demo.go
+│   ├── ctl_index.go
+├── data
+│   ├── cache
+│   └── log
+├── main.go
+├── model
+│   ├── mod_common.go
+├── static
+│   ├── css
+│   ├── images
+│   └── js
+└── template
+    └── index.tpl
 
 ## To do
 
@@ -37,6 +52,7 @@ v1.0.0: 初始化类库
 3. 测试cpu、内存使用率
 4. 完善使用文档
 5. 基于此框架开发一个CMS
+6. 一个服务自定义绑定多个端口
 
 ## Known bugs
 
