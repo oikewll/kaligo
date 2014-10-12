@@ -22,9 +22,13 @@ v1.0.0: 初始化类库
 
 ## Examples
 
-### tree
+### 新建项目
 
-    └── epoollprojects
+    $ cd $GOPATH/src/
+    $ mkdir epoollprojects
+    $ cd epoollprojects
+    $ tree
+
     ├── conf
     │   └── app.ini
     ├── control
@@ -41,14 +45,6 @@ v1.0.0: 初始化类库
     │   └── js
     └── template
         └── index.tpl
-
-### 新建项目
-
-    cd $GOPATH/src/
-    mkdir epoollprojects
-    cd epoollprojects
-    ...
-    and then,the pstree like this
 
 ### Example 1: 路由设置
 
@@ -72,6 +68,107 @@ v1.0.0: 初始化类库
 
 ### Example 2:  Controller 编写
 
+    package control
+
+    import (
+        "github.com/owner888/epooll"
+        "net/http"
+        "io"
+    )
+
+    type Index struct {}
+
+    func (this *Index) Index(w http.ResponseWriter, r *http.Request) {
+        io.WriteString(w, "Hello World!")
+    }
+
+
+### Example 3:  Model 编写
+
+    write model
+    // mod_common.go
+    package model
+
+    import (
+    )
+
+    func GetString() string {
+        return "Hi"
+    }
+
+    and then, use for control
+
+    // ctl_index.go
+    import (
+        "epoollprojects/model"
+        "net/http"
+        "io"
+    )
+
+    type Index struct {}
+
+    func (this *Index) Index(w http.ResponseWriter, r *http.Request) {
+        str := model.GetString()
+        io.WriteString(w, str)
+    }
+
+### Example 4:  View 编写
+
+#### index.tpl
+
+    <!DOCTYPE html>
+    <html>
+        <head>
+            <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+            <title>Epooll</title>
+        </head>
+        <body>
+            <h1>Hello Epooll Go!</h1>
+            <p>Username: {{.username}}</p>
+            <p>
+                <ul>
+                    {{range .data}}
+                    <li>
+                        id: {{.id}} --- email: {{.email}}
+                    </li>
+                    {{end}}
+                </ul>
+            </p>
+        </body>
+    </html>
+
+#### ctl_index.go
+
+    import (
+        "net/http"
+        "github.com/owner888/epooll"
+        "io"
+        "html/template"
+    )
+
+    func (this *Demo) Index(w http.ResponseWriter, r *http.Request) {
+
+        args := map[string]interface{}{
+            "username":"yangzetao",
+            "data":[]map[string]string{
+                map[string]string{
+                    "id":"1",
+                    "email":"seatle@foxmail.com",
+                },
+                map[string]string{
+                    "id":"2",
+                    "email":"seatle@163.com",
+                },
+            },
+        }
+
+        t, err := template.ParseFiles("template/index.tpl")
+        if err != nil {
+            io.WriteString(w, fmt.Sprintf("%s", err));
+            return
+        }
+        t.Execute(w, args)
+    }
 
 
 ## To do
