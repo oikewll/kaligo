@@ -18,11 +18,11 @@ v1.2.4: 抽取http监听地址和端口、mysql连接参数，redis连接参数 
 
 v1.2.3: 采用channel实现的多功能连接池，只要是tcp连接方式都可以使用，并在此基础上实现Mysql连接池，每秒处理并发读请求接近2W，写请求8K，有没有感觉，生成静态HTML，生成缓存已经意义不大了？呵呵
 
-v1.2.2: 封装MyMysql实现的CRUD数据库类，GetOne()、GetAll()、Insert()、InsertBatch()、Update()
+v1.2.2: 封装MyMysql实现的CRUD数据库类，GetOne()、GetAll()、Insert()、InsertBatch()、Update()，采用Map，可直接利用post、get方式获取的Map进行数据库操作，比一张表就对应写一个类的ORM更轻量，更实用，让繁琐的ORM见鬼去吧
 
 v1.2.1: 实现基本类库编写: util.go、配置文件读取: app.ini
 
-v1.2: github线上项目，实现 package 远程调用
+v1.2: github线上项目，实现 package 远程调用，只需短短几行代码，即可启用一个高并发Web服务，妈妈再也不用担心我不会写 Hello World 了
 
 v1.1: 采用redigo，成功调用redis连接池，应用在线上日志系统统计，每秒处理并发请求2W多
 
