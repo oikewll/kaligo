@@ -70,9 +70,9 @@ v1.0.0: 初始化类库
     port = 3306
     name = test
     ; 是否记录慢查询
-    logSlowQuery = true
+    log_slow_query = true
     ; 记录慢查询时间，单位：秒
-    logSlowTime = 1
+    log_slow_time = 1
     [redis]
     ; --------------------------
     ; Redis配置

@@ -35,8 +35,8 @@ func newRedisPool() *redis.Pool {
 func newMysqlPool() *ConnPool {
     conf := InitConfig()
     poolNum, _ := strconv.Atoi(conf.GetValue("pool", "mysql")) 
-    logSlowQuery, _ := strconv.ParseBool(conf.GetValue("db", "logSlowQuery")) 
-    logSlowTime, _ := strconv.ParseInt(conf.GetValue("db", "logSlowTime"), 0, 64) 
+    logSlowQuery, _ := strconv.ParseBool(conf.GetValue("db", "log_slow_query")) 
+    logSlowTime, _ := strconv.ParseInt(conf.GetValue("db", "log_slow_time"), 0, 64) 
     fmt.Printf("初始化 Mysql 连接池，连接数：%d \n", poolNum)
     return &ConnPool{
         MaxActive: poolNum,
