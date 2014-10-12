@@ -45,7 +45,48 @@ v1.0.0: 初始化类库
         └── template
             └── index.tpl
 
-### Example 1: 路由设置
+### 配置项目 - conf/app.ini
+    
+    [base]
+    ; --------------------------
+    ; 基本配置
+    ; --------------------------
+    display_errors = true
+    log_errors = true
+    static_path = /static
+    [http]
+    ; --------------------------
+    ; Web服务器监听地址和端口
+    ; --------------------------
+    addr = 0.0.0.0
+    port = 9527
+    [db]
+    ; --------------------------
+    ; 数据库配置
+    ; --------------------------
+    user = root
+    pass = root
+    host = localhost
+    port = 3306
+    name = test
+    ; 是否记录慢查询
+    logSlowQuery = true
+    ; 记录慢查询时间，单位：秒
+    logSlowTime = 1
+    [redis]
+    ; --------------------------
+    ; Redis配置
+    ; --------------------------
+    host = 127.0.0.1
+    port = 6379
+    ; --------------------------
+    ; 连接池连接数配置
+    ; --------------------------
+    [pool]
+    mysql = 1000
+    redis = 12000
+
+### Example 1 - 路由设置
 
     // main.go
     package main
@@ -65,7 +106,7 @@ v1.0.0: 初始化类库
         epooll.Run()
     }
 
-### Example 2: Controller 编写
+### Example 2 - Controller 编写
 
     package control
 
@@ -82,7 +123,7 @@ v1.0.0: 初始化类库
     }
 
 
-### Example 3: Model 编写
+### Example 3 - Model 编写
 
 #### model 编写 mod_common.go
 
@@ -110,7 +151,7 @@ v1.0.0: 初始化类库
         io.WriteString(w, str)
     }
 
-### Example 4: View 编写
+### Example 4 - View 编写
 
 #### 模板文件：index.tpl
 
@@ -168,7 +209,7 @@ v1.0.0: 初始化类库
         t.Execute(w, args)
     }
 
-### Example 5: 静态文件处理
+### Example 5 - 静态文件处理
     
     // 如何把刚才创建的应用如下目录当做静态来访问：
     ├── static
@@ -181,10 +222,91 @@ v1.0.0: 初始化类库
 
     这样用户访问 URL http://localhost/static/123.txt 则会请求 static 目录下的 123.txt 文件
 
-### Example 6: 数据库操作
+### Example 6 - 数据库操作
 
 #### 原生SQL查询
+    
+    epooll框架数据库底层驱动使用的是mymysql，利用autorc的断开重连机制，加上channel实现了连接池，相比普通短连接方式，性能提升10倍以上
+    经过测试，epooll数据库每秒可并发读取数据库2W次，写入数据库8K次，读取速度接近Redis+连接池方式，可以说有了这个框架，对Mysql读取出来的数据进行缓存毫无意义
+    原生用法请参考：
+    https://github.com/ziutek/mymysql    
+
 #### CRUD 操作
+
+##### Select
+    
+    // 从连接池获取一个连接，不需要Close，Sql执行完框架会自动回收连接到池里
+    db := epooll.MysqlConn.Get().(*epooll.DB)
+
+    // 单条记录查询,GetOne方法会自动给sql加上Limit 1
+    row := db.GetOne("Select `name`, `pass` From `user`")
+    // row的结构如下：
+    //row := map[string]string {
+    //    "name": "name111",
+    //    "pass": "pass111",
+    //}
+
+    // 多条记录查询
+    rows := db.GetAll("Select `name`, `pass` From `user`")
+    // rows的结构如下：
+    //rows := []map[string]string {
+    //    row := map[string]string {
+    //        "name": "name111",
+    //        "pass": "pass111",
+    //    },
+    //    row := map[string]string {
+    //        "name": "name222",
+    //        "pass": "pass222",
+    //    },
+    //}
+
+    // map方式存储的数据好处，就是不用每张表对应的写一个类与之对应，再配合Go强大的模板引擎，你懂的，easy到吓人
+
+##### Insert
+
+    // 单条插入，相当于 Insert Into `user`(`name`,`pass`) Values ("name111", "pass111")
+    row := map[string]string {
+        "name": "name111",
+        "pass": "pass111",
+    }
+    if ok, err := db.Insert("user", row); !ok {
+        fmt.Println("错误信息：", err)
+    } else {
+        fmt.Println("自增ID：", db.InsertId())
+    }
+
+    // 批量插入，相当于 Insert Into `user`(`name`,`pass`) Values ("name111", "pass111"),("name222", "pass222"),...
+    rows := []map[string]string {
+        row := map[string]string {
+            "name": "name111",
+            "pass": "pass111",
+        },
+        row := map[string]string {
+            "name": "name222",
+            "pass": "pass222",
+        },
+    }
+    if ok, err := db.InsertBatch("user", rows); !ok {
+        fmt.Println("错误信息：", err)
+    } else {
+        fmt.Println("影响条数：", db.AffectedRows())
+    }
+
+##### Update
+
+    // 单条修改，相当于 Update `user` Set `name`="name111",`pass`="pass111" Where `id`=10
+    row := map[string]string {
+        "name": "name111",
+        "pass": "pass111",
+    }
+    if ok, err := db.Update("user", rows, "`id`=10"); !ok {
+        fmt.Println("错误信息：", err)
+    } else {
+        fmt.Println("影响条数：", db.AffectedRows())
+    }
+
+    // 批量修改，因为使用比较少，尚未实现
+    
 
 ## To do
 
@@ -194,9 +316,6 @@ v1.0.0: 初始化类库
 4. 完善使用文档
 5. 基于此框架开发一个CMS
 6. 一个服务自定义绑定多个端口
-
-## Known bugs
-
 
 ## Documentation
 * [control](http://www.godoc.org/pkg/github.com/owner888/epooll/control)

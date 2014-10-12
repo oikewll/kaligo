@@ -24,10 +24,11 @@ type DB struct {
 }
 
 // (读+写)连接数据库+选择数据库
-func InitDB(address, user, pass, name string) (*DB, error){
+func InitDB(address, user, pass, name string, logSlowQuery bool, logSlowTime int64) (*DB, error){
     //fmt.Println("InitDB")
 
-    db := new(DB)
+    //db := new(DB)
+    db := &DB{logSlowQuery:logSlowQuery, logSlowTime:logSlowTime}
     conn := autorc.New("tcp", "", address, user, pass, name) 
     conn.Register("set names utf8")
     db.Conn = conn

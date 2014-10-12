@@ -3,6 +3,7 @@ package epooll
 import (
     "net/http"
     "fmt"
+    "log"
     "io"
     "strings"
     "reflect"
@@ -18,7 +19,18 @@ var (
 func Run() {
     runtime.GOMAXPROCS(runtime.NumCPU());
     http.HandleFunc("/", loadController)
-    http.ListenAndServe(":9527", nil)
+    conf := InitConfig()
+    addr := conf.GetValue("http", "addr") 
+    port := conf.GetValue("http", "port") 
+    if addr == "no value" {
+        addr = ""
+    }
+    if port == "no value" {
+        port = "9527"
+    }
+
+    log.Printf("[I] Running on %s:%s", addr, port)
+    http.ListenAndServe(addr+":"+port, nil)
 }
 
 func Router(ct string, control interface{}) {
