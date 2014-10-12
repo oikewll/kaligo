@@ -27,25 +27,23 @@ v1.0.0: 初始化类库
 
 ### Example 1
 
-`
-├── conf
-│   └── app.ini
-├── control
-│   ├── ctl_demo.go
-│   ├── ctl_index.go
-├── data
-│   ├── cache
-│   └── log
-├── main.go
-├── model
-│   ├── mod_common.go
-├── static
-│   ├── css
-│   ├── images
-│   └── js
-└── template
-    └── index.tpl
-`
+>├── conf
+>│   └── app.ini
+>├── control
+>│   ├── ctl_demo.go
+>│   ├── ctl_index.go
+>├── data
+>│   ├── cache
+>│   └── log
+>├── main.go
+>├── model
+>│   ├── mod_common.go
+>├── static
+>│   ├── css
+>│   ├── images
+>│   └── js
+>└── template
+>    └── index.tpl
 
 ## To do
 
