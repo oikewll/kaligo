@@ -27,6 +27,7 @@ v1.0.0: 初始化类库
 
 ### Example 1
 
+`
 ├── conf
 │   └── app.ini
 ├── control
@@ -44,6 +45,7 @@ v1.0.0: 初始化类库
 │   └── js
 └── template
     └── index.tpl
+`
 
 ## To do
 
