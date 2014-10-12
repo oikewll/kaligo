@@ -1,4 +1,4 @@
-## Epooll v1.0.0 (2014-10-01)
+## Epooll v1.2.4 (2014-10-12)
 
 epooll is an open-source, high-performance, modularity, full-stack web framework.
 
@@ -14,7 +14,20 @@ More info [epooll.com](http://www.epooll.com)
 
 ## Changelog
 
-v1.0.0: 初始化类库
+v1.2.4: 抽取http监听地址和端口、mysql连接参数，redis连接参数 等公用资源到配置文件
+
+v1.2.3: 采用channel实现的多功能连接池，只要是tcp连接方式都可以使用，并在此基础上实现Mysql连接池
+
+v1.2.2: 封装MyMysql实现的CRUD数据库类，GetOne()、GetAll()、Insert()、InsertBatch()、Update()
+
+v1.2.1: 实现配置文件读取，app.ini
+
+v1.2: github线上项目，实现远程调用package
+    go get github.com/owner888/epooll
+
+v1.1: 采用redigo，成功调用redis连接池，应用在线上日志系统统计，每秒处理并发请求2W多
+
+v1.0: 本地的MVC框架，实现控制器
 
 ## Installation
 
@@ -316,6 +329,8 @@ v1.0.0: 初始化类库
 4. 完善使用文档
 5. 基于此框架开发一个CMS
 6. 一个服务自定义绑定多个端口
+7. 服务器硬件监控：CPU、内存、网卡带宽、硬盘、RAID
+8. redis访问图表、mysql访问图表、请求统计信息、定时任务
 
 ## Documentation
 * [control](http://www.godoc.org/pkg/github.com/owner888/epooll/control)
