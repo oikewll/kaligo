@@ -9,6 +9,7 @@ import (
     //"sync"
     "time"
     //"reflect"
+    "sort"
     "github.com/ziutek/mymysql/autorc" 
 	"github.com/ziutek/mymysql/mysql"
     _ "github.com/ziutek/mymysql/native"    // 普通模式
@@ -180,26 +181,30 @@ func (this *DB) Insert(table string, data map[string]string) (bool, error) {
 // (写)拼凑一个sql语句批量插入多条记录数据
 func (this *DB) InsertBatch(table string, data []map[string]string) (bool, error) {
 
-    var keys = []string{}
-    var vals = []string{}
-    var keys_sql string
-    var vals_sql string
-    var vals_arr = []string{}
+    var keys string
+    var vals string
+    var vals_arr []string
     for _, d := range data {
-        keys = []string{}
-        vals = []string{}
-        for k, v := range d {
-            keys = append(keys, k)
-            vals = append(vals, this.AddSlashes(this.StripSlashes(v)))
+        keys = ""
+        vals = ""
+        // slice是无序的，这里是保证他有顺序
+        ms := NewMapSorter(d)
+        sort.Sort(ms)
+        for k, v := range ms {
+            if k == 0 {
+                keys = v.Key
+                vals = v.Val
+            } else {
+                keys = keys+"`,`"+v.Key
+                vals = vals+"\",\""+this.AddSlashes(this.StripSlashes(v.Val))
+            }
         }
-        if keys_sql == "" {
-            keys_sql = "`"+strings.Join(keys, "`, `")+"`"
-        }
-        vals_arr = append(vals_arr, "(\""+strings.Join(vals, "\", \"")+"\")")
+        keys = "`"+keys+"`"
+        vals = "(\""+vals+"\")"
+        vals_arr = append(vals_arr, vals)
     }
-    vals_sql = strings.Join(vals_arr, ", ")
-    sql := "Insert Into `"+table+"`("+keys_sql+") Values "+vals_sql
-    fmt.Println(sql)
+    sql := "Insert Into `"+table+"`("+keys+") Values "+strings.Join(vals_arr, ", ")
+    //fmt.Println(sql)
     _, res, err := this.Query(sql)
     var ok bool = true
     if err != nil {
@@ -208,6 +213,7 @@ func (this *DB) InsertBatch(table string, data []map[string]string) (bool, error
     this.res = res
     return ok, err
 }
+
 // (写)拼凑一个sql语句修改一条记录数据
 func (this *DB) Update(table string, data map[string]string, where string) (bool, error) {
     

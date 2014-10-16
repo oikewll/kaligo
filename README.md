@@ -329,7 +329,7 @@ v1.0: 本地的MVC框架，实现控制器
 5. 基于此框架开发一个CMS
 6. 一个服务自定义绑定多个端口
 7. 服务器硬件监控：CPU、内存、网卡带宽、硬盘、RAID
-8. redis访问图表、mysql访问图表、请求统计信息、定时任务
+8. redis访问图表、mysql访问图表、请求统计信息、定时任务(跑一个gotinue会不会影响性能？)
 
 ## Documentation
 * [control](http://www.godoc.org/pkg/github.com/owner888/epooll/control)
