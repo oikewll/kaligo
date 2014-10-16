@@ -14,6 +14,8 @@ More info [epooll.com](http://www.epooll.com)
 
 ## Changelog
 
+v1.2.5: 增加计时器，修复InsertBatch()方法Bug
+
 v1.2.4: 抽取http监听地址和端口、mysql连接参数，redis连接参数 等公用资源到配置文件
 
 v1.2.3: 采用channel实现的多功能连接池，只要是tcp连接方式都可以使用，并在此基础上实现Mysql连接池，每秒处理并发读请求接近2W，写请求8K，有没有感觉，生成静态HTML，生成缓存已经意义不大了？呵呵
@@ -319,6 +321,16 @@ v1.0: 本地的MVC框架，实现控制器
 
     // 批量修改，因为使用比较少，尚未实现
     
+### Example 7 - 定时器
+
+    // 增加定时任务，设置时间小于当前时间则不执行，大于当前时间则当到达时间时执行
+    epooll.AddTasker("default", &control.Task{}, "import_database", "2014-10-15 15:33:00")
+    // 删除定时任务
+    epooll.DelTasker("default")
+    // 增加定时器，每5秒运行一次
+    epooll.AddTimer("default", &control.Timer{}, "Import_database_login_v2", 5000)
+    // 删除定时器
+    epooll.DelTimer("default")
 
 ## To do
 
