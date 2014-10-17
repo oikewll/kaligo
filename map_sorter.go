@@ -25,8 +25,8 @@ func (ms MapSorter) Len() int {
 }
 
 func (ms MapSorter) Less(i, j int) bool {
-    return ms[i].Val < ms[j].Val // 按值排序
-    //return ms[i].Key < ms[j].Key // 按键排序
+    //return ms[i].Val < ms[j].Val // 按值排序
+    return ms[i].Key < ms[j].Key // 按键排序,入数据库，一定要用这个，也就是根据字段排序了
 }
 
 func (ms MapSorter) Swap(i, j int) {
