@@ -10,6 +10,7 @@ import (
     "runtime"
     "path"
     "time"
+    "github.com/owner888/epooll/util"
 )
 
 // 定义当前package中使用的全局变量
@@ -104,7 +105,6 @@ func SetStaticPath(key string, value string) {
 // 处理静态文件
 func staticServer(w http.ResponseWriter, r *http.Request) {
 
-    util := new(Util)
     // 获取请求路径
     requestPath := path.Clean(r.URL.Path)
     for prefix, staticDir := range StaticDir {

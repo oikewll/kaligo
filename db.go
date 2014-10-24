@@ -10,6 +10,7 @@ import (
     "time"
     //"reflect"
     "sort"
+    "github.com/owner888/epooll/util"
     "github.com/ziutek/mymysql/autorc" 
 	"github.com/ziutek/mymysql/mysql"
     _ "github.com/ziutek/mymysql/native"    // 普通模式
@@ -38,9 +39,8 @@ func InitDB(address, user, pass, name string, logSlowQuery bool, logSlowTime int
 
 // 记录慢查询日志
 func (this *DB) slowQueryLog(sql string, queryTime int64) {
-    util := new(Util)
     msg  := "Time: "+fmt.Sprintf("%s",queryTime)+" -- "+time.Now().Format("2006-01-02 15:04:05")+" -- "+sql+"\n";
-    if ok, err := util.WriteLog("./data/log/slow_query.log", msg); !ok {
+    if ok, err := util.WriteLog("slow_query.log", msg); !ok {
         log.Print(err)
     }
 }
@@ -158,7 +158,7 @@ func (this *DB) GetSafeParam(val string) (string) {
 }
 
 // (写)拼凑一个sql语句插入一条记录数据
-func (this *DB) Insert(table string, data map[string]string) (bool, error) {
+func (this *DB) Insert(table string, data map[string]string) (string, error) {
     
     keys := []string{}
     vals := []string{}
@@ -170,16 +170,12 @@ func (this *DB) Insert(table string, data map[string]string) (bool, error) {
     vals_sql := "\""+strings.Join(vals, "\", \"")+"\""
     sql := "Insert Into `"+table+"`("+keys_sql+") Values ("+vals_sql+")"
     _, res, err := this.Query(sql)
-    var ok bool = true
-    if err != nil {
-        ok = false
-    }
     this.res = res
-    return ok, err
+    return sql, err
 }
 
 // (写)拼凑一个sql语句批量插入多条记录数据
-func (this *DB) InsertBatch(table string, data []map[string]string) (bool, error) {
+func (this *DB) InsertBatch(table string, data []map[string]string) (string, error) {
 
     var keys string
     var vals string
@@ -206,16 +202,12 @@ func (this *DB) InsertBatch(table string, data []map[string]string) (bool, error
     sql := "Insert Into `"+table+"`("+keys+") Values "+strings.Join(vals_arr, ", ")
     //fmt.Println(sql)
     _, res, err := this.Query(sql)
-    var ok bool = true
-    if err != nil {
-        ok = false
-    }
     this.res = res
-    return ok, err
+    return sql, err
 }
 
 // (写)拼凑一个sql语句修改一条记录数据
-func (this *DB) Update(table string, data map[string]string, where string) (bool, error) {
+func (this *DB) Update(table string, data map[string]string, where string) (string, error) {
     
     sets := []string{}
     for k, v := range data {
@@ -224,12 +216,8 @@ func (this *DB) Update(table string, data map[string]string, where string) (bool
     sets_sql := strings.Join(sets, ", ")
     sql := "Update `"+table+"` Set "+sets_sql+" "+where
     _, res, err := this.Query(sql)
-    var ok bool = true
-    if err != nil {
-        ok = false
-    }
     this.res = res
-    return ok, err
+    return sql, err
 }
 
 // 取得最后一次插入记录的自增ID值
