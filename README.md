@@ -14,6 +14,8 @@ More info [epooll.com](http://www.epooll.com)
 
 ## Changelog
 
+v1.2.6: 迁移util类到util namespace里面去，调用就不用每次都new那么麻烦了，修改CRUD数据库类插入、批量插入、修改为返回sql，以便记录日志;增加项目绝对路径，数据绝对路径util.PATH_ROOT、util.PATH_DATA
+
 v1.2.5: 增加计时器，修复InsertBatch()方法Bug
 
 v1.2.4: 抽取http监听地址和端口、mysql连接参数，redis连接参数 等公用资源到配置文件
@@ -283,9 +285,12 @@ v1.0: 本地的MVC框架，实现控制器
         "name": "name111",
         "pass": "pass111",
     }
-    if ok, err := db.Insert("user", row); !ok {
+    if sql, err := db.Insert("user", row); err != nil {
         fmt.Println("错误信息：", err)
     } else {
+        // 记录一下sql？
+        logfile := util.PATH_DATA+"/log/user_"+time.Now().Format("2006-01-02")+".sql";
+        util.PutFile(logfile, sql+"\n", 1)
         fmt.Println("自增ID：", db.InsertId())
     }
 
@@ -300,9 +305,10 @@ v1.0: 本地的MVC框架，实现控制器
             "pass": "pass222",
         },
     }
-    if ok, err := db.InsertBatch("user", rows); !ok {
+    if sql, err := db.InsertBatch("user", rows); err != nil {
         fmt.Println("错误信息：", err)
     } else {
+        //要不要把sql记录起来？
         fmt.Println("影响条数：", db.AffectedRows())
     }
 
@@ -313,9 +319,10 @@ v1.0: 本地的MVC框架，实现控制器
         "name": "name111",
         "pass": "pass111",
     }
-    if ok, err := db.Update("user", rows, "`id`=10"); !ok {
+    if sql, err := db.Update("user", rows, "`id`=10"); err != nil {
         fmt.Println("错误信息：", err)
     } else {
+        //要不要把sql记录起来？
         fmt.Println("影响条数：", db.AffectedRows())
     }
 
