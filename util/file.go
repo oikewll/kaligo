@@ -75,11 +75,14 @@ func PutFile(file string, format string, args ...interface{}) (bool, error) {
             f, err = os.Create(file)
         }
     }
-    defer f.Close()
 
     if err != nil {
         return false, err
     }
+
+    // 要先检查nil是否为空，才能关闭打开的文件，否则报错
+    // http://stackoverflow.com/questions/16280176/go-panic-runtime-error-invalid-memory-address-or-nil-pointer-dereference
+    defer f.Close()
 
     f.WriteString(format)
     return true, err
