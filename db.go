@@ -214,7 +214,7 @@ func (this *DB) Update(table string, data map[string]string, where string) (stri
         sets = append(sets, "`"+k+"`=\""+this.AddSlashes(this.StripSlashes(v))+"\"")
     }
     sets_sql := strings.Join(sets, ", ")
-    sql := "Update `"+table+"` Set "+sets_sql+" "+where
+    sql := "Update `"+table+"` Set "+sets_sql+" Where "+where
     _, res, err := this.Query(sql)
     this.res = res
     return sql, err
