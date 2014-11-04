@@ -252,7 +252,7 @@ v1.0: 本地的MVC框架，实现控制器
 ##### Select
     
     // 从连接池获取一个连接，不需要Close，Sql执行完框架会自动回收连接到池里
-    db := epooll.MysqlConn.Get().(*epooll.DB)
+    db, err := epooll.MysqlConn.Get().(*epooll.DB)
 
     // 单条记录查询,GetOne方法会自动给sql加上Limit 1
     row := db.GetOne("Select `name`, `pass` From `user`")
@@ -263,7 +263,7 @@ v1.0: 本地的MVC框架，实现控制器
     //}
 
     // 多条记录查询
-    rows := db.GetAll("Select `name`, `pass` From `user`")
+    rows, err := db.GetAll("Select `name`, `pass` From `user`")
     // rows的结构如下：
     //rows := []map[string]string {
     //    row := map[string]string {
