@@ -76,6 +76,8 @@ func (this *DB) Query(sql string) ([]mysql.Row, mysql.Result, error){
 // (读)直接从一个sql语句返回一条记录数据
 func (this *DB) GetOne(sql string) (map[string]string, error) {
 
+    results := map[string]string {}
+
     reg, _ := regexp.Compile(`(?i:limit)`)
     if (!reg.MatchString(sql)) {
         sql = strings.Trim(sql, " ") 
@@ -85,6 +87,9 @@ func (this *DB) GetOne(sql string) (map[string]string, error) {
     sql = fmt.Sprintf("%s Limit 1", sql)
 
     rows, res, err := this.Query(sql)
+    if err != nil { 
+        return results, err
+    } 
 
     //fields := this.getFieldList(fmt.Sprintf("%s", res))
     fields := []string{}
@@ -92,11 +97,6 @@ func (this *DB) GetOne(sql string) (map[string]string, error) {
         fields = append(fields, field.Name)
 	}
 
-    if err != nil { 
-        panic(err) 
-    } 
-
-    results := map[string]string {}
     for _, row := range rows { 
         for _, field := range fields {
             results[field] = row.Str(res.Map(field)) 
@@ -109,7 +109,12 @@ func (this *DB) GetOne(sql string) (map[string]string, error) {
 // (读)直接从一个sql语句返回多条记录数据
 func (this *DB) GetAll(sql string) ([]map[string]string, error) {
 
+    results := []map[string]string {}
+
     rows, res, err := this.Query(sql)
+    if err != nil { 
+        return results, err
+    } 
 
     //fields := this.getFieldList(fmt.Sprintf("%s", res))
     fields := []string{}
@@ -117,11 +122,6 @@ func (this *DB) GetAll(sql string) ([]map[string]string, error) {
         fields = append(fields, field.Name)
 	}
 
-    if err != nil { 
-        panic(err) 
-    } 
-
-    results := []map[string]string {}
     for _, row := range rows { 
         v := map[string]string {}
         for _, field := range fields {
