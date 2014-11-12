@@ -10,6 +10,7 @@ import (
     "runtime"
     "path"
     "time"
+    "sync"
     "github.com/owner888/epooll/util"
 )
 
@@ -19,6 +20,7 @@ var (
     StaticDir map[string]string 
     Timer map[string]*time.Ticker
     Tasker map[string]*time.Timer
+    Mutex sync.Mutex
 )
 
 // 设置定时任务
@@ -52,12 +54,19 @@ func AddTimer(name string, control interface{}, action string, duration time.Dur
     if llen == 0 {
         Timer = make(map[string]*time.Ticker)
     }
-    //fmt.Println(Timer)
+    // 这里如果不用协程，main.go的主进程就会被堵住
+    // 用协程，要注意map要用读写锁，不然协程间会抢占导致空指针异常
     go func() {
+        Mutex.Lock()
+        // 下面这个 defer 是永远不会执行的了，因为这个协程一直都不会退出
+        //defer Mutex.Unlock()
+        // Timer是一个全局的 map，多个协程写的时候会冲突，所以这里写之前要先Lock，写完Unlock
         Timer[name] = time.NewTicker(duration * time.Millisecond)
+        Mutex.Unlock()
         for {
             select {
             case <-Timer[name].C:
+            //case <-Timer.Get(name).(*time.Ticker).C:
                 action = strings.Title(action)
                 callMethod(control, action)
             }
@@ -66,7 +75,12 @@ func AddTimer(name string, control interface{}, action string, duration time.Dur
 }
 // 删除闹钟
 func DelTimer(name string) bool{
-    Timer[name].Stop()
+    if timer, ok := Timer[name]; ok {
+        timer.Stop()
+    } else {
+        fmt.Println("定时任务 --- [ "+name+" ] --- 不存在，考虑是否在协程里面生成而且尚未生成，不能执行Stop()")
+    }
+    //Timer[name].Stop()
     return true
 }
 

@@ -184,7 +184,7 @@ func (this *DB) InsertBatch(table string, data []map[string]string) (string, err
         keys = ""
         vals = ""
         // slice是无序的，这里是保证他有顺序
-        ms := NewMapSorter(d)
+        ms := NewSortMap(d)
         sort.Sort(ms)
         for k, v := range ms {
             if k == 0 {
