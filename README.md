@@ -14,6 +14,8 @@ More info [epooll.com](http://www.epooll.com)
 
 ## Changelog
 
+v1.2.7: 定时器增加全局锁，修复同时设置多个定时器时协程并发写Timer map出现空指针异常Bug，增加用读写锁实现的安全map，排序map类改名
+
 v1.2.6: 迁移util类到util namespace里面去，调用就不用每次都new那么麻烦了，修改CRUD数据库类插入、批量插入、修改为返回sql，以便记录日志;增加项目绝对路径，数据绝对路径util.PATH_ROOT、util.PATH_DATA
 
 v1.2.5: 增加计时器，修复InsertBatch()方法Bug
