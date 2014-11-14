@@ -98,8 +98,13 @@ func Run() {
         port = "9527"
     }
 
-    log.Printf("[I] Running on %s:%s", addr, port)
-    http.ListenAndServe(addr+":"+port, nil)
+    str := util.Colorize(fmt.Sprintf("[I] Running on %s:%s", addr, port), "note")
+    log.Printf(str)
+    //log.Printf("[I] Running on %s:%s", addr, port)
+    err := http.ListenAndServe(addr+":"+port, nil)
+    if err != nil {
+		log.Fatal("ListenAndServe: ", err)
+	}
 }
 
 // 配置动态路由
@@ -112,13 +117,19 @@ func Router(ct string, control interface{}) {
 
 // 配置静态路由
 func SetStaticPath(key string, value string) {
-    StaticDir = make(map[string]string)
+    if len(StaticDir) == 0 {
+        StaticDir = make(map[string]string)
+    }
     StaticDir[key] = value
 }
 
 // 处理静态文件
-func staticServer(w http.ResponseWriter, r *http.Request) {
+func staticServer(w http.ResponseWriter, r *http.Request) bool {
 
+    // 如果没有设置静态路径
+    if len(StaticDir) == 0 {
+        return false
+    }
     // 获取请求路径
     requestPath := path.Clean(r.URL.Path)
     for prefix, staticDir := range StaticDir {
@@ -131,11 +142,10 @@ func staticServer(w http.ResponseWriter, r *http.Request) {
             file := path.Join(staticDir, requestPath)
             if util.FileExists(file) {
                 http.ServeFile(w, r, file)
-                return
             } else {
                 http.NotFound(w, r)
-                return
             }
+            return true
         }
         // 如果设置的静态文件目录包含在url 路径信息中
         if strings.HasPrefix(requestPath, prefix) {
@@ -143,23 +153,19 @@ func staticServer(w http.ResponseWriter, r *http.Request) {
                 continue
             }
             file := path.Join(staticDir, requestPath[len(prefix):])
-            fmt.Println(file)
             if util.FileExists(file) {
                 http.ServeFile(w, r, file)
-                return
             } else {
                 http.NotFound(w, r)
-                return
             }
+            return true
         }
     }
+    return false
 }
 
 // 载入控制器
 func loadController(w http.ResponseWriter, r *http.Request) { 
-
-    // 拦截静态文件
-    staticServer(w, r)
 
     //r.ParseForm()
     //forms := make(map[string]string)
@@ -175,20 +181,23 @@ func loadController(w http.ResponseWriter, r *http.Request) {
         }
     }()
 
-    // the default control、action
-    var ct, ac string
-    if ct = r.FormValue("ct"); ct == "" {
-        ct = "index"
-    }
-    if ac = r.FormValue("ac"); ac == "" {
-        ac = "index"
-    }
-    // 首字母转大写
-    ac = strings.Title(ac)
-    if v, ok := controlMapping[ct]; ok {
-        callMethod(v, ac, w, r)
-    } else {
-        panic("Control "+ct+" is not exists!")
+    // 拦截静态文件
+    if !staticServer(w, r) {
+        // the default control、action
+        var ct, ac string
+        if ct = r.FormValue("ct"); ct == "" {
+            ct = "index"
+        }
+        if ac = r.FormValue("ac"); ac == "" {
+            ac = "index"
+        }
+        // 首字母转大写
+        ac = strings.Title(ac)
+        if v, ok := controlMapping[ct]; ok {
+            callMethod(v, ac, w, r)
+        } else {
+            panic("Control "+ct+" is not exists!")
+        }
     }
 }
 

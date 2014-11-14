@@ -296,13 +296,15 @@ v1.0: 本地的MVC框架，实现控制器
         fmt.Println("自增ID：", db.InsertId())
     }
 
+##### InsertBatch
+
     // 批量插入，相当于 Insert Into `user`(`name`,`pass`) Values ("name111", "pass111"),("name222", "pass222"),...
     rows := []map[string]string {
-        row := map[string]string {
+        map[string]string {
             "name": "name111",
             "pass": "pass111",
         },
-        row := map[string]string {
+        map[string]string {
             "name": "name222",
             "pass": "pass222",
         },
@@ -328,7 +330,39 @@ v1.0: 本地的MVC框架，实现控制器
         fmt.Println("影响条数：", db.AffectedRows())
     }
 
-    // 批量修改，因为使用比较少，尚未实现
+##### UpdateBatch
+
+    // 批量修改，相当于 
+    Update `user` Set 
+    `pass` = Case  
+    When `name` = 'name111' Then 'pass111' 
+    When `name` = 'name222' Then 'pass222' 
+    Else `plat_name` End, 
+    `age` = Case  
+    When `name` = 'name111' Then '11' 
+    When `name` = 'name222' Then '22' 
+    Else `channel` End 
+    Where `plat_user_name` In ('name111', 'name222')
+
+    rows := []map[string]string {
+        map[string]string {
+            "name": "name111",
+            "pass": "pass111",
+            "age": "11",
+        },
+        map[string]string {
+            "name": "name222",
+            "pass": "pass222",
+            "age": "22",
+        },
+    }
+    if sql, err := db.UpdateBatch("user", rows, "name"); err != nil {
+        fmt.Println("错误信息：", err)
+    } else {
+        //要不要把sql记录起来？
+        fmt.Println("影响条数：", db.AffectedRows())
+    }
+
     
 ### Example 7 - 定时器
 
