@@ -268,11 +268,11 @@ v1.0: 本地的MVC框架，实现控制器
     rows, err := db.GetAll("Select `name`, `pass` From `user`")
     // rows的结构如下：
     //rows := []map[string]string {
-    //    row := map[string]string {
+    //    map[string]string {
     //        "name": "name111",
     //        "pass": "pass111",
     //    },
-    //    row := map[string]string {
+    //    map[string]string {
     //        "name": "name222",
     //        "pass": "pass222",
     //    },
