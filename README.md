@@ -309,6 +309,7 @@ v1.0: 本地的MVC框架，实现控制器
             "pass": "pass222",
         },
     }
+    // InsertBatch(table string, data []map[string]string) (string, error)
     if sql, err := db.InsertBatch("user", rows); err != nil {
         fmt.Println("错误信息：", err)
     } else {
@@ -356,6 +357,7 @@ v1.0: 本地的MVC框架，实现控制器
             "age": "22",
         },
     }
+    // UpdateBatch(table string, data []map[string]string, index string) (string, error)
     if sql, err := db.UpdateBatch("user", rows, "name"); err != nil {
         fmt.Println("错误信息：", err)
     } else {
