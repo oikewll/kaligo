@@ -9,12 +9,13 @@ import (
     //"sync"
     "time"
     //"reflect"
+    "strconv"
     "sort"
     "github.com/owner888/epooll/util"
     "github.com/ziutek/mymysql/autorc" 
 	"github.com/ziutek/mymysql/mysql"
-    _ "github.com/ziutek/mymysql/native"    // 普通模式
-    //_ "github.com/ziutek/mymysql/thrsafe" // 用了连接池之后连接都是重复利用的，没必要用线程安全模式
+    //_ "github.com/ziutek/mymysql/native"    // 普通模式
+    _ "github.com/ziutek/mymysql/thrsafe" // 用了连接池之后连接都是重复利用的，没必要用线程安全模式
 )
 
 
@@ -26,8 +27,18 @@ type DB struct {
 }
 
 // (读+写)连接数据库+选择数据库
-func InitDB(address, user, pass, name string, logSlowQuery bool, logSlowTime int64) (*DB, error){
+//func InitDB(address, user, pass, name string, logSlowQuery bool, logSlowTime int64) (*DB, error){
+func InitDB() (*DB, error){
     //fmt.Println("InitDB")
+    conf := InitConfig()
+    host := conf.GetValue("db", "host")
+    port := conf.GetValue("db", "port")
+    user := conf.GetValue("db", "user")
+    pass := conf.GetValue("db", "pass")
+    name := conf.GetValue("db", "name")
+    logSlowQuery, _ := strconv.ParseBool(conf.GetValue("db", "log_slow_query")) 
+    logSlowTime, _ := strconv.ParseInt(conf.GetValue("db", "log_slow_time"), 0, 64) 
+    address := host+":"+port
 
     //db := new(DB)
     db := &DB{logSlowQuery:logSlowQuery, logSlowTime:logSlowTime}
@@ -220,6 +231,61 @@ func (this *DB) Update(table string, data map[string]string, where string) (stri
     return sql, err
 }
 
+// (写)拼凑一个sql语句批量插入多条记录数据
+func (this *DB) UpdateBatch(table string, data []map[string]string, index string) (string, error) {
+
+    sql := "Update `"+table+"` Set "
+    ids := []string{}
+    rows := map[string][]string {}
+
+    // 下面两段是拆解过程
+    //rows := map[string][]string {
+        //"channel":[]string {
+            //"When `plat_user_name` = 'test111' Then 'kkk5'",
+            //"When `plat_user_name` = 'test222' Then '360'",
+        //},
+        //"plat_name":[]string {
+            //"When `plat_user_name` = 'test111' Then 'kkk5_xxx'",
+            //"When `plat_user_name` = 'test222' Then '360_xxx'",
+        //},
+    //}
+
+    //rows["channel"] = []string{}
+    //rows["channel"] = append(rows["channel"], "When `plat_user_name` = 'test111' Then 'kkk5'")
+    //rows["channel"] = append(rows["channel"], "When `plat_user_name` = 'test222' Then '360'")
+    //rows["plat_name"] = []string{}
+    //rows["plat_name"] = append(rows["plat_name"], "When `plat_user_name` = 'test111' Then 'kkk5_xxx'")
+    //rows["plat_name"] = append(rows["plat_name"], "When `plat_user_name` = 'test222' Then '360_xxx'")
+
+    // 拼凑上面的Map结构出来
+    for _, d := range data {
+        ids = append(ids, d[index])
+        for k, v := range d {
+            if k != index {
+                str := "When `"+index+"` = '" + d[index]+"' Then '"+v+"'"
+                rows[k] = append(rows[k], str)
+            }
+        }
+    }
+    // 拼凑批量修改SQL语句
+    for k, v := range rows {
+        sql += "`"+k+"` = Case "
+        for _, vv := range v {
+            sql += " "+vv
+        }
+        sql += " Else `"+k+"` End, "
+    }
+    // 拼凑Where条件
+    join := "'"+strings.Join(ids, "', '")+"'"
+    where := " Where `"+index+"` In ("+join+")"
+    // 完整的可执行SQL语句
+    sql = util.Substr(sql, 0, len(sql)-2) + where
+
+    _, res, err := this.Query(sql)
+    this.res = res
+    return sql, err
+}
+
 // 取得最后一次插入记录的自增ID值
 func (this *DB) InsertId() uint64 {
     return this.res.InsertId()
@@ -229,3 +295,9 @@ func (this *DB) InsertId() uint64 {
 func (this *DB) AffectedRows() uint64 {
     return this.res.AffectedRows()
 }
+
+func (this *DB) Close() error {
+    err := this.Conn.Raw.Close()
+    return err
+}
+
