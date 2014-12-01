@@ -4,10 +4,10 @@ import (
     "fmt"
     "strconv"
     "github.com/garyburd/redigo/redis"
+    "github.com/owner888/epooll/conf"
 )
 
 func newRedisPool() *redis.Pool {
-    conf := InitConfig()
     poolNum, _ := strconv.Atoi(conf.GetValue("pool", "redis")) 
     fmt.Printf("初始化 Redis 连接池，连接数：%d \n", poolNum)
     return &redis.Pool{
@@ -33,7 +33,6 @@ func newRedisPool() *redis.Pool {
 //redisDB := RedisConn.Get()
 
 func newMysqlPool() *ConnPool {
-    conf := InitConfig()
     poolNum, _ := strconv.Atoi(conf.GetValue("pool", "mysql")) 
     fmt.Printf("初始化 Mysql 连接池，连接数：%d \n", poolNum)
     return &ConnPool{

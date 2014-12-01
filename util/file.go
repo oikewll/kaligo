@@ -11,8 +11,12 @@ import (
 	"regexp"
 )
 
-var PATH_ROOT = SelfDir()
-var PATH_DATA = SelfDir()+"/data"
+//var PATH_ROOT = SelfDir()
+//var PATH_DATA = SelfDir()+"/data"
+var (
+    PATH_ROOT string
+    PATH_DATA string
+)
 
 // SelfPath gets compiled executable file absolute path
 func SelfPath() string {
@@ -90,7 +94,7 @@ func PutFile(file string, format string, args ...interface{}) (bool, error) {
 }
 
 func GetFile(file string) (string, error) {
-    
+
     f, err := os.Open(file)
     if err != nil {
         // 抛出异常

@@ -12,6 +12,7 @@ import (
     "strconv"
     "sort"
     "github.com/owner888/epooll/util"
+    "github.com/owner888/epooll/conf"
     "github.com/ziutek/mymysql/autorc" 
 	"github.com/ziutek/mymysql/mysql"
     //_ "github.com/ziutek/mymysql/native"    // 普通模式
@@ -30,7 +31,6 @@ type DB struct {
 //func InitDB(address, user, pass, name string, logSlowQuery bool, logSlowTime int64) (*DB, error){
 func InitDB() (*DB, error){
     //fmt.Println("InitDB")
-    conf := InitConfig()
     host := conf.GetValue("db", "host")
     port := conf.GetValue("db", "port")
     user := conf.GetValue("db", "user")
@@ -56,10 +56,21 @@ func (this *DB) slowQueryLog(sql string, queryTime int64) {
     }
 }
 
+// 记录慢查询日志
+func (this *DB) errorSqlLog(sql string, err error) {
+    msg  := time.Now().Format("2006-01-02 15:04:05")+" -- "+sql+"\n"+fmt.Sprintf("%v", err);
+    if ok, err := util.WriteLog("error_sql.log", msg); !ok {
+        log.Print(err)
+    }
+}
+
 // 执行一条语句(读 + 写)
 func (this *DB) Query(sql string) ([]mysql.Row, mysql.Result, error){
     startTime := time.Now().UnixNano()
     rows, res, err := this.Conn.Query(sql) 
+    if err != nil {
+        this.errorSqlLog(sql, err)
+    }
     //endTime := time.Now().Unix() - startTime
     //endTime := (time.Now().UnixNano() - 1412524713953787006) / 1000000000
     queryTime := (time.Now().UnixNano() - startTime) / 1000000000

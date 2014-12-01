@@ -5,6 +5,7 @@ import (
     "fmt"
     "log"
     "io"
+    "os"
     "strings"
     "reflect"
     "runtime"
@@ -12,6 +13,7 @@ import (
     "time"
     "sync"
     "github.com/owner888/epooll/util"
+    "github.com/owner888/epooll/conf"
 )
 
 // 定义当前package中使用的全局变量
@@ -88,15 +90,16 @@ func DelTimer(name string) bool{
 func Run() {
     runtime.GOMAXPROCS(runtime.NumCPU());
     http.HandleFunc("/", loadController)
-    conf := InitConfig()
+
+    confFile := "conf/app.ini"
+    if len(os.Args) > 1 {
+        confFile = os.Args[1]
+    }
+    conf.InitConfig(confFile)
     addr := conf.GetValue("http", "addr") 
     port := conf.GetValue("http", "port") 
-    if addr == "no value" {
-        addr = ""
-    }
-    if port == "no value" {
-        port = "9527"
-    }
+    util.PATH_ROOT = conf.GetValue("base", "path_root")
+    util.PATH_DATA = util.PATH_ROOT + "/data"
 
     str := util.Colorize(fmt.Sprintf("[I] Running on %s:%s", addr, port), "note")
     log.Printf(str)

@@ -1,5 +1,10 @@
 package util
 
+import (
+    "time"
+    "math/rand"
+)
+
 // 用法如下：
 // sql = util.Substr(sql, 0, len(sql)-2)
 func Substr(str string, start, length int) string {
@@ -32,3 +37,7 @@ func Substr(str string, start, length int) string {
     return string(rs[start:end])
 }
 
+func RandNum() int{
+    r := rand.New(rand.NewSource(time.Now().UnixNano()))
+    return r.Intn(100) 
+}
