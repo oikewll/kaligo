@@ -5,7 +5,6 @@ import (
     "fmt"
     "log"
     "io"
-    "os"
     "strings"
     "reflect"
     "runtime"
@@ -91,15 +90,8 @@ func Run() {
     runtime.GOMAXPROCS(runtime.NumCPU());
     http.HandleFunc("/", loadController)
 
-    confFile := "conf/app.ini"
-    if len(os.Args) > 1 {
-        confFile = os.Args[1]
-    }
-    conf.InitConfig(confFile)
     addr := conf.GetValue("http", "addr") 
     port := conf.GetValue("http", "port") 
-    util.PATH_ROOT = conf.GetValue("base", "path_root")
-    util.PATH_DATA = util.PATH_ROOT + "/data"
 
     str := util.Colorize(fmt.Sprintf("[I] Running on %s:%s", addr, port), "note")
     log.Printf(str)

@@ -15,13 +15,27 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+    "fmt"
 )
 
 var (
+    PATH_ROOT string
+    PATH_DATA string
 	confFile string                         //your ini file path directory+file
 	confList []map[string]map[string]string //configuration information slice
 )
 
+// 一导入conf package就初始化变量
+func init() {
+    confFile := "conf/app.ini"
+    if len(os.Args) > 1 {
+        confFile = os.Args[1]
+    }
+    InitConfig(confFile)
+    PATH_ROOT = GetValue("base", "path_root")
+    fmt.Println(PATH_ROOT)
+    PATH_DATA = PATH_ROOT + "/data"
+}
 //Create an empty configuration file
 func InitConfig(filename string) {
 	confFile = filename

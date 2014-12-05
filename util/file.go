@@ -9,14 +9,11 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+    "github.com/owner888/epooll/conf"
 )
 
 //var PATH_ROOT = SelfDir()
 //var PATH_DATA = SelfDir()+"/data"
-var (
-    PATH_ROOT string
-    PATH_DATA string
-)
 
 // SelfPath gets compiled executable file absolute path
 func SelfPath() string {
@@ -47,7 +44,7 @@ func FileExists(name string) bool {
  */
 func WriteLog(filename string, format string) (bool, error) {
 
-    logfile := PATH_DATA+"/log/"+filename+".log";
+    logfile := conf.PATH_DATA+"/log/"+filename+".log";
     f, err := os.OpenFile(logfile, os.O_RDWR | os.O_APPEND |  os.O_CREATE, 0777)
     if err != nil {
         return false, err
