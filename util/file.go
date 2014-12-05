@@ -80,12 +80,13 @@ func PutFile(file string, format string, args ...interface{}) (bool, error) {
         }
     }
 
+    // f的类型是*os.File，所以即使上面因为权限问题等问题导致f为nil了，一样可以Close()，因为*os.File是有Close()方法的，可以Close()多少次都行
+    // 如果err不为空，说明f本来就是Close()的，虽然Close()也不会报错，但是直接返回还是省点资源的，所以这里直接就return吧
+    // 如果是http抓取网页的 res.Body.Close() 就不同了，res.Body为空是不能Close()的，会报空指针异常，因为本来就是空指针
+    // http://stackoverflow.com/questions/16280176/go-panic-runtime-error-invalid-memory-address-or-nil-pointer-dereference
     if err != nil {
         return false, err
     }
-
-    // 要先检查nil是否为空，才能关闭打开的文件，否则报错
-    // http://stackoverflow.com/questions/16280176/go-panic-runtime-error-invalid-memory-address-or-nil-pointer-dereference
     defer f.Close()
 
     f.WriteString(format)
