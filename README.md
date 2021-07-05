@@ -120,7 +120,7 @@ v1.0: 本地的MVC框架，实现控制器
         kaligo.Router("index", &control.Index{})
         // 设置静态路径，当用户访问 /static 的时候，就访问 static 目录下面的静态文件
         kaligo.SetStaticPath("/static", "static")
-        // 解析配置文件、编译模板、启动epooll模块、监听服务端口
+        // 解析配置文件、编译模板、启动模块、监听服务端口
         kaligo.Run()
     }
 
@@ -245,7 +245,7 @@ v1.0: 本地的MVC框架，实现控制器
 #### 原生SQL查询
     
     KaliGo框架数据库底层驱动使用的是mymysql，利用autorc的断开重连机制，加上channel实现了连接池，相比普通短连接方式，性能提升10倍以上
-    经过测试，epooll数据库每秒可并发读取数据库2W次，写入数据库8K次，读取速度接近Redis+连接池方式，可以说有了这个框架，对Mysql读取出来的数据进行缓存毫无意义
+    经过测试，数据库每秒可并发读取数据库2W次，写入数据库8K次，读取速度接近Redis+连接池方式，可以说有了这个框架，对Mysql读取出来的数据进行缓存毫无意义
     原生用法请参考：
     https://github.com/ziutek/mymysql    
 
