@@ -110,18 +110,18 @@ v1.0: 本地的MVC框架，实现控制器
     package main
 
     import (
-        "epoollprojects/control"
-        "github.com/owner888/epooll"
+        "kaligoprojects/control"
+        "github.com/owner888/kaligo"
     )
 
     func main() {
         // 设置路由
         // 当用户访问 /?ct=index&ac=login 的时候就是调用了 control/ctl_index.go 里面的login方法
-        epooll.Router("index", &control.Index{})
+        kaligo.Router("index", &control.Index{})
         // 设置静态路径，当用户访问 /static 的时候，就访问 static 目录下面的静态文件
-        epooll.SetStaticPath("/static", "static")
+        kaligo.SetStaticPath("/static", "static")
         // 解析配置文件、编译模板、启动epooll模块、监听服务端口
-        epooll.Run()
+        kaligo.Run()
     }
 
 ### Example 2 - Controller 编写
@@ -129,7 +129,7 @@ v1.0: 本地的MVC框架，实现控制器
     package control
 
     import (
-        "github.com/owner888/epooll"
+        "github.com/owner888/kaligo"
         "net/http"
         "io"
     )
@@ -157,7 +157,7 @@ v1.0: 本地的MVC框架，实现控制器
 #### 在控制器ctl_index.go 中使用model 
 
     import (
-        "epoollprojects/model"
+        "kaligoprojects/model"
         "net/http"
         "io"
     )
@@ -177,10 +177,10 @@ v1.0: 本地的MVC框架，实现控制器
     <html>
         <head>
             <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-            <title>Epooll</title>
+            <title>KaliGo</title>
         </head>
         <body>
-            <h1>Hello Epooll Go!</h1>
+            <h1>Hello Kali Go!</h1>
             <p>Username: {{.username}}</p>
             <p>
                 <ul>
@@ -198,7 +198,7 @@ v1.0: 本地的MVC框架，实现控制器
 
     import (
         "net/http"
-        "github.com/owner888/epooll"
+        "github.com/owner888/kaligo"
         "io"
         "html/template"
     )
@@ -236,7 +236,7 @@ v1.0: 本地的MVC框架，实现控制器
     │   └── js
 
     // 在项目初始文件 main.go 里面设置静态文件处理目录
-    epooll.SetStaticPath("/static", "static")
+    kaligo.SetStaticPath("/static", "static")
 
     这样用户访问 URL http://localhost/static/123.txt 则会请求 static 目录下的 123.txt 文件
 
@@ -244,7 +244,7 @@ v1.0: 本地的MVC框架，实现控制器
 
 #### 原生SQL查询
     
-    epooll框架数据库底层驱动使用的是mymysql，利用autorc的断开重连机制，加上channel实现了连接池，相比普通短连接方式，性能提升10倍以上
+    KaliGo框架数据库底层驱动使用的是mymysql，利用autorc的断开重连机制，加上channel实现了连接池，相比普通短连接方式，性能提升10倍以上
     经过测试，epooll数据库每秒可并发读取数据库2W次，写入数据库8K次，读取速度接近Redis+连接池方式，可以说有了这个框架，对Mysql读取出来的数据进行缓存毫无意义
     原生用法请参考：
     https://github.com/ziutek/mymysql    
@@ -254,7 +254,7 @@ v1.0: 本地的MVC框架，实现控制器
 ##### Select
     
     // 从连接池获取一个连接，不需要Close，Sql执行完框架会自动回收连接到池里
-    db, err := epooll.MysqlConn.Get().(*epooll.DB)
+    db, err := kaligo.MysqlConn.Get().(*kaligo.DB)
 
     // 单条记录查询,GetOne方法会自动给sql加上Limit 1
     row := db.GetOne("Select `name`, `pass` From `user`")
@@ -369,13 +369,13 @@ v1.0: 本地的MVC框架，实现控制器
 ### Example 7 - 定时器
 
     // 增加定时任务，设置时间小于当前时间则不执行，大于当前时间则当到达时间时执行
-    epooll.AddTasker("default", &control.Task{}, "import_database", "2014-10-15 15:33:00")
+    kaligo.AddTasker("default", &control.Task{}, "import_database", "2014-10-15 15:33:00")
     // 删除定时任务
-    epooll.DelTasker("default")
+    kaligo.DelTasker("default")
     // 增加定时器，每5秒运行一次
-    epooll.AddTimer("default", &control.Timer{}, "Import_database_login_v2", 5000)
+    kaligo.AddTimer("default", &control.Timer{}, "Import_database_login_v2", 5000)
     // 删除定时器
-    epooll.DelTimer("default")
+    kaligo.DelTimer("default")
 
 ## To do
 
@@ -389,14 +389,14 @@ v1.0: 本地的MVC框架，实现控制器
 8. redis访问图表、mysql访问图表、请求统计信息、定时任务(跑一个gotinue会不会影响性能？)
 
 ## Documentation
-* [control](http://www.godoc.org/pkg/github.com/owner888/epooll/control)
-* [db](http://www.godoc.org/pkg/github.com/owner888/epooll/db)
-* [redis](http://www.godoc.org/pkg/github.com/owner888/epooll/redis)
+* [control](http://www.godoc.org/pkg/github.com/owner888/kaligo/control)
+* [db](http://www.godoc.org/pkg/github.com/owner888/kaligo/db)
+* [redis](http://www.godoc.org/pkg/github.com/owner888/kaligo/redis)
 
 ## Contact US
 QQ:525773145
 
 ## LICENSE
 
-epooll is licensed under the Apache Licence, Version 2.0
+KaliGo is licensed under the Apache Licence, Version 2.0
 (http://www.apache.org/licenses/LICENSE-2.0.html).
