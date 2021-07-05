@@ -36,15 +36,15 @@ v1.0: 本地的MVC框架，实现控制器
 
 ## Installation
 
-    $ go get github.com/owner888/epooll
+    $ go get github.com/owner888/kaligo
 
 ## Examples
 
 ### 新建项目
 
     $ cd $GOPATH/src/
-    $ mkdir epoollprojects
-    $ cd epoollprojects
+    $ mkdir kaligoprojects
+    $ cd kaligoprojects
     $ tree
         ├── conf
         │   └── app.ini
