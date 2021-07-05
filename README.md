@@ -1,6 +1,6 @@
 ## KaliGo v1.2.4 (2014-10-12)
 
-epooll is an open-source, high-performance, modularity, full-stack web framework.
+KaliGo is an open-source, high-performance, modularity, full-stack web framework.
 
 More info [doc.kaligo.com](https://doc.kaligo.com)
 
