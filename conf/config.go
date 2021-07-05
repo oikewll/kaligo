@@ -1,9 +1,8 @@
 /**
  * Read the configuration file
  *
- * @copyright           (C) 2014  seatle
- * @lastmodify          2014-12-01
- * @website		http://www.epooll.com
+ * @copyright   (C) 2014  seatle
+ * @lastmodify  2014-12-01
  *
  */
 

@@ -1,4 +1,4 @@
-package epooll
+package kaligo
 
 import (
     "fmt"
@@ -11,8 +11,8 @@ import (
     //"reflect"
     "strconv"
     "sort"
-    "github.com/owner888/epooll/util"
-    "github.com/owner888/epooll/conf"
+    "github.com/owner888/kaligo/util"
+    "github.com/owner888/kaligo/conf"
     "github.com/ziutek/mymysql/autorc" 
 	"github.com/ziutek/mymysql/mysql"
     //_ "github.com/ziutek/mymysql/native"    // 普通模式

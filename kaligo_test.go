@@ -1,7 +1,7 @@
-package epooll
+package kaligo
 
 //import(
-    //"epooll/control"
+    //"kaligo/control"
     //"testing"
 //)
 
