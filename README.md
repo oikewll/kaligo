@@ -1,16 +1,16 @@
-## Epooll v1.2.4 (2014-10-12)
+## KaliGo v1.2.4 (2014-10-12)
 
 epooll is an open-source, high-performance, modularity, full-stack web framework.
 
-More info [epooll.com](http://www.epooll.com)
+More info [doc.kaligo.com](https://doc.kaligo.com)
 
-* [Changelog](https://github.com/owner888/epooll/blob/master/README.md#changelog)
-* [Installing](https://github.com/owner888/epooll/blob/master/README.md#installing)
-* [Testing](https://github.com/owner888/epooll/blob/master/README.md#testing)
-* [Examples](https://github.com/owner888/epooll/blob/master/README.md#examples)
-* [To do](https://github.com/owner888/epooll/blob/master/README.md#to-do)
-* [Known bugs](https://github.com/owner888/epooll/blob/master/README.md#known-bugs)
-* [Documentation](https://github.com/owner888/epooll/blob/master/README.md#documentation)
+* [Changelog](https://github.com/owner888/kaligo/blob/master/README.md#changelog)
+* [Installing](https://github.com/owner888/kaligo/blob/master/README.md#installing)
+* [Testing](https://github.com/owner888/kaligo/blob/master/README.md#testing)
+* [Examples](https://github.com/owner888/kaligo/blob/master/README.md#examples)
+* [To do](https://github.com/owner888/kaligo/blob/master/README.md#to-do)
+* [Known bugs](https://github.com/owner888/kaligo/blob/master/README.md#known-bugs)
+* [Documentation](https://github.com/owner888/kaligo/blob/master/README.md#documentation)
 
 ## Changelog
 
