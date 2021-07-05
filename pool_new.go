@@ -1,10 +1,10 @@
-package epooll
+package kaligo
 
 import (
     "fmt"
     "strconv"
     "github.com/garyburd/redigo/redis"
-    "github.com/owner888/epooll/conf"
+    "github.com/owner888/kaligo/conf"
 )
 
 func newRedisPool() *redis.Pool {
@@ -27,7 +27,7 @@ func newRedisPool() *redis.Pool {
 }
 
 // 不是当前package 的，每次都会重新初始化
-//redisDB := epooll.NewRedisPool()
+//redisDB := kaligo.NewRedisPool()
 
 // 其他package的，用下面调用
 //redisDB := RedisConn.Get()

@@ -1,5 +1,5 @@
 // 用读写锁实现了 安全的map
-package epooll
+package kaligo
  
 import (
     "sync"

@@ -1,4 +1,4 @@
-package epooll
+package kaligo
 
 import (
     "net/http"
@@ -11,8 +11,8 @@ import (
     "path"
     "time"
     "sync"
-    "github.com/owner888/epooll/util"
-    "github.com/owner888/epooll/conf"
+    "github.com/owner888/kaligo/util"
+    "github.com/owner888/kaligo/conf"
 )
 
 // 定义当前package中使用的全局变量

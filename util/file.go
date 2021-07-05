@@ -9,7 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
-    "github.com/owner888/epooll/conf"
+    "github.com/owner888/kaligo/conf"
 )
 
 //var PATH_ROOT = SelfDir()

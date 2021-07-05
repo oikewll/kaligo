@@ -7,7 +7,7 @@
  *
  */
 
-package epooll
+package kaligo
 
 import (
 	"bufio"
