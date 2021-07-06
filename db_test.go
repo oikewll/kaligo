@@ -3,8 +3,13 @@ package kaligo
 import(
     "testing"
     "fmt"
+    //"strconv"
     //"reflect"
-    "github.com/ziutek/mymysql/autorc" 
+    "database/sql"
+    //"kaligo/conf"
+    //"kaligo/util"
+    //_ "github.com/go-sql-driver/mysql"
+    //"github.com/ziutek/mymysql/autorc" 
     //"github.com/ziutek/mymysql/mysql" 
     //"github.com/ziutek/mymysql/native" // Native engine 
     // _ "github.com/ziutek/mymysql/thrsafe" // Thread safe engine 
@@ -12,71 +17,60 @@ import(
 
 //func initConn() (*autorc.Conn, error) {
 func initConn() (interface{}, error) {
-    conn := autorc.New("tcp", "", "localhost:3306", "root", "root", "test")
-    // Register initialisation commands
-	conn.Register("set names utf8")
-    fmt.Println(" --- autorc --- ", conn.Raw, " --- ")
+    //conn := autorc.New("tcp", "", "localhost:3306", "root", "root", "test")
+    //conn.Register("set names utf8")
+
+    conn, err := sql.Open("mysql", "root:root@localhost:3306/test")
+    checkErr(err)
+    //fmt.Println(" --- autorc --- ", conn.Raw, " --- ")
     //rows, res, err := db.Query("Select * From `test` Limit 1")
-    //fmt.Println(rows)
-    //fmt.Println(res)
-    //fmt.Println(err)
+    //fmt.Println(rows, res, err)
     return conn, nil
 }
 
-var dbPool = new(ConnPool)
-var err = dbPool.InitPool(3, initConn)
 
-func Do() {
+func Test_DB(t *testing.T) {
 
-    db := dbPool.Get().(*autorc.Conn)
-    //fmt.Println(db)
-    defer dbPool.Release(db)
-    _, res, _ := db.Query("Select * From `test` Limit 1")
-    fmt.Println(res)
-}
+    db, err := New()
 
-func Test_Pool(t *testing.T) {
-    Do()
-    //for i := 0; i <= 1000; i++ {
-        //Do()
-    //}
+    defer db.Close()
 
-    //count := len(dbPool.conn)
-    //for i := 0; i < count; i++ {
-        //fmt.Println(<-dbPool.conn)
-    //}
-}
-/*func Test_DB(t *testing.T) {
-    //db := &DB{} 
-    db := InitDB()
-    
-    data := map[string]string {
-        "name": "nam'e111",
-        "pass": "pas\"s111",
-        //"sex":"111",
+    if err != nil {
+        t.Fatal(err)
     }
-    //if ok, err := db.Update("test", data, "Where `id`=1"); !ok {
+
+    //data := map[string]string {
+        //"name": "nam'e111",
+        //"pass": "pas\"s111",
+        //"sex":"1",
+    //}
+    //t.Fatal(data)   // 输出并中断程序
+
+    //if ok, err := db.Update("user", data, "`id`=1"); !ok {
         //fmt.Println(err)
     //} else {
         //fmt.Println(db.AffectedRows())
     //}
 
-    if ok, err := db.Insert("test", data); !ok {
-        fmt.Println(err)
-    } else {
-        fmt.Println(db.InsertId())
-    }
+    //if ok, err := db.Insert("user", data); !ok {
+        //fmt.Println(err)
+    //} else {
+        //fmt.Println(db.InsertID())
+    //}
 
-    //sql := "Select a.id,a.name,b.date From `test` a Left Join `test_part` b On a.id=b.test_id; "
+    //sql := "Select a.id,a.name,b.date From `test` a Left Join `test_part` b On a.id=b.test_id;"
+    sql := "Select * From user"
+
     //row, _ := db.GetOne(sql)
+    //fmt.Println(row)
     //fmt.Println(row["id"], " --- ", row["name"])
 
-    //for _, v := range results {
-        //fmt.Println("id = ", v["id"], " --- name = ", v["name"])
-    //}
-    //fmt.Println(results)
+    rows, _ := db.GetAll(sql)
     //fmt.Println(rows)
+    for _, v := range rows {
+        fmt.Println("id = ", v["id"], " --- name = ", v["name"])
+    }
 
     //log.Print(db, err)
 
-}*/
+}

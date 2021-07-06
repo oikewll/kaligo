@@ -10,6 +10,7 @@ var (
     tpls map[string]string 
 )
 
+// Assign is the function for set the corresponding value of the key value, if not add, if there is a key change
 func Assign(key string, val interface{}) bool {
 
     if len(args) == 0 {
@@ -19,6 +20,7 @@ func Assign(key string, val interface{}) bool {
     return true
 }
 
+// Layout is the function for set the corresponding value of the key value, if not add, if there is a key change
 func Layout(key string, val string) bool {
 
     if len(tpls) == 0 {
@@ -28,7 +30,7 @@ func Layout(key string, val string) bool {
     return true
 }
 
-
+// Display is the function for parse template files
 func Display(w http.ResponseWriter, tpl string) error {
 
     t, err := template.ParseFiles("template/"+tpl)
