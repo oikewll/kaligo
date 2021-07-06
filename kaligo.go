@@ -11,8 +11,8 @@ import (
     "path"
     "time"
     "sync"
-    "github.com/owner888/kaligo/util"
-    "github.com/owner888/kaligo/conf"
+    "kaligo/util"
+    "kaligo/conf"
 )
 
 // 定义当前package中使用的全局变量
@@ -24,7 +24,7 @@ var (
     Mutex sync.Mutex
 )
 
-// 设置定时任务
+// AddTasker is the function for add tasker
 func AddTasker(name string, control interface{}, action string, taskTime string) {
 
     llen := len(Tasker)
@@ -43,12 +43,13 @@ func AddTasker(name string, control interface{}, action string, taskTime string)
         fmt.Println("定时任务 --- [ "+name+" ] --- 小于当前时间，将不会被执行")
     }
 }
-// 删除定时任务
+
+// DelTasker is the function for delete tasker
 func DelTasker(name string) bool{
     return Tasker[name].Stop()
 }
 
-// 设置闹钟，间隔单位为微秒
+// AddTimer is the function for add timer, The interval is in microseconds
 func AddTimer(name string, control interface{}, action string, duration time.Duration) {
 
     llen := len(Timer)
@@ -74,7 +75,8 @@ func AddTimer(name string, control interface{}, action string, duration time.Dur
         }
     } ()
 }
-// 删除闹钟
+
+// DelTimer is the function for delete timer
 func DelTimer(name string) bool{
     if timer, ok := Timer[name]; ok {
         timer.Stop()
@@ -85,7 +87,7 @@ func DelTimer(name string) bool{
     return true
 }
 
-// 启动Web服务
+// Run is the function for start the web service
 func Run() {
     runtime.GOMAXPROCS(runtime.NumCPU());
     http.HandleFunc("/", loadController)
@@ -102,7 +104,7 @@ func Run() {
 	}
 }
 
-// 配置动态路由
+// Router is the function for configure dynamic routing
 func Router(ct string, control interface{}) {
     if controlMapping == nil {
         controlMapping = make(map[string]interface{})
@@ -110,7 +112,7 @@ func Router(ct string, control interface{}) {
     controlMapping[ct] = control
 }
 
-// 配置静态路由
+// SetStaticPath is the function forsconfigure static file path
 func SetStaticPath(key string, value string) {
     if len(StaticDir) == 0 {
         StaticDir = make(map[string]string)
@@ -118,7 +120,7 @@ func SetStaticPath(key string, value string) {
     StaticDir[key] = value
 }
 
-// 处理静态文件
+// Processing static files
 func staticServer(w http.ResponseWriter, r *http.Request) bool {
 
     // 如果没有设置静态路径
@@ -159,7 +161,7 @@ func staticServer(w http.ResponseWriter, r *http.Request) bool {
     return false
 }
 
-// 载入控制器
+// Load controller
 func loadController(w http.ResponseWriter, r *http.Request) { 
 
     //r.ParseForm()
@@ -199,7 +201,7 @@ func loadController(w http.ResponseWriter, r *http.Request) {
 // 反射调用函数, 注意被调用的object要带 &，表示指针传递
 func callMethod(object interface{}, methodName string, args ...interface{}) {
     params := make([]reflect.Value, len(args))
-    for i, _ := range args {
+    for i := range args {
         params[i] = reflect.ValueOf(args[i])
     }
     method := reflect.ValueOf(object).MethodByName(methodName)

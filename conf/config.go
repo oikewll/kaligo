@@ -2,7 +2,7 @@
  * Read the configuration file
  *
  * @copyright   (C) 2014  seatle
- * @lastmodify  2014-12-01
+ * @lastmodify  2021-07-06
  *
  */
 
@@ -18,29 +18,30 @@ import (
 )
 
 var (
-    PATH_ROOT string
-    PATH_DATA string
-	confFile string                         //your ini file path directory+file
-	confList []map[string]map[string]string //configuration information slice
+    // PathRoot is PathRoot
+    PathRoot string
+    // PathData is PathData
+    PathData string
+	//confFile string                         // Your ini file path directory+file
+	confList []map[string]map[string]string // Configuration information slice
 )
 
-// 一导入conf package就初始化变量
+// 一导入conf package 就初始化变量
 func init() {
     confFile := "conf/app.ini"
-    if len(os.Args) > 1 {
-        confFile = os.Args[1]
-    }
+    //if len(os.Args) > 1 {
+        //confFile = os.Args[1]
+    //}
     InitConfig(confFile)
-    PATH_ROOT = GetValue("base", "path_root")
-    fmt.Println(PATH_ROOT)
-    PATH_DATA = PATH_ROOT + "/data"
+    PathRoot = GetValue("base", "path_root")
+    fmt.Println(PathRoot)
+    PathData = PathRoot + "/data"
 }
-//Create an empty configuration file
-func InitConfig(filename string) {
-	confFile = filename
-    err := ReadList()
-    if err != nil {
 
+// InitConfig is the function for create an empty configuration file
+func InitConfig(confFile string) {
+    err := ReadList(confFile)
+    if err != nil {
         SetValue("http", "addr", "0.0.0.0")
         SetValue("http", "port", "9527")
         path, _ := filepath.Abs(os.Args[0])
@@ -50,7 +51,7 @@ func InitConfig(filename string) {
     }
 }
 
-//To obtain corresponding value of the key values
+// GetValue is the function for obtain corresponding value of the key values
 func GetValue(section, name string) string {
 
 	for _, v := range confList {
@@ -63,7 +64,7 @@ func GetValue(section, name string) string {
 	return ""
 }
 
-//Set the corresponding value of the key value, if not add, if there is a key change
+// SetValue is the function for set the corresponding value of the key value, if not add, if there is a key change
 func SetValue(section, key, value string) bool {
 
 	var ok bool
@@ -85,22 +86,20 @@ func SetValue(section, key, value string) bool {
 
 	if ok {
 		confList[i][section][key] = value
-		return true
-	} else {
-		conf[section] = make(map[string]string)
-		conf[section][key] = value
-		confList = append(confList, conf)
-		return true
-	}
+        return true
+    }
 
-	return false
+    conf[section] = make(map[string]string)
+    conf[section][key] = value
+    confList = append(confList, conf)
+    return true
 }
 
-//Delete the corresponding key values
+// DeleteValue is the function for delete the corresponding key values
 func DeleteValue(section, name string) bool {
 
 	for i, v := range confList {
-		for key, _ := range v {
+		for key := range v {
 			if key == section {
 				delete(confList[i][key], name)
 				return true
@@ -110,8 +109,8 @@ func DeleteValue(section, name string) bool {
 	return false
 }
 
-//List all the configuration file
-func ReadList() (err error) {
+// ReadList is the function for list all the configuration file
+func ReadList(confFile string) (err error) {
 
 	file, err := os.Open(confFile)
 	if err != nil {
@@ -121,42 +120,41 @@ func ReadList() (err error) {
 	var data map[string]map[string]string
 	var section string
 	buf := bufio.NewReader(file)
-	for {
-		l, err := buf.ReadString('\n')
-		line := strings.TrimSpace(l)
-		if err != nil {
-			if err != io.EOF {
+    for {
+        l, err := buf.ReadString('\n')
+        line := strings.TrimSpace(l)
+        if err != nil {
+            if err != io.EOF {
                 return err
-			}
-			if len(line) == 0 {
-				break
-			}
-		}
-		switch {
-		case strings.Index(line, "#") >= 0 || strings.Index(line, ";") >= 0:
-		case len(line) == 0:
-		case line[0] == '[' && line[len(line)-1] == ']':
-			section = strings.TrimSpace(line[1 : len(line)-1])
-			data = make(map[string]map[string]string)
-			data[section] = make(map[string]string)
-		default:
-			i := strings.IndexAny(line, "=")
-			value := strings.TrimSpace(line[i+1 : len(line)])
-			data[section][strings.TrimSpace(line[0:i])] = value
-			if uniquappend(section) == true {
-				confList = append(confList, data)
-			}
-		}
-
-	}
+            }
+            if len(line) == 0 {
+                break
+            }
+        }
+        switch {
+        case strings.Index(line, "#") >= 0 || strings.Index(line, ";") >= 0:
+        case len(line) == 0:
+        case line[0] == '[' && line[len(line)-1] == ']':
+            section = strings.TrimSpace(line[1 : len(line)-1])
+            data = make(map[string]map[string]string)
+            data[section] = make(map[string]string)
+        default:
+            i := strings.IndexAny(line, "=")
+            value := strings.TrimSpace(line[i+1:])
+            data[section][strings.TrimSpace(line[0:i])] = value
+            if uniquappend(section) == true {
+                confList = append(confList, data)
+            }
+        }
+    }
 
 	return err
 }
 
-//Ban repeated appended to the slice method
+// uniquappend is the function for ban repeated appended to the slice method
 func uniquappend(conf string) bool {
 	for _, v := range confList {
-		for k, _ := range v {
+		for k := range v {
 			if k == conf {
 				return false
 			}

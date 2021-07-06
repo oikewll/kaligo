@@ -9,7 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
-    "github.com/owner888/kaligo/conf"
+    "kaligo/conf"
 )
 
 //var PATH_ROOT = SelfDir()
@@ -44,7 +44,7 @@ func FileExists(name string) bool {
  */
 func WriteLog(filename string, format string) (bool, error) {
 
-    logfile := conf.PATH_DATA+"/log/"+filename+".log";
+    logfile := conf.PathData+"/log/"+filename+".log";
     f, err := os.OpenFile(logfile, os.O_RDWR | os.O_APPEND |  os.O_CREATE, 0777)
     if err != nil {
         return false, err

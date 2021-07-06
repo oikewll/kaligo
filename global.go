@@ -4,7 +4,8 @@ import (
 )
 
 var (
-    GlobalCount int 
+    // GlobalCount is ...
+    GlobalCount int
 )
 
 
