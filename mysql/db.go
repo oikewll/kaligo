@@ -6,21 +6,21 @@
  *
  */
 
-package kaligo
+package mysql
 
 import (
     "fmt"
     "log"
     "regexp"
     "strings"
-    "strconv"
     "time"
     "sort"
     //"container/list"
     //"sync"
     //"reflect"
-    "kaligo/conf"
-    "kaligo/util"
+    "github.com/owner888/kaligo"
+    "github.com/owner888/kaligo/conf"
+    "github.com/owner888/kaligo/util"
     "database/sql"
     _ "github.com/go-sql-driver/mysql"  // 空白导入必须在main.go、testing，否则就必须在这里写注释
     //"github.com/owner888/mymysql/autorc"
@@ -31,73 +31,45 @@ import (
 
 // DB is the struct for MySQL connection handler
 type DB struct {
+    Conn *Conn    // MySQL connection
+    //rows Rows
+
+    ////Conn *autorc.Conn
+    ////res mysql.Result
+    //Conn *sql.DB    // MySQL connection
+    //rows sql.Rows
+    res sql.Result
+    initCmds []string   // MySQL commands/queries executed after connect
     logSlowQuery bool
     logSlowTime int64
-    //Conn *autorc.Conn
-    //res mysql.Result
-    Conn *sql.DB    // MySQL connection
-    rows sql.Rows
-    res sql.Result
 }
 
-// New is the function for create an database operation handle
+
+// New is the function for Create new MySQL handler. 
 // (读+写)连接数据库+选择数据库
-func New() (*DB, error){
-    //fmt.Println("InitDB")
-    host := conf.GetValue("db", "host")
-    port := conf.GetValue("db", "port")
-    user := conf.GetValue("db", "user")
-    pass := conf.GetValue("db", "pass")
-    name := conf.GetValue("db", "name")
-    logSlowQuery, _ := strconv.ParseBool(conf.GetValue("db", "log_slow_query")) 
-    logSlowTime, _ := strconv.ParseInt(conf.GetValue("db", "log_slow_time"), 0, 64) 
-
-    db := &DB{
-        logSlowQuery:logSlowQuery, 
-        logSlowTime:logSlowTime,
+func New() *DB {
+    c := NewConn()
+    db := DB{
+        Conn: c,
+        logSlowQuery: kaligo.StrToBool(conf.GetValue("db", "log_slow_query")),
+        logSlowTime:  kaligo.StrToInt64(conf.GetValue("db", "log_slow_time")),
     }
 
-    connection := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=%s",
-		user,
-		pass,
-		host,
-		port,
-		name,
-		"utf8mb4",
-	)
-	//fmt.Println(connection)
-    //conn := autorc.New("tcp", "", address, user, pass, name) 
-    //conn.Register("set names utf8")
-    // 数据库的抽象，并不是真的数据库连接
-    conn, err := sql.Open("mysql", connection)
-    //checkErr(err)
-    if err != nil {
-        return db, nil
-    }
-    // 推出这个函数时不能关闭链接，否则其他调用的函数就无法执行 Query()、Exel() 方法 了
-    //defer db.Close()
+    return &db
+    //host := conf.GetValue("db", "host")
+    //port := conf.GetValue("db", "port")
+    //user := conf.GetValue("db", "user")
+    //pass := conf.GetValue("db", "pass")
+    //name := conf.GetValue("db", "name")
+    //logSlowQuery := kaligo.StrToBool( conf.GetValue("db", "log_slow_query"))
+    //logSlowTime  := kaligo.StrToInt64(conf.GetValue("db", "log_slow_time"))
+    //maxOpenConns := kaligo.StrToInt(  conf.GetValue("db", "max_open_conns"))
+    //maxIdleConns := kaligo.StrToInt(  conf.GetValue("db", "max_idle_conns"))
 
-    // See "Important settings" section.
-    conn.SetConnMaxLifetime(time.Minute * 3)
-    conn.SetMaxOpenConns(10)    // 数据库的最大连接数
-    conn.SetMaxIdleConns(10)    // 连接池中的保持连接的最大连接数
-
-    // 初始化一个数据库连接，sql.Open 的时候实际上是返回一个链接对象而已，并没有真的和mysql链接上
-    err = conn.Ping()
-    if err != nil {
-        fmt.Println("连接数据库失败", err.Error())
-        return db, nil
-    }
-    conn.Query("set names utf8");
-
-    db.Conn = conn
-    return db, nil
-}
-
-func checkErr(err error) {
-    if err != nil {
-        panic(err)
-    }
+    //db := &DB{
+        //logSlowQuery:logSlowQuery, 
+        //logSlowTime:logSlowTime,
+    //}
 }
 
 // slowQueryLog is the function for record the slow query log
@@ -113,7 +85,7 @@ func (db *DB) slowQueryLog(sql string, queryTime int64) {
     }
 }
 
-// 记录慢查询日志
+// 记录错误查询日志
 func (db *DB) errorSQLLog(sql string, err error) {
     msg := fmt.Sprintf("Time: %s --- %s --- %s \n",
 		time.Now().Format("2006-01-02 15:04:05"),
@@ -125,36 +97,31 @@ func (db *DB) errorSQLLog(sql string, err error) {
     }
 }
 
-
-// Escape ...: Escapes special characters in the txt, so it is safe to place returned string
-// to Query method.
-func (db *DB) Escape(txt string) string {
-	//return db.Conn.Escape(my, txt)
-    return txt
+// Register registers initialization commands.
+// This is workaround, see http://codereview.appspot.com/5706047
+func (db *DB) Register(query string) {
+	db.initCmds = append(db.initCmds, query)
 }
 
 // Query is the function for query
 // 执行一条语句(读 + 写)
-//func (db *DB) Query(sql string) ([]mysql.Row, mysql.Result, error){
-func (db *DB) Query(sql string) ([]sql.Row, sql.Result, error){
+//func (db *DB) Query(sql string) ([]mysql.Row, mysql.Result, error) {
+func (db *DB) Query(sql string) (*sql.Rows, error) {
     startTime := time.Now().UnixNano()
-    //rows, res, err := db.Conn.Query(sql) 
-    rows, res, err := db.Query(sql) 
+    rows, err := db.Conn.Query(sql) 
     if err != nil {
         db.errorSQLLog(sql, err)
     }
-    //endTime := time.Now().Unix() - startTime
-    //endTime := (time.Now().UnixNano() - 1412524713953787006) / 1000000000
     queryTime := (time.Now().UnixNano() - startTime) / 1000000000
 
     if queryTime > db.logSlowTime && db.logSlowQuery {
         db.slowQueryLog(sql, queryTime)
     }
 
-    return rows, res, err
+    return rows, err
 }
 
-// 提取数据表字段名称
+//// 提取数据表字段名称
 //func (db *DB) getFieldList(str string) ([]string) {
     //reg, _ := regexp.Compile(`map\[(.*?)\]`)
     //arr := reg.FindAllString(str, 2)
@@ -169,7 +136,7 @@ func (db *DB) Query(sql string) ([]sql.Row, sql.Result, error){
 
 // GetOne is the function for get one record
 // (读)直接从一个sql语句返回一条记录数据
-func (db *DB) GetOne(sql string) (map[string]string, error) {
+func (db *DB) GetOne(sql string) (row map[string]string, err error) {
     // 判断SQL语句是否包含 Limit 1
     reg, _ := regexp.Compile(`(?i:limit)`)
     if (!reg.MatchString(sql)) {
@@ -180,46 +147,57 @@ func (db *DB) GetOne(sql string) (map[string]string, error) {
     sql = fmt.Sprintf("%s Limit 1", sql)
     //fmt.Println(sql)
 
-    results, err := db.GetAll(sql)
-    //fmt.Println(results[0])
-    return results[0], err
+    // 非常重要：确保QueryRow之后调用Scan方法，否则持有的数据库链接不会被释放
+	//err := db.QueryRow(sqlStr, 1).Scan(&u.id, &u.name, &u.age)
+    rows, err := db.GetAll(sql)
+
+    if _, ok := rows[0]; ok {
+        row = rows[0]
+    }
+
+    //fmt.Println(row)
+    return row, err
 }
 
 // GetAll is the function for get all record
 // (读)直接从一个sql语句返回多条记录数据
-func (db *DB) GetAll(sql string) (map[int]map[string]string, error) {
+func (db *DB) GetAll(sql string) (row map[int]map[string]string, err error) {
 
     // 最后得到的map
     results := make(map[int]map[string]string)
 
-    //rows := db.Conn.QueryRow(sql) // 查询一条
+    //row := db.Conn.QueryRow(sql)  // 查询一条，因为不存在Columns()方法，所以统一用Query吧
     rows, err := db.Conn.Query(sql) // 查询多条
     if err != nil { 
         fmt.Println("查询数据库失败", err.Error())
         return results, err
     }
 
+    // 非常重要：关闭rows释放持有的数据库链接
+    defer rows.Close()
+
     // 读出查询出的列字段名
 	cols, _ := rows.Columns()
-	// values是每个列的值，这里获取到byte里
-	values := make([][]byte, len(cols))
+	// vals是每个列的值，这里获取到byte里
+	vals := make([][]byte, len(cols))
 	// rows.Scan的参数，因为每次查询出来的列是不定长的，用len(cols)定住当次查询的长度
 	scans := make([]interface{}, len(cols))
 	// 让每一行数据都填充到[][]byte里面
-	for i := range values {
-		scans[i] = &values[i]
+	for i := range vals {
+		scans[i] = &vals[i]
 	}
 
     i := 0
+    // 循环读取结果集中的数据
     for rows.Next() { //循环，让游标往下推
-        if err := rows.Scan(scans...); err != nil { //rows.Scan查询出来的不定长值放到scans[i] = &values[i],也就是每行都放在values里
+        if err := rows.Scan(scans...); err != nil { //rows.Scan查询出来的不定长值放到scans[i] = &vals[i],也就是每行都放在vals里
             fmt.Println(err)
             return results, err
         }
 
         row := make(map[string]string) //每行数据
 
-        for k, v := range values { //每行数据是放在values里面，现在把它挪到row里
+        for k, v := range vals { //每行数据是放在values里面，现在把它挪到row里
             key := cols[k]
             row[key] = string(v)
         }
@@ -271,7 +249,7 @@ func (db *DB) InsertBatch(table string, data []map[string]string) (bool, error) 
         keys = ""
         vals = ""
         // slice是无序的，这里是保证他有顺序
-        ms := NewSortMap(d)
+        ms := util.NewSortMap(d)
         sort.Sort(ms)
         for k, v := range ms {
             if k == 0 {
@@ -396,10 +374,13 @@ func (db *DB) AffectedRows() int64 {
 }
 
 // Close is the function for close db connection
-func (db *DB) Close() error {
-    //err := db.Conn.Raw.Close()
+func (db *DB) Close() (err error) {
+    if db.Conn.netConn == nil {
+        return nil  // closed before
+    }
+
     // 连接将会被释放回到连接池，而不是真的断开了链接
-    err := db.Conn.Close()
+    err = db.Conn.Close()
     return err
 }
 
@@ -416,13 +397,13 @@ type Transaction struct {
 
 // Commit is the function for close db connection
 func (db *DB) Commit() error {
-    err := db.Conn.Close()
+    err := db.Close()
     return err
 }
 
 // Rollback is the function for close db connection
 func (db *DB) Rollback() error {
-    err := db.Conn.Close()
+    err := db.Close()
     return err
 }
 

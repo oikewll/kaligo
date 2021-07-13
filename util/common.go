@@ -1,4 +1,4 @@
-package kaligo
+package util
 
 import (
 	"io"
@@ -7,7 +7,15 @@ import (
 
 var tab8s = "        "
 
-func catchError(err *error) {
+// CheckErr is...
+func CheckErr(err error) {
+    if err != nil {
+        panic(err)
+    }
+}
+
+// CatchError is...
+func CatchError(err *error) {
 	if pv := recover(); pv != nil {
 		switch e := pv.(type) {
 		case runtime.Error:

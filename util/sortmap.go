@@ -1,15 +1,18 @@
-package kaligo
+package util
 
 import (
 )
 
+// SortMap is ...
 type SortMap []Item
                  
+// Item is ...
 type Item struct {
     Key string
     Val string
 }
 
+// NewSortMap is ...
 func NewSortMap(m map[string]string) SortMap {
     ms := make(SortMap, 0, len(m))
                  

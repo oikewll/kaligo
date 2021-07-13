@@ -1,12 +1,4 @@
-/**
- * Realize a safe map with a read-write lock
- *
- * @copyright   (C) 2014  seatle
- * @lastmodify  2021-07-06
- *
- */
-
-package kaligo
+package util
  
 import (
     "sync"
