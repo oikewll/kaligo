@@ -19,10 +19,10 @@ import (
     //"sync"
     //"reflect"
     "github.com/owner888/kaligo"
-    "github.com/owner888/kaligo/conf"
-    "github.com/owner888/kaligo/util"
+    "kaligo/conf"
+    "kaligo/util"
     "database/sql"
-    _ "github.com/go-sql-driver/mysql"  // 空白导入必须在main.go、testing，否则就必须在这里写注释
+    //_ "github.com/go-sql-driver/mysql"  // 空白导入必须在main.go、testing，否则就必须在这里写注释
     //"github.com/owner888/mymysql/autorc"
     //"github.com/owner888/mymysql/mysql"
     ////_ "github.com/ziutek/mymysql/native"    // 普通模式
