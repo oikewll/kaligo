@@ -1,11 +1,11 @@
 package util
 
 import (
-    "fmt"
-    "os"
-    "io"
     "archive/tar"
     "compress/gzip"
+    "fmt"
+    "io"
+    "os"
 )
 
 func zip(zipname, openfile string) {

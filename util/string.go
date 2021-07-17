@@ -1,9 +1,9 @@
 package util
 
 import (
-    "time"
     "math/rand"
     "strconv"
+    "time"
 )
 
 // Substr 返回一个字符串中从指定位置开始到指定字符数的字符
@@ -49,8 +49,8 @@ func RandNum() int{
 func RandomStr(length int) string {
 	str := "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 	bytes := []byte(str)
-	result := []byte{}
-	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+    var result []byte
+    r := rand.New(rand.NewSource(time.Now().UnixNano()))
 	for i := 0; i < length; i++ {
 		result = append(result, bytes[r.Intn(len(bytes))])
 	}
@@ -59,13 +59,13 @@ func RandomStr(length int) string {
 
 // StrToInt is the...
 func StrToInt(str string) int{
-    int, _ := strconv.Atoi(str)
+    var int, _ = strconv.Atoi(str)
     return int
 }
 
 // StrToInt64 is the...
 func StrToInt64(str string) int64{
-    int64, _ := strconv.ParseInt(str, 10, 64)
+    var int64, _ = strconv.ParseInt(str, 10, 64)
     return int64
 }
 

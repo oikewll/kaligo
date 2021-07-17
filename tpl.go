@@ -1,34 +1,34 @@
 package kaligo
 
 import (
-    "net/http"
+    "fmt"
     "html/template"
     "io"
-    "fmt"
+    "net/http"
 )
 type Tpl struct {
     args map[string]interface{} 
     Response http.ResponseWriter
 }
 
-func (this *Tpl) Assign(tplVar string, value interface{}) bool {
+func (t *Tpl) Assign(tplVar string, value interface{}) bool {
 
-    if len(this.args) == 0 {
-        this.args = make(map[string]interface{})
+    if len(t.args) == 0 {
+        t.args = make(map[string]interface{})
     }
-    this.args[tplVar] = value
+    t.args[tplVar] = value
     return true
 }
 
 
-func (this *Tpl) Display(tpl string) bool {
+func (t *Tpl) Display(tpl string) bool {
 
-    t, err := template.ParseFiles("template/"+tpl)
+    var htp, err = template.ParseFiles("template/" + tpl)
     if err != nil {
-        io.WriteString(this.Response, fmt.Sprintf("%s", err));
+        io.WriteString(t.Response, fmt.Sprintf("%s", err))
         return false
     }
-    t.Execute(this.Response, this.args)
+    htp.Execute(t.Response, t.args)
 
     return true
 }

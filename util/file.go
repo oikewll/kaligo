@@ -3,13 +3,13 @@ package util
 import (
 	"bufio"
 	"errors"
+	"github.com/owner888/kaligo/conf"
 	"io"
-    "io/ioutil"
-    "log"
+	"io/ioutil"
+	"log"
 	"os"
 	"path/filepath"
 	"regexp"
-    "github.com/owner888/kaligo/conf"
 )
 
 //var PATH_ROOT = SelfDir()
@@ -37,6 +37,7 @@ func FileExists(name string) bool {
 }
 
 /**
+ * WriteLog
  *  使用方法
     if ok, err := util.WriteLog("Just a test\n"); !ok {
         log.Print(err)
@@ -44,7 +45,7 @@ func FileExists(name string) bool {
  */
 func WriteLog(filename string, format string) (bool, error) {
 
-    logfile := conf.PathData+"/log/"+filename+".log";
+    logfile := conf.PathData+"/log/"+filename+".log"
     f, err := os.OpenFile(logfile, os.O_RDWR | os.O_APPEND |  os.O_CREATE, 0777)
     if err != nil {
         return false, err
