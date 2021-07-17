@@ -1,8 +1,5 @@
 package util
 
-import (
-)
-
 // SortMap is ...
 type SortMap []Item
                  
