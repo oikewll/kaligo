@@ -11,17 +11,17 @@ import (
     "path"
     "time"
     "sync"
-    "kaligo/util"
-    "kaligo/conf"
+    "github.com/owner888/kaligo/util"
+    "github.com/owner888/kaligo/conf"
 )
 
 // 定义当前package中使用的全局变量
 var (
-    controlMapping map[string]interface{} 
-    StaticDir map[string]string 
-    Timer map[string]*time.Ticker
-    Tasker map[string]*time.Timer
-    Mutex sync.Mutex
+    controlMap map[string]interface{} 
+    StaticDir  map[string]string 
+    Timer      map[string]*time.Ticker
+    Tasker     map[string]*time.Timer
+    Mutex      sync.Mutex
 )
 
 // AddTasker is the function for add tasker
@@ -106,10 +106,10 @@ func Run() {
 
 // Router is the function for configure dynamic routing
 func Router(ct string, control interface{}) {
-    if controlMapping == nil {
-        controlMapping = make(map[string]interface{})
+    if controlMap == nil {
+        controlMap = make(map[string]interface{})
     }
-    controlMapping[ct] = control
+    controlMap[ct] = control
 }
 
 // SetStaticPath is the function forsconfigure static file path
@@ -190,7 +190,7 @@ func loadController(w http.ResponseWriter, r *http.Request) {
         }
         // 首字母转大写
         ac = strings.Title(ac)
-        if v, ok := controlMapping[ct]; ok {
+        if v, ok := controlMap[ct]; ok {
             callMethod(v, ac, w, r)
         } else {
             panic("Control "+ct+" is not exists!")

@@ -18,11 +18,10 @@ import (
     //"container/list"
     //"sync"
     //"reflect"
-    "github.com/owner888/kaligo"
-    "kaligo/conf"
-    "kaligo/util"
+    "github.com/owner888/kaligo/conf"
+    "github.com/owner888/kaligo/util"
     "database/sql"
-    //_ "github.com/go-sql-driver/mysql"  // 空白导入必须在main.go、testing，否则就必须在这里写注释
+    _ "github.com/go-sql-driver/mysql"  // 空白导入必须在main.go、testing，否则就必须在这里写注释
     //"github.com/owner888/mymysql/autorc"
     //"github.com/owner888/mymysql/mysql"
     ////_ "github.com/ziutek/mymysql/native"    // 普通模式
@@ -31,12 +30,12 @@ import (
 
 // DB is the struct for MySQL connection handler
 type DB struct {
-    Conn *Conn    // MySQL connection
-    //rows Rows
+    Conn *Conn          // MySQL connection
+    //rows Rows         // 自己再封装一层Row、Result
 
     ////Conn *autorc.Conn
     ////res mysql.Result
-    //Conn *sql.DB    // MySQL connection
+    //Conn *sql.DB      // MySQL connection
     //rows sql.Rows
     res sql.Result
     initCmds []string   // MySQL commands/queries executed after connect
@@ -45,31 +44,19 @@ type DB struct {
 }
 
 
-// New is the function for Create new MySQL handler. 
+// NewDB is the function for Create new MySQL handler. 
 // (读+写)连接数据库+选择数据库
-func New() *DB {
+//func New() *DB {
+func NewDB() *DB {
     c := NewConn()
-    db := DB{
+    c.Connect()
+    db := &DB{
         Conn: c,
-        logSlowQuery: kaligo.StrToBool(conf.GetValue("db", "log_slow_query")),
-        logSlowTime:  kaligo.StrToInt64(conf.GetValue("db", "log_slow_time")),
+        logSlowQuery: util.StrToBool(conf.GetValue("db", "log_slow_query")),
+        logSlowTime:  util.StrToInt64(conf.GetValue("db", "log_slow_time")),
     }
 
-    return &db
-    //host := conf.GetValue("db", "host")
-    //port := conf.GetValue("db", "port")
-    //user := conf.GetValue("db", "user")
-    //pass := conf.GetValue("db", "pass")
-    //name := conf.GetValue("db", "name")
-    //logSlowQuery := kaligo.StrToBool( conf.GetValue("db", "log_slow_query"))
-    //logSlowTime  := kaligo.StrToInt64(conf.GetValue("db", "log_slow_time"))
-    //maxOpenConns := kaligo.StrToInt(  conf.GetValue("db", "max_open_conns"))
-    //maxIdleConns := kaligo.StrToInt(  conf.GetValue("db", "max_idle_conns"))
-
-    //db := &DB{
-        //logSlowQuery:logSlowQuery, 
-        //logSlowTime:logSlowTime,
-    //}
+    return db
 }
 
 // slowQueryLog is the function for record the slow query log

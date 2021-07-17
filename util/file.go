@@ -9,7 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
-    "kaligo/conf"
+    "github.com/owner888/kaligo/conf"
 )
 
 //var PATH_ROOT = SelfDir()
