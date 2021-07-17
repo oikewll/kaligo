@@ -18,17 +18,20 @@ import (
 )
 
 var (
+    // AppPath is ...
+    AppPath string
     // PathRoot is PathRoot
     PathRoot string
     // PathData is PathData
     PathData string
-	//confFile string                         // Your ini file path directory+file
+	//confFile string                       // Your ini file path directory+file
 	confList []map[string]map[string]string // Configuration information slice
 )
 
 // 一导入conf package 就初始化变量
 func init() {
-    confFile := "conf/app.ini"
+    confFile := "../conf/app.ini"
+    //confFile := AppPath + "conf/app.ini"
     //if len(os.Args) > 1 {
         //confFile = os.Args[1]
     //}
@@ -40,6 +43,8 @@ func init() {
 
 // InitConfig is the function for create an empty configuration file
 func InitConfig(confFile string) {
+    fmt.Printf("AppPath: [ %v ]", AppPath)
+
     err := ReadList(confFile)
     if err != nil {
         SetValue("http", "addr", "0.0.0.0")
@@ -116,6 +121,7 @@ func ReadList(confFile string) (err error) {
 	if err != nil {
         return err
 	}
+
 	defer file.Close()
 	var data map[string]map[string]string
 	var section string

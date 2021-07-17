@@ -18,9 +18,8 @@ import (
     //"container/list"
     //"sync"
     //"reflect"
-    //"kaligo"
-    "kaligo/conf"
-    "kaligo/util"
+    "github.com/owner888/kaligo/conf"
+    "github.com/owner888/kaligo/util"
     "database/sql"
     //_ "github.com/go-sql-driver/mysql"  // 空白导入必须在main.go、testing，否则就必须在这里写注释
     //"github.com/owner888/mymysql/autorc"
@@ -50,6 +49,7 @@ type Conn struct {
 	dbname string       // Database name
     plugin string       // Authentication plugin
 
+    dbDsn string        // MySQL Dsn
     info serverInfo     // MySQL server information
 	seq  byte           // MySQL sequence number
 
@@ -69,7 +69,7 @@ type Conn struct {
 	Debug bool
 }
 
-// NewConn is the function for Create new MySQL handler. 
+// NewConn 实例化数据库连接 
 // (读+写)连接数据库+选择数据库
 func NewConn() *Conn {
     c := Conn{
@@ -79,26 +79,11 @@ func NewConn() *Conn {
         dbuser: conf.GetValue("db", "user"),
         dbpass: conf.GetValue("db", "pass"),
         dbname: conf.GetValue("db", "name"),
-        //logSlowQuery: kaligo.StrToBool(conf.GetValue("db", "log_slow_query")),
-        //logSlowTime:  kaligo.StrToInt64(conf.GetValue("db", "log_slow_time")),
+        maxOpenConns: util.StrToInt(conf.GetValue("db", "max_open_conns")),
+        maxIdleConns: util.StrToInt(conf.GetValue("db", "max_idle_conns")),
     }
 
     return &c
-    //host := conf.GetValue("db", "host")
-    //port := conf.GetValue("db", "port")
-    //user := conf.GetValue("db", "user")
-    //pass := conf.GetValue("db", "pass")
-    //name := conf.GetValue("db", "name")
-    //logSlowQuery := kaligo.StrToBool( conf.GetValue("db", "log_slow_query"))
-    //logSlowTime  := kaligo.StrToInt64(conf.GetValue("db", "log_slow_time"))
-    //maxOpenConns := kaligo.StrToInt(  conf.GetValue("db", "max_open_conns"))
-    //maxIdleConns := kaligo.StrToInt(  conf.GetValue("db", "max_idle_conns"))
-
-    //db := &DB{
-        //logSlowQuery:logSlowQuery, 
-        //logSlowTime:logSlowTime,
-    //}
-
 }
 
 func (c *Conn) init() {
@@ -126,7 +111,7 @@ func (c *Conn) connect() (err error) {
 
     c.netConn = nil
 
-    dbDsn := fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=%s",
+    c.dbDsn = fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=%s",
 		c.dbuser,
 		c.dbpass,
 		c.raddr,
@@ -134,10 +119,12 @@ func (c *Conn) connect() (err error) {
 		"utf8mb4",
 	)
 
+    //fmt.Printf("%v", c.dbDsn)
+
     if c.netConn == nil {
         // 数据库的抽象（*sql.DB），并不是真的数据库连接
         //my.conn := autorc.New("tcp", "", address, user, pass, name) 
-        c.netConn, err = sql.Open("mysql", dbDsn)
+        c.netConn, err = sql.Open("mysql", c.dbDsn)
         if err != nil {
             c.netConn = nil
             return
@@ -153,13 +140,13 @@ func (c *Conn) connect() (err error) {
 
     // 初始化一个数据库连接，sql.Open 的时候实际上是返回一个数据库的抽象而已，并没有真的和mysql链接上
     //err = c.netConn.Ping()
-    //if err != nil {
-        //fmt.Println("连接数据库失败", err.Error())
-        //return
-    //}
-    c.Ping()
+    err = c.Ping()
+    if err != nil {
+        fmt.Println("连接数据库失败 --- ", err.Error())
+        return
+    }
 
-    //my.conn.Query("set names utf8");
+    //my.netConn.Query("set names utf8");
 
     return
 }

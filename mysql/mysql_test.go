@@ -1,50 +1,53 @@
-package kaligo
+package mysql
+// go test -v -count=1 mysql/mysql_test.go
 
 import(
     "testing"
-    //"fmt"
+    "os"
+    "log"
     //"strconv"
     //"reflect"
-    //"database/sql"
     //"encoding/json"
-    //"kaligo/conf"
-    //"kaligo/util"
-    "kaligo/mysql"
+    //"database/sql"
     //_ "github.com/go-sql-driver/mysql"
+    //"github.com/owner888/kaligo"
+    "github.com/owner888/kaligo/conf"
+    //"github.com/owner888/kaligo/util"
+    "github.com/owner888/kaligo/mysql"
+    //"github.com/owner888/kaligo/cache"
     //"github.com/ziutek/mymysql/autorc" 
     //"github.com/ziutek/mymysql/mysql" 
     //"github.com/ziutek/mymysql/native" // Native engine 
     // _ "github.com/ziutek/mymysql/thrsafe" // Thread safe engine 
 )
 
-//func initConn() (*autorc.Conn, error) {
-//func initConn() (interface{}, error) {
-    //conn := autorc.New("tcp", "", "localhost:3306", "root", "root", "test")
-    //conn.Register("set names utf8")
-
-    //conn, err := sql.Open("mysql", "root:root@localhost:3306/test")
-    //checkErr(err)
-    //fmt.Println(" --- autorc --- ", conn.Raw, " --- ")
-    //rows, res, err := db.Query("Select * From `test` Limit 1")
-    //fmt.Println(rows, res, err)
-    //return conn, nil
-//}
-
-
 func TestDB(t *testing.T) {
 
-    db := mysql.New()
-    db.Debug = false
+    //memory := cache.NewMemory()
+    //memory.Set("name", "kaka", 10)
+    //name := memory.Get("name")
+    //t.Logf("name: [ %v ]", name)
+    str, _ := os.Getwd()
+    conf.AppPath = str + "/../"
+    log.Printf("TestDB AppPath: [ %v ]", conf.AppPath)
+    
+    //define('APPPATH', __DIR__.'/../app');
 
-    // Register initialisation commands
-	db.Register("set names utf8")
+    //t.Logf("%s", kaligo.Int64ToStr(100))
 
-    // my is in unconnected state
-	//mysql.checkErr(t, c.Use(dbname), nil)
+    db := mysql.NewDB()
+    //db := NewDB()
+    //db.Debug = false
 
-    //t.Logf("%s", conn)
+    //// Register initialisation commands
+	//db.Register("set names utf8")
 
-    defer db.Close()
+    //// my is in unconnected state
+	////mysql.checkErr(t, c.Use(dbname), nil)
+
+    ////t.Logf("%s", conn)
+
+    //defer db.Close()
 
     //if err != nil {
         //t.Fatal(err)
@@ -70,11 +73,11 @@ func TestDB(t *testing.T) {
     //}
 
     //sql := "Select a.id,a.name,b.date From `test` a Left Join `test_part` b On a.id=b.test_id;"
-    //sql := "Select * From user"
+    sql := "Select * From user"
 
     row, _ := db.GetOne(sql)
-    fmt.Println(row)
-    fmt.Println(row["id"], " --- ", row["name"])
+    t.Logf("%v", row)
+    //fmt.Println(row["id"], " --- ", row["name"])
 
     //rows, _ := db.GetAll(sql)
     //fmt.Printf("%v\n", rows)

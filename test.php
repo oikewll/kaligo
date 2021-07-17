@@ -1,4 +1,6 @@
 <?php
+echo __dir__."\n";
+exit;
 $arr = array(0,1,2,3,4,5,6);
  
 if(!($nShmID = shm_attach(ftok(__FILE__, 'i'), 1024))) {
