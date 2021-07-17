@@ -9,23 +9,23 @@
 package mysql
 
 import (
-    "fmt"
-    "log"
-    "time"
-    //"regexp"
-    //"strings"
-    //"sort"
-    //"container/list"
-    //"sync"
-    //"reflect"
-    "github.com/owner888/kaligo/conf"
-    "github.com/owner888/kaligo/util"
-    "database/sql"
-    //_ "github.com/go-sql-driver/mysql"  // 空白导入必须在main.go、testing，否则就必须在这里写注释
-    //"github.com/owner888/mymysql/autorc"
-    //"github.com/owner888/mymysql/mysql"
-    ////_ "github.com/ziutek/mymysql/native"    // 普通模式
-    //_ "github.com/ziutek/mymysql/thrsafe" // 用了连接池之后连接都是重复利用的，没必要用线程安全模式
+	"database/sql"
+	"fmt"
+	"log"
+	"time"
+	//"regexp"
+	//"strings"
+	//"sort"
+	//"container/list"
+	//"sync"
+	//"reflect"
+	"github.com/owner888/kaligo/conf"
+	"github.com/owner888/kaligo/util"
+	//_ "github.com/go-sql-driver/mysql"  // 空白导入必须在main.go、testing，否则就必须在这里写注释
+	//"github.com/owner888/mymysql/autorc"
+	//"github.com/owner888/mymysql/mysql"
+	////_ "github.com/ziutek/mymysql/native"    // 普通模式
+	//_ "github.com/ziutek/mymysql/thrsafe" // 用了连接池之后连接都是重复利用的，没必要用线程安全模式
 )
 
 type serverInfo struct {
@@ -190,7 +190,10 @@ func (c *Conn) Close() (err error) {
 func (c *Conn) Reconnect() (err error) {
 	if c.netConn != nil {
 		// Close connection, ignore all errors
-		c.close()
+		err := c.close()
+		if err != nil {
+			return err
+		}
 	}
 	// Reopen the connection.
 	if err = c.connect(); err != nil {
@@ -261,7 +264,7 @@ func (c *Conn) Ping() (err error) {
 }
 
 // QueryRow is the function for query one row
-func (c *Conn) QueryRow(query string) (*sql.Row) {
+func (c *Conn) QueryRow(query string) *sql.Row {
     row := c.netConn.QueryRow(query, 1) // 查询一条
     return row
 }

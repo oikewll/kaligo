@@ -10,11 +10,11 @@ package conf
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
 	"strings"
-    "fmt"
 )
 
 var (
