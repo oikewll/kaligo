@@ -9,19 +9,19 @@
 package mysql
 
 import (
+    "database/sql"
     "fmt"
+    _ "github.com/go-sql-driver/mysql" // 空白导入必须在main.go、testing，否则就必须在这里写注释
     "log"
     "regexp"
+    "sort"
     "strings"
     "time"
-    "sort"
     //"container/list"
     //"sync"
     //"reflect"
     "github.com/owner888/kaligo/conf"
     "github.com/owner888/kaligo/util"
-    "database/sql"
-    _ "github.com/go-sql-driver/mysql"  // 空白导入必须在main.go、testing，否则就必须在这里写注释
     //"github.com/owner888/mymysql/autorc"
     //"github.com/owner888/mymysql/mysql"
     ////_ "github.com/ziutek/mymysql/native"    // 普通模式
@@ -49,7 +49,10 @@ type DB struct {
 //func New() *DB {
 func NewDB() *DB {
     c := NewConn()
-    c.Connect()
+    err := c.Connect()
+    if err != nil {
+        return nil
+    }
     db := &DB{
         Conn: c,
         logSlowQuery: util.StrToBool(conf.GetValue("db", "log_slow_query")),
@@ -126,7 +129,7 @@ func (db *DB) Query(sql string) (*sql.Rows, error) {
 func (db *DB) GetOne(sql string) (row map[string]string, err error) {
     // 判断SQL语句是否包含 Limit 1
     reg, _ := regexp.Compile(`(?i:limit)`)
-    if (!reg.MatchString(sql)) {
+    if !reg.MatchString(sql) {
         sql = strings.Trim(sql, " ") 
         reg, _ = regexp.Compile(`(?i:[,;])$`)
         sql = reg.ReplaceAllString(sql, "")
@@ -203,19 +206,19 @@ func (db *DB) GetAll(sql string) (row map[int]map[string]string, err error) {
 // Insert is the function for insert data
 // (写)拼凑一个sql语句插入一条记录数据
 func (db *DB) Insert(table string, data map[string]string) (bool, error) {
-    
-    keys := []string{}
-    vals := []string{}
+
+    var keys = []string{}
+    var vals = []string{}
     for k, v := range data {
         keys = append(keys, k)
         vals = append(vals, db.AddSlashes(db.StripSlashes(v)))
     }
     keysSQL := "`"+strings.Join(keys, "`, `")+"`"
     valsSQL := "\""+strings.Join(vals, "\", \"")+"\""
-    sql := "Insert Into `"+table+"`("+keysSQL+") Values ("+valsSQL+")"
+    var sqlStr = "Insert Into `"+table+"`("+keysSQL+") Values ("+valsSQL+")"
     //fmt.Println(sql)
     //_, res, err := db.Query(sql)
-    res, err := db.Conn.Exec(sql)
+    res, err := db.Conn.Exec(sqlStr)
     if err != nil {
         return false, err
     }
@@ -251,10 +254,10 @@ func (db *DB) InsertBatch(table string, data []map[string]string) (bool, error) 
         vals = "(\""+vals+"\")"
         valsArr = append(valsArr, vals)
     }
-    sql := "Insert Into `"+table+"`("+keys+") Values "+strings.Join(valsArr, ", ")
+    var sqlStr = "Insert Into `"+table+"`("+keys+") Values "+strings.Join(valsArr, ", ")
     //fmt.Println(sql)
 
-    res, err := db.Conn.Exec(sql)
+    res, err := db.Conn.Exec(sqlStr)
     if err != nil {
         return false, err
     }
@@ -267,15 +270,15 @@ func (db *DB) InsertBatch(table string, data []map[string]string) (bool, error) 
 // Update is the function for update data
 // (写)拼凑一个sql语句修改一条记录数据
 func (db *DB) Update(table string, data map[string]string, where string) (bool, error) {
-    
-    sets := []string{}
+
+    var sets []string
     for k, v := range data {
         sets = append(sets, "`"+k+"`=\""+db.AddSlashes(db.StripSlashes(v))+"\"")
     }
     setsSQL := strings.Join(sets, ", ")
-    sql := "Update `"+table+"` Set "+setsSQL+" Where "+where
+    var sqlStr = "Update `"+table+"` Set "+setsSQL+" Where "+where
     //fmt.Println(sql)
-    res, err := db.Conn.Exec(sql)
+    res, err := db.Conn.Exec(sqlStr)
     if err != nil {
         return false, err
     }
@@ -289,7 +292,7 @@ func (db *DB) Update(table string, data map[string]string, where string) (bool, 
 // (写)拼凑一个sql语句批量插入多条记录数据
 func (db *DB) UpdateBatch(table string, data []map[string]string, index string) (bool, error) {
 
-    sql := "Update `"+table+"` Set "
+    var sqlStr = "Update `"+table+"` Set "
     ids := []string{}
     rows := map[string][]string {}
 
@@ -324,19 +327,19 @@ func (db *DB) UpdateBatch(table string, data []map[string]string, index string) 
     }
     // 拼凑批量修改SQL语句
     for k, v := range rows {
-        sql += "`"+k+"` = Case "
+        sqlStr += "`"+k+"` = Case "
         for _, vv := range v {
-            sql += " "+vv
+            sqlStr += " "+vv
         }
-        sql += " Else `"+k+"` End, "
+        sqlStr += " Else `"+k+"` End, "
     }
     // 拼凑Where条件
     join := "'"+strings.Join(ids, "', '")+"'"
     where := " Where `"+index+"` In ("+join+")"
     // 完整的可执行SQL语句
-    sql = util.Substr(sql, 0, len(sql)-2) + where
+    sqlStr = util.Substr(sqlStr, 0, len(sqlStr)-2) + where
 
-    res, err := db.Conn.Exec(sql)
+    res, err := db.Conn.Exec(sqlStr)
     if err != nil {
         return false, err
     }
@@ -396,7 +399,7 @@ func (db *DB) Rollback() error {
 
 // AddSlashes is ...
 // 转义：引号、双引号添加反斜杠
-func (db *DB) AddSlashes(val string) (string) {
+func (db *DB) AddSlashes(val string) string {
     val = strings.Replace(val, "\"", "\\\"", -1)
     val = strings.Replace(val, "'", "\\'", -1)
     return val
@@ -404,7 +407,7 @@ func (db *DB) AddSlashes(val string) (string) {
 
 // StripSlashes is ...
 // 反转义：引号、双引号去除反斜杠
-func (db *DB) StripSlashes(val string) (string) {
+func (db *DB) StripSlashes(val string) string {
     val = strings.Replace(val, "\\\"", "\"", -1)
     val = strings.Replace(val, "\\'", "'", -1)
     return val
@@ -412,7 +415,7 @@ func (db *DB) StripSlashes(val string) (string) {
 
 // GetSafeParam is ...
 // 防止XSS跨站攻击
-func (db *DB) GetSafeParam(val string) (string) {
+func (db *DB) GetSafeParam(val string) string {
     val = strings.Replace(val, "&", "&amp;", -1)
     val = strings.Replace(val, "<", "&lt;", -1)
     val = strings.Replace(val, ">", "&gt;", -1)

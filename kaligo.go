@@ -1,18 +1,18 @@
 package kaligo
 
 import (
-    "net/http"
     "fmt"
-    "log"
-    "io"
-    "strings"
-    "reflect"
-    "runtime"
-    "path"
-    "time"
-    "sync"
-    "github.com/owner888/kaligo/util"
     "github.com/owner888/kaligo/conf"
+    "github.com/owner888/kaligo/util"
+    "io"
+    "log"
+    "net/http"
+    "path"
+    "reflect"
+    runtime "runtime"
+    "strings"
+    "sync"
+    "time"
 )
 
 // 定义当前package中使用的全局变量
@@ -89,7 +89,7 @@ func DelTimer(name string) bool{
 
 // Run is the function for start the web service
 func Run() {
-    runtime.GOMAXPROCS(runtime.NumCPU());
+    runtime.GOMAXPROCS(runtime.NumCPU())
     http.HandleFunc("/", loadController)
 
     addr := conf.GetValue("http", "addr") 

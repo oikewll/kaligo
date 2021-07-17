@@ -54,7 +54,10 @@ func (connPoll *ConnPool)InitPool() error{
 func (connPoll *ConnPool)Get() interface{} {
     // 如果空闲连接为空，初始化连接池
     if connPoll.idle == nil {
-        connPoll.InitPool()
+		err := connPoll.InitPool()
+		if err != nil {
+			return nil
+		}
     }
 
     // 赋值一下好给下面回收和返回
