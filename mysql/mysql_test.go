@@ -1,3 +1,4 @@
+// 要运行这个test，记得先cd mysql，然后再 go test -v -count=1 或者 直接用 alias 好的 gotest
 package mysql
 // go test -v -count=1 mysql/mysql_test.go
 
@@ -13,12 +14,12 @@ import(
     //"github.com/owner888/kaligo"
     "github.com/owner888/kaligo/conf"
     //"github.com/owner888/kaligo/util"
-    "github.com/owner888/kaligo/mysql"
+    //"github.com/owner888/kaligo/mysql"
     //"github.com/owner888/kaligo/cache"
-    //"github.com/ziutek/mymysql/autorc" 
-    //"github.com/ziutek/mymysql/mysql" 
-    //"github.com/ziutek/mymysql/native" // Native engine 
-    // _ "github.com/ziutek/mymysql/thrsafe" // Thread safe engine 
+    //"github.com/ziutek/mymysql/autorc"
+    //"github.com/ziutek/mymysql/mysql" // 不能引入自己
+    //"github.com/ziutek/mymysql/native" // Native engine
+    // _ "github.com/ziutek/mymysql/thrsafe" // Thread safe engine
 )
 
 func TestDB(t *testing.T) {
@@ -30,12 +31,12 @@ func TestDB(t *testing.T) {
     str, _ := os.Getwd()
     conf.AppPath = str + "/../"
     log.Printf("TestDB AppPath: [ %v ]", conf.AppPath)
-    
+
     //define('APPPATH', __DIR__.'/../app');
 
     //t.Logf("%s", kaligo.Int64ToStr(100))
 
-    db := mysql.NewDB()
+    db := NewDB()
     //db := NewDB()
     //db.Debug = false
 

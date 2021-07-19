@@ -1,3 +1,4 @@
+// Package cache 注意go语言的接口实现与接口的定义是没有依赖关系的
 package cache
 
 import "time"

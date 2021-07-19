@@ -92,8 +92,8 @@ func Run() {
     runtime.GOMAXPROCS(runtime.NumCPU())
     http.HandleFunc("/", loadController)
 
-    addr := conf.GetValue("http", "addr") 
-    port := conf.GetValue("http", "port") 
+    addr := conf.Get("http", "addr") 
+    port := conf.Get("http", "port") 
 
     str := util.Colorize(fmt.Sprintf("[I] Running on %s:%s", addr, port), "note")
     log.Printf(str)
