@@ -1,23 +1,24 @@
 package kaligo
 
-//import (
-	//"fmt"
-	//"testing"
-//)
+import (
+    "fmt"
+    "testing"
+    "github.com/owner888/kaligo/conf"
+)
 
-//func Test(t *testing.T) {
-	//conf := InitConfig("./conf/conf.ini")
-	//username := conf.GetValue("database", "username")
-	//fmt.Println(username) //root
-	//conf.DeleteValue("database", "username")
-	//username = conf.GetValue("database", "username")
-	//if len(username) == 0 {
-		//fmt.Println("username is not exists") //this stdout username is not exists
-	//}
-	//conf.SetValue("database", "username", "widuu")
-	//username = conf.GetValue("database", "username")
-	//fmt.Println(username) //widuu
+func Test(t *testing.T) {
+    conf.InitConfig("../conf/conf.ini")
+    user := conf.Get("db", "user")
+    fmt.Printf("Test user: %v\n", user)
+    conf.Delete("db", "user")
+    user = conf.Get("db", "user")
+    if len(user) == 0 {
+        fmt.Println("username is not exists") //this stdout username is not exists
+    }
+    conf.Set("db", "user", "widuu")
+    user = conf.Get("db", "user")
+    fmt.Println(user) //widuu
 
-	//data := conf.ReadList()
-	//fmt.Println(data)
-//}
+    //data := conf.ReadList()
+    //fmt.Println(data)
+}

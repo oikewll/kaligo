@@ -30,34 +30,34 @@ var (
 
 // 一导入conf package 就初始化变量
 func init() {
-    confFile := "../conf/app.ini"
-    //confFile := AppPath + "conf/app.ini"
-    //if len(os.Args) > 1 {
-        //confFile = os.Args[1]
-    //}
-    InitConfig(confFile)
-    PathRoot = GetValue("base", "path_root")
-    fmt.Println(PathRoot)
-    PathData = PathRoot + "/data"
+    //confFile := "../conf/app.ini"
+    ////confFile := AppPath + "conf/app.ini"
+    ////if len(os.Args) > 1 {
+        ////confFile = os.Args[1]
+    ////}
+    //InitConfig(confFile)
+    //PathRoot = Get("base", "path_root")
+    //fmt.Println(PathRoot)
+    //PathData = PathRoot + "/data"
 }
 
 // InitConfig is the function for create an empty configuration file
 func InitConfig(confFile string) {
-    fmt.Printf("AppPath: [ %v ]", AppPath)
+    fmt.Printf("confFile: [ %v ]", confFile)
 
     err := ReadList(confFile)
     if err != nil {
-        SetValue("http", "addr", "0.0.0.0")
-        SetValue("http", "port", "9527")
+        Set("http", "addr", "0.0.0.0")
+        Set("http", "port", "9527")
         path, _ := filepath.Abs(os.Args[0])
         //dir := filepath.Dir(path)
         pathArr := strings.Split(path, "/")
-        SetValue("base", "basename", pathArr[len(pathArr)-1])
+        Set("base", "basename", pathArr[len(pathArr)-1])
     }
 }
 
-// GetValue is the function for obtain corresponding value of the key values
-func GetValue(section, name string) string {
+// Get is the function for obtain corresponding value of the key values
+func Get(section, name string) string {
 
 	for _, v := range confList {
 		for key, value := range v {
@@ -69,8 +69,8 @@ func GetValue(section, name string) string {
 	return ""
 }
 
-// SetValue is the function for set the corresponding value of the key value, if not add, if there is a key change
-func SetValue(section, key, value string) bool {
+// Set is the function for set the corresponding value of the key value, if not add, if there is a key change
+func Set(section, key, value string) bool {
 
 	var ok bool
 	var index = make(map[int]bool)
@@ -100,8 +100,8 @@ func SetValue(section, key, value string) bool {
     return true
 }
 
-// DeleteValue is the function for delete the corresponding key values
-func DeleteValue(section, name string) bool {
+// Delete is the function for delete the corresponding key values
+func Delete(section, name string) bool {
 
 	for i, v := range confList {
 		for key := range v {
