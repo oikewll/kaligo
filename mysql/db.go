@@ -31,6 +31,13 @@ import (
 // DB is the struct for MySQL connection handler
 type DB struct {
     Conn *Conn          // MySQL connection
+    //S *Select
+    I *Insert
+    //U *Update
+    //D *Delete
+    //Q *Query
+    //R *Result
+
     //rows Rows         // 自己再封装一层Row、Result
 
     ////Conn *autorc.Conn
@@ -44,7 +51,7 @@ type DB struct {
 }
 
 
-// NewDB is the function for Create new MySQL handler. 
+// NewDB is the function for Create new MySQL handler.
 // (读+写)连接数据库+选择数据库
 //func New() *DB {
 func NewDB() *DB {
@@ -53,13 +60,31 @@ func NewDB() *DB {
     if err != nil {
         return nil
     }
+    // 生成指针类型的实例
     db := &DB{
         Conn: c,
-        logSlowQuery: util.StrToBool(conf.GetValue("db", "log_slow_query")),
-        logSlowTime:  util.StrToInt64(conf.GetValue("db", "log_slow_time")),
+        logSlowQuery: util.StrToBool(conf.Get("db", "log_slow_query")),
+        logSlowTime:  util.StrToInt64(conf.Get("db", "log_slow_time")),
     }
 
     return db
+}
+
+// Insert func is use for create a new [*Insert]
+func (db *DB) Insert(table string, columns []string) *Insert {
+    //for _, arg := range args {
+        //fmt.Println(arg)
+    //}
+    // 生成指针类型的实例，下面两个用法一样，记得要加取址符
+    //i := new(Insert)
+    //i.table   = table
+    //i.columns = columns
+    i := &Insert{
+        table: table,
+        columns: columns,
+    }
+    //i.Insert(table, args)
+    return i 
 }
 
 // slowQueryLog is the function for record the slow query log
@@ -98,7 +123,7 @@ func (db *DB) Register(query string) {
 //func (db *DB) Query(sql string) ([]mysql.Row, mysql.Result, error) {
 func (db *DB) Query(sql string) (*sql.Rows, error) {
     startTime := time.Now().UnixNano()
-    rows, err := db.Conn.Query(sql) 
+    rows, err := db.Conn.Query(sql)
     if err != nil {
         db.errorSQLLog(sql, err)
     }
@@ -130,7 +155,7 @@ func (db *DB) GetOne(sql string) (row map[string]string, err error) {
     // 判断SQL语句是否包含 Limit 1
     reg, _ := regexp.Compile(`(?i:limit)`)
     if !reg.MatchString(sql) {
-        sql = strings.Trim(sql, " ") 
+        sql = strings.Trim(sql, " ")
         reg, _ = regexp.Compile(`(?i:[,;])$`)
         sql = reg.ReplaceAllString(sql, "")
     }
@@ -158,7 +183,7 @@ func (db *DB) GetAll(sql string) (row map[int]map[string]string, err error) {
 
     //row := db.Conn.QueryRow(sql)  // 查询一条，因为不存在Columns()方法，所以统一用Query吧
     rows, err := db.Conn.Query(sql) // 查询多条
-    if err != nil { 
+    if err != nil {
         fmt.Println("查询数据库失败", err.Error())
         return results, err
     }
@@ -205,28 +230,28 @@ func (db *DB) GetAll(sql string) (row map[int]map[string]string, err error) {
 
 // Insert is the function for insert data
 // (写)拼凑一个sql语句插入一条记录数据
-func (db *DB) Insert(table string, data map[string]string) (bool, error) {
+//func (db *DB) Insert(table string, data map[string]string) (bool, error) {
 
-    var keys = []string{}
-    var vals = []string{}
-    for k, v := range data {
-        keys = append(keys, k)
-        vals = append(vals, db.AddSlashes(db.StripSlashes(v)))
-    }
-    keysSQL := "`"+strings.Join(keys, "`, `")+"`"
-    valsSQL := "\""+strings.Join(vals, "\", \"")+"\""
-    var sqlStr = "Insert Into `"+table+"`("+keysSQL+") Values ("+valsSQL+")"
-    //fmt.Println(sql)
-    //_, res, err := db.Query(sql)
-    res, err := db.Conn.Exec(sqlStr)
-    if err != nil {
-        return false, err
-    }
+    //var keys = []string{}
+    //var vals = []string{}
+    //for k, v := range data {
+        //keys = append(keys, k)
+        //vals = append(vals, db.AddSlashes(db.StripSlashes(v)))
+    //}
+    //keysSQL := "`"+strings.Join(keys, "`, `")+"`"
+    //valsSQL := "\""+strings.Join(vals, "\", \"")+"\""
+    //var sqlStr = "Insert Into `"+table+"`("+keysSQL+") Values ("+valsSQL+")"
+    ////fmt.Println(sql)
+    ////_, res, err := db.Query(sql)
+    //res, err := db.Conn.Exec(sqlStr)
+    //if err != nil {
+        //return false, err
+    //}
 
-    db.res = res
+    //db.res = res
 
-    return true, err
-}
+    //return true, err
+//}
 
 // InsertBatch is the function for insert data in bulk
 // (写)拼凑一个sql语句批量插入多条记录数据
@@ -423,4 +448,3 @@ func (db *DB) GetSafeParam(val string) string {
     val = strings.Replace(val, "'", "&#039;", -1)
     return val
 }
-

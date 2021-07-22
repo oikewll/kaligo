@@ -9,7 +9,7 @@ import (
     "net/http"
     "path"
     "reflect"
-    runtime "runtime"
+    "runtime"
     "strings"
     "sync"
     "time"
@@ -17,7 +17,7 @@ import (
 
 // 定义当前package中使用的全局变量
 var (
-    controlMap map[string]interface{} 
+    controlMap map[string]func()
     StaticDir  map[string]string 
     Timer      map[string]*time.Ticker
     Tasker     map[string]*time.Timer
@@ -50,7 +50,7 @@ func DelTasker(name string) bool{
 }
 
 // AddTimer is the function for add timer, The interval is in microseconds
-func AddTimer(name string, control interface{}, action string, duration time.Duration) {
+func AddTimer(name string, control func(), action string, duration time.Duration) {
 
     llen := len(Timer)
     if llen == 0 {
@@ -105,9 +105,10 @@ func Run() {
 }
 
 // Router is the function for configure dynamic routing
-func Router(ct string, control interface{}) {
+//func Router(ct string, control interface{}) {
+func Router(ct string, control func()) {
     if controlMap == nil {
-        controlMap = make(map[string]interface{})
+        controlMap = make(map[string]func())
     }
     controlMap[ct] = control
 }

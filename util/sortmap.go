@@ -1,3 +1,6 @@
+// Package util ...
+// Map跟Set一样对元素进行无序存储
+// TreeMap 可以实现有序存储
 package util
 
 // SortMap is ...
