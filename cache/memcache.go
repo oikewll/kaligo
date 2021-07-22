@@ -15,7 +15,7 @@ type Memcache struct {
 // NewMemcache create new memcache
 func NewMemcache(server ...string) *Memcache {
 	mc := memcache.New(server...)
-	return &Memcache{mc}
+	return &Memcache{mc} // bradfitz/gomemcache/memcache 的方法全部合并到当前的 type Memcache struct 去
 }
 
 // Get return cached value

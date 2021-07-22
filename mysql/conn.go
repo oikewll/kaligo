@@ -75,12 +75,12 @@ func NewConn() *Conn {
     c := Conn{
         proto: "tcp",
         laddr: "",
-        raddr:  conf.GetValue("db", "host") + ":" + conf.GetValue("db", "port"),
-        dbuser: conf.GetValue("db", "user"),
-        dbpass: conf.GetValue("db", "pass"),
-        dbname: conf.GetValue("db", "name"),
-        maxOpenConns: util.StrToInt(conf.GetValue("db", "max_open_conns")),
-        maxIdleConns: util.StrToInt(conf.GetValue("db", "max_idle_conns")),
+        raddr:  conf.Get("db", "host") + ":" + conf.Get("db", "port"),
+        dbuser: conf.Get("db", "user"),
+        dbpass: conf.Get("db", "pass"),
+        dbname: conf.Get("db", "name"),
+        maxOpenConns: util.StrToInt(conf.Get("db", "max_open_conns")),
+        maxIdleConns: util.StrToInt(conf.Get("db", "max_idle_conns")),
     }
 
     return &c

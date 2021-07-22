@@ -6,7 +6,7 @@ import (
 
 // SafeMap is the struct for Safemap
 type SafeMap struct {
-    sync.Mutex  // sync.Mutex 的方法合并到 SafeMap struct
+    sync.Mutex  // 内嵌结构，无法当作继承使用，不支持重载（无法访问子类的方法、数据），不支持LSP
     data map[string]interface{}
 }
 
