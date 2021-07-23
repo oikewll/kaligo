@@ -38,8 +38,8 @@ type serverInfo struct {
     plugin   []byte
 }
 
-// Conn is the struct for MySQL connection handler
-type Conn struct {
+// Connection is the struct for MySQL connection handler
+type Connection struct {
     proto string        // Network protocol
     laddr string        // Local address
     raddr string        // Remote (server) address
@@ -55,12 +55,14 @@ type Conn struct {
 
     // Timeout for connect
     timeout time.Duration
+    lastUse time.Time
 
     maxIdleConns int
     maxOpenConns int
     //Conn *autorc.Conn
     //res mysql.Result
-    netConn *sql.DB        // MySQL connection
+    db *sql.DB        // MySQL connection
+    tx *sql.Tx        // MySQL connection
     rows sql.Rows
     res sql.Result
     //row *Row
@@ -69,10 +71,10 @@ type Conn struct {
     Debug bool
 }
 
-// NewConn 实例化数据库连接
+// NewConnection 实例化数据库连接
 // (读+写)连接数据库+选择数据库
-func NewConn() *Conn {
-    c := Conn{
+func NewConnection() *Connection {
+    c := Connection{
         proto: "tcp",
         laddr: "",
         raddr:  conf.Get("db", "host") + ":" + conf.Get("db", "port"),
@@ -86,7 +88,7 @@ func NewConn() *Conn {
     return &c
 }
 
-func (c *Conn) init() {
+func (c *Connection) init() {
     c.seq = 0 // Reset sequence number, mainly for reconnect
     if c.Debug {
         log.Printf("[%2d ->] Init packet:", c.seq)
@@ -95,86 +97,80 @@ func (c *Conn) init() {
 }
 
 // SetTimeout sets timeout for Connect and Reconnect
-func (c *Conn) SetTimeout(timeout time.Duration) {
+func (c *Connection) SetTimeout(timeout time.Duration) {
     c.timeout = timeout
 }
 
 // NetConn return internall net.Conn
-//func (my *Conn) NetConn() net.Conn {
-//return my.net_conn
+//func (c *Connection) NetConn() net.Conn {
+//return c.net_conn
 //}
 
-func (c *Conn) connect() (err error) {
+func (c *Connection) connect() (err error) {
     defer util.CatchError(&err)
     // 推出这个函数时不能关闭链接，否则其他调用的函数就无法执行 Query()、Exel() 方法 了
     //defer db.Close()
 
-    c.netConn = nil
+    c.db = nil
 
-    c.dbDsn = fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=%s",
-    c.dbuser,
-    c.dbpass,
-    c.raddr,
-    c.dbname,
-    "utf8mb4",
-)
+    c.dbDsn = fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=%s", c.dbuser, c.dbpass, c.raddr, c.dbname, "utf8mb4")
 
-//fmt.Printf("%v", c.dbDsn)
+    //fmt.Printf("%v", c.dbDsn)
 
-if c.netConn == nil {
-    // 数据库的抽象（*sql.DB），并不是真的数据库连接
-    //my.conn := autorc.New("tcp", "", address, user, pass, name)
-    c.netConn, err = sql.Open("mysql", c.dbDsn)
+    if c.db == nil {
+        // 数据库的抽象（*sql.DB），并不是真的数据库连接
+        //my.conn := autorc.New("tcp", "", address, user, pass, name)
+        c.db, err = sql.Open("mysql", c.dbDsn)
+        if err != nil {
+            c.db = nil
+            return
+        }
+    }
+
+    c.init()
+
+    // See "Important settings" section.
+    c.db.SetConnMaxLifetime(time.Minute * 3)   // 连接存活 3分钟
+    c.db.SetMaxOpenConns(c.maxOpenConns)       // 数据库的最大连接数
+    c.db.SetMaxIdleConns(c.maxIdleConns)       // 连接池中的保持连接的最大连接数
+
+    // 初始化一个数据库连接，sql.Open 的时候实际上是返回一个数据库的抽象而已，并没有真的和mysql链接上
+    //err = c.netConn.Ping()
+    err = c.Ping()
     if err != nil {
-        c.netConn = nil
+        fmt.Println("连接数据库失败 --- ", err.Error())
         return
     }
-}
 
-c.init()
+    //my.netConn.Query("set names utf8");
 
-// See "Important settings" section.
-c.netConn.SetConnMaxLifetime(time.Minute * 3)   // 连接存活 3分钟
-c.netConn.SetMaxOpenConns(c.maxOpenConns)       // 数据库的最大连接数
-c.netConn.SetMaxIdleConns(c.maxIdleConns)       // 连接池中的保持连接的最大连接数
-
-// 初始化一个数据库连接，sql.Open 的时候实际上是返回一个数据库的抽象而已，并没有真的和mysql链接上
-//err = c.netConn.Ping()
-err = c.Ping()
-if err != nil {
-    fmt.Println("连接数据库失败 --- ", err.Error())
     return
 }
 
-//my.netConn.Query("set names utf8");
-
-return
-}
-
 // Connect is Establishes a connection with MySQL server version 4.1 or later.
-func (c *Conn) Connect() (err error) {
-    if c.netConn != nil {
+func (c *Connection) Connect() (err error) {
+    if c.db != nil {
         return ErrAlredyConn
     }
 
     return c.connect()
 }
 
-func (c *Conn) close() (err error) {
+func (c *Connection) close() (err error) {
     defer util.CatchError(&err)
 
     // Always close and invalidate connection
     defer func() {
-        err = c.netConn.Close()
-        c.netConn = nil // Mark that we disconnect
+        err = c.db.Close()
+        c.db = nil // Mark that we disconnect
     }()
 
     return
 }
 
 // Close connection to the server
-func (c *Conn) Close() (err error) {
-    if c.netConn == nil {
+func (c *Connection) Close() (err error) {
+    if c.db == nil {
         return ErrNotConn
     }
     //if c.unreaded_reply {
@@ -187,8 +183,8 @@ func (c *Conn) Close() (err error) {
 
 // Reconnect to Close and reopen connection.
 // Ignore unreaded rows, reprepare all prepared statements.
-func (c *Conn) Reconnect() (err error) {
-    if c.netConn != nil {
+func (c *Connection) Reconnect() (err error) {
+    if c.db != nil {
         // Close connection, ignore all errors
         err := c.close()
         if err != nil {
@@ -223,10 +219,10 @@ func (c *Conn) Reconnect() (err error) {
 }
 
 // Use to Change database
-func (c *Conn) Use(dbname string) (err error) {
+func (c *Connection) Use(dbname string) (err error) {
     defer util.CatchError(&err)
 
-    if c.netConn == nil {
+    if c.db == nil {
         return ErrNotConn
     }
     //if c.unreaded_reply {
@@ -238,10 +234,10 @@ func (c *Conn) Use(dbname string) (err error) {
 }
 
 // Ping is Send MySQL PING to the server.
-func (c *Conn) Ping() (err error) {
+func (c *Connection) Ping() (err error) {
     defer util.CatchError(&err)
 
-    if c.netConn == nil {
+    if c.db == nil {
         return ErrNotConn
     }
     //if c.unreaded_reply {
@@ -253,7 +249,7 @@ func (c *Conn) Ping() (err error) {
     // Get server response
     //my.getResult(nil, nil)
 
-    err = c.netConn.Ping()
+    err = c.db.Ping()
     if err != nil {
         return ErrNotConn
         //fmt.Println("连接数据库失败", err.Error())
@@ -264,20 +260,20 @@ func (c *Conn) Ping() (err error) {
 }
 
 // QueryRow is the function for query one row
-func (c *Conn) QueryRow(query string) *sql.Row {
-    row := c.netConn.QueryRow(query, 1) // 查询一条
+func (c *Connection) QueryRow(query string) *sql.Row {
+    row := c.db.QueryRow(query, 1) // 查询一条
     return row
 }
 
 // Query is the function for query multi rows
-func (c *Conn) Query(query string) (*sql.Rows, error) {
-    rows, err := c.netConn.Query(query) // 查询多条
+func (c *Connection) Query(query string) (*sql.Rows, error) {
+    rows, err := c.db.Query(query) // 查询多条
     return rows, err
 }
 
 // Exec is the function for Insert、Update、Delete
-func (c *Conn) Exec(query string) (sql.Result, error) {
-    res, err := c.netConn.Exec(query) // 查询多条
+func (c *Connection) Exec(query string) (sql.Result, error) {
+    res, err := c.db.Exec(query) // 查询多条
     return res, err
 }
 

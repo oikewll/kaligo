@@ -1,5 +1,15 @@
 <?php
-echo __dir__."\n";
+
+$conditions = [
+    ['LEFT', '1111'],
+    ['RIGHT', '2222'],
+    ['RIGHT', '2222'],
+];
+
+print_r(end($conditions));
+print_r(key($conditions));
+
+
 exit;
 $arr = array(0,1,2,3,4,5,6);
  

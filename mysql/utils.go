@@ -4,6 +4,8 @@ import (
     "bytes"
     "fmt"
     "io"
+	"regexp"
+	"strings"
 )
 
 // Version returns version string
@@ -13,6 +15,13 @@ func Version() string {
 
 func syntaxError(ln int) error {
     return fmt.Errorf("syntax error at line: %d", ln)
+}
+
+var reg = regexp.MustCompile(`\B[A-Z]`)
+
+// transFieldName 转换字段名称，驼峰写法转下划线写法
+func transFieldName(name string) string {
+	return strings.ToLower(reg.ReplaceAllString(name, "_$0"))
 }
 
 func escapeString(txt string) string {
