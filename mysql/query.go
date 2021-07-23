@@ -2,9 +2,12 @@ package mysql
 
 import (
     //"errors"
-    //"fmt"
     //"strconv"
-    //"strings"
+    "strings"
+    "regexp"
+    //"fmt"
+    //"crypto/md5"
+    //"io"
     //"time"
     //"github.com/owner888/kaligo/util"
 )
@@ -96,13 +99,84 @@ func (q *Query) Parameters(params map[string]string) *Query {
 }
 
 // SetConnection Set a DB Connection to use when compiling the SQL.
-func (q *Query) SetConnection(params map[string]string) *Query {
-    // Merge the new parameters in
-    for param, value := range params {
-        q.parameters[param] = value
-    }
+func (q *Query) SetConnection(c *Connection) *Query {
+    //if c == nil {
+    //}
+
+    q.connection = c
 
     return q
+}
+
+// Compile the SQL query and return it. Raplaces and parameters with their
+// @return result Result DatabaseResult for SELECT queries
+// @return result interface{} the insert id for INSERT queries
+// @return result integer number of affected rows for all other queries
+func (q *Query) Compile() string {
+    sqlStr := q.sqlStr
+
+    if q.parameters != nil {
+        // Quote all of the values
+        values := q.parameters
+        for k, v := range values {
+            //values[k] = db.Quote(v)
+            values[k] = v
+        }
+
+        //sqlStr = Str.Tr(sqlStr, values)
+    }
+
+    return strings.TrimSpace(sqlStr)
+}
+
+// Execute the current query on the given database.
+func (q *Query) Execute() interface{} {
+    // Compile the SQL query
+    sqlStr := q.Compile()
+
+    // make sure we have a SQL type to work with
+    if q.queryType == 0 {
+        // get the SQL statement type without having to duplicate the entire statement
+        stmt := regexp.MustCompile(`[\s]+`).Split(strings.TrimLeft(sqlStr[0:11], "("), 2)
+        switch strings.ToUpper(stmt[0]) {
+        case "DESCRIBE", "EXECUTE", "EXPLAIN", "SELECT", "SHOW":
+            q.queryType = SELECT
+        case "INSERT":
+            q.queryType = INSERT
+        case "UPDATE":
+            q.queryType = UPDATE
+        case "DELETE":
+            q.queryType = DELETE
+        default:
+            q.queryType = 0
+        }
+
+        //cacheObj = cache.Forge(cacheKey)
+        //if q.connection.Caching() && q.lifeTime != 0 && q.queryType == SELECT {
+            //var cacheKey string    
+            //if q.cacheKey == "" {
+                //h := md5.New()
+                //io.WriteString(h, "Connection.Query(\"" + sqlStr + "\")")
+                //cacheKey += fmt.Sprintf("db.%x", h.Sum(nil))
+                //return db.Cache(cache.Get(cacheKey), sqlStr, q.AsObject)
+            //} else {
+                //cacheKey += q.cacheKey
+            //}
+        //}
+
+        // Execute the query
+        //db.queryCount++
+        // 调用db.go 还是 connection.go ？？？
+        //result := db.Query(q.queryType, sqlStr, q.AsObject)
+
+        // Cache the result if needed
+        //if  cacheObj != nil && (q.cacheAll || result.count() != 0) {
+            //cacheObj.setExpiration(q.lifeTime).SetContents(result.asArray()).Set()
+        //}
+    }
+
+    result := 10
+    return result
 }
 // Reset the query parameters
 //func (q *Query) reset() *Query {

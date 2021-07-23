@@ -147,6 +147,13 @@ func (c *Connection) connect() (err error) {
     return
 }
 
+
+// Caching Per connection cache controller setter/getter
+func (c *Connection) Caching() bool {
+    //return \Arr::get($this->_config, 'enable_cache', true);
+    return false
+}
+
 // Connect is Establishes a connection with MySQL server version 4.1 or later.
 func (c *Connection) Connect() (err error) {
     if c.db != nil {

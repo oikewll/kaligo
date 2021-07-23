@@ -182,7 +182,7 @@ func (db *DB) GetOne(sql string) (row map[string]string, err error) {
     // 判断SQL语句是否包含 Limit 1
     reg, _ := regexp.Compile(`(?i:limit)`)
     if !reg.MatchString(sql) {
-        sql = strings.Trim(sql, " ")
+        sql = strings.TrimSpace(sql)
         reg, _ = regexp.Compile(`(?i:[,;])$`)
         sql = reg.ReplaceAllString(sql, "")
     }
