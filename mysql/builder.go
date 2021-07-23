@@ -78,8 +78,8 @@ func (b *Builder) CompileConditions(db *DB, conditions map[string][][]string) st
                     ////BETWEEN always has exactly two arguments
                     valueArr := strings.Split(value, ",")
                     // trim一下兼容有空格写法：10,20 和 10, 20 都兼容
-                    min := strings.Trim(valueArr[0], " ")
-                    max := strings.Trim(valueArr[1], " ")
+                    min := strings.TrimSpace(valueArr[0])
+                    max := strings.TrimSpace(valueArr[1])
                     if b.parameters[min] != "" {
                         // Set the parameter as the minimum
                         min = b.parameters[min]

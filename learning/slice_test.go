@@ -6,6 +6,7 @@ package learning
 import(
     "testing"
     "strings"
+    "regexp"
     "fmt"
     //"sync"
 )
@@ -49,6 +50,19 @@ func (g *Singleton) GetName() string {
 //}
 
 func TryFuncArgsInterface(args interface{}) bool{
+
+    //sqlStr := "hypertext, language, programming"
+    sqlStr := "Select * From user where id = 10"
+    a := regexp.MustCompile(`[\s]+`).Split(strings.TrimLeft(sqlStr[0:11], "("), 2)
+    fmt.Printf("TryFuncArgsInterface sqlStr: %T=[%v]\n", a[0], a[0])
+
+    //sqlStr := "Select * From user where id = 10"
+    //sqlStr = sqlStr[0:11]
+    //sqlStr = strings.TrimLeft(sqlStr[0:11], "(")
+    //a := regexp.MustCompile(`[\s]+`)
+    //sqlArr := a.Split(sqlStr, -1)
+    //fmt.Printf("TryFuncArgsInterface sqlStr: %T=[%v]\n", sqlStr, sqlStr)
+    //fmt.Printf("TryFuncArgsInterface sqlArr: %T=[%v]\n", sqlArr, sqlArr)
 
     g := GetInstance("111")
     name := g.GetName()
