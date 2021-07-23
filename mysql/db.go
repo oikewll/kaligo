@@ -28,14 +28,26 @@ import (
     //_ "github.com/ziutek/mymysql/thrsafe" // 用了连接池之后连接都是重复利用的，没必要用线程安全模式
 )
 
+const (
+    // SELECT Query select type
+    SELECT = 1
+    // INSERT Query insert type
+    INSERT = 2
+    // UPDATE Query update type
+    UPDATE = 3
+    // DELETE Query delete type
+    DELETE = 4
+)
+
 // DB is the struct for MySQL connection handler
 type DB struct {
-    Conn *Conn          // MySQL connection
-    //S *Select
+    queryCount int
+    C *Connection          // MySQL connection
+    S *Select
     I *Insert
-    //U *Update
-    //D *Delete
-    //Q *Query
+    U *Update
+    D *Delete
+    Q *Query
     //R *Result
 
     //rows Rows         // 自己再封装一层Row、Result
@@ -46,6 +58,8 @@ type DB struct {
     //rows sql.Rows
     res sql.Result
     initCmds []string   // MySQL commands/queries executed after connect
+    queryType string
+    //lastSqlStr string
     logSlowQuery bool
     logSlowTime int64
 }
@@ -55,14 +69,14 @@ type DB struct {
 // (读+写)连接数据库+选择数据库
 //func New() *DB {
 func NewDB() *DB {
-    c := NewConn()
+    c := NewConnection()
     err := c.Connect()
     if err != nil {
         return nil
     }
     // 生成指针类型的实例
     db := &DB{
-        Conn: c,
+        C: c,
         logSlowQuery: util.StrToBool(conf.Get("db", "log_slow_query")),
         logSlowTime:  util.StrToInt64(conf.Get("db", "log_slow_time")),
     }
@@ -70,11 +84,17 @@ func NewDB() *DB {
     return db
 }
 
+// Query func is use for create a new [*Query]
+//func (db *DB) Query(sqlStr string, queryType int) *Query {
+    //q := &Query{
+        //sqlStr:    sqlStr,
+        //queryType: queryType,
+    //}
+    //return q 
+//}
+
 // Insert func is use for create a new [*Insert]
 func (db *DB) Insert(table string, columns []string) *Insert {
-    //for _, arg := range args {
-        //fmt.Println(arg)
-    //}
     // 生成指针类型的实例，下面两个用法一样，记得要加取址符
     //i := new(Insert)
     //i.table   = table
@@ -83,8 +103,15 @@ func (db *DB) Insert(table string, columns []string) *Insert {
         table: table,
         columns: columns,
     }
-    //i.Insert(table, args)
     return i 
+}
+
+// Update func is use for create a new [*Update]
+func (db *DB) Update(table string) *Update {
+    u := &Update{
+        table: table,
+    }
+    return u 
 }
 
 // slowQueryLog is the function for record the slow query log
@@ -121,20 +148,20 @@ func (db *DB) Register(query string) {
 // Query is the function for query
 // 执行一条语句(读 + 写)
 //func (db *DB) Query(sql string) ([]mysql.Row, mysql.Result, error) {
-func (db *DB) Query(sql string) (*sql.Rows, error) {
-    startTime := time.Now().UnixNano()
-    rows, err := db.Conn.Query(sql)
-    if err != nil {
-        db.errorSQLLog(sql, err)
-    }
-    queryTime := (time.Now().UnixNano() - startTime) / 1000000000
+//func (db *DB) Query(sql string) (*sql.Rows, error) {
+    //startTime := time.Now().UnixNano()
+    //rows, err := db.Conn.Query(sql)
+    //if err != nil {
+        //db.errorSQLLog(sql, err)
+    //}
+    //queryTime := (time.Now().UnixNano() - startTime) / 1000000000
 
-    if queryTime > db.logSlowTime && db.logSlowQuery {
-        db.slowQueryLog(sql, queryTime)
-    }
+    //if queryTime > db.logSlowTime && db.logSlowQuery {
+        //db.slowQueryLog(sql, queryTime)
+    //}
 
-    return rows, err
-}
+    //return rows, err
+//}
 
 //// 提取数据表字段名称
 //func (db *DB) getFieldList(str string) ([]string) {
@@ -182,7 +209,7 @@ func (db *DB) GetAll(sql string) (row map[int]map[string]string, err error) {
     results := make(map[int]map[string]string)
 
     //row := db.Conn.QueryRow(sql)  // 查询一条，因为不存在Columns()方法，所以统一用Query吧
-    rows, err := db.Conn.Query(sql) // 查询多条
+    rows, err := db.C.Query(sql) // 查询多条
     if err != nil {
         fmt.Println("查询数据库失败", err.Error())
         return results, err
@@ -282,7 +309,7 @@ func (db *DB) InsertBatch(table string, data []map[string]string) (bool, error) 
     var sqlStr = "Insert Into `"+table+"`("+keys+") Values "+strings.Join(valsArr, ", ")
     //fmt.Println(sql)
 
-    res, err := db.Conn.Exec(sqlStr)
+    res, err := db.C.Exec(sqlStr)
     if err != nil {
         return false, err
     }
@@ -294,24 +321,24 @@ func (db *DB) InsertBatch(table string, data []map[string]string) (bool, error) 
 
 // Update is the function for update data
 // (写)拼凑一个sql语句修改一条记录数据
-func (db *DB) Update(table string, data map[string]string, where string) (bool, error) {
+//func (db *DB) Update(table string, data map[string]string, where string) (bool, error) {
 
-    var sets []string
-    for k, v := range data {
-        sets = append(sets, "`"+k+"`=\""+db.AddSlashes(db.StripSlashes(v))+"\"")
-    }
-    setsSQL := strings.Join(sets, ", ")
-    var sqlStr = "Update `"+table+"` Set "+setsSQL+" Where "+where
-    //fmt.Println(sql)
-    res, err := db.Conn.Exec(sqlStr)
-    if err != nil {
-        return false, err
-    }
+    //var sets []string
+    //for k, v := range data {
+        //sets = append(sets, "`"+k+"`=\""+db.AddSlashes(db.StripSlashes(v))+"\"")
+    //}
+    //setsSQL := strings.Join(sets, ", ")
+    //var sqlStr = "Update `"+table+"` Set "+setsSQL+" Where "+where
+    ////fmt.Println(sql)
+    //res, err := db.Conn.Exec(sqlStr)
+    //if err != nil {
+        //return false, err
+    //}
 
-    db.res = res
+    //db.res = res
 
-    return true, err
-}
+    //return true, err
+//}
 
 // UpdateBatch is the function for update data in bulk
 // (写)拼凑一个sql语句批量插入多条记录数据
@@ -364,7 +391,7 @@ func (db *DB) UpdateBatch(table string, data []map[string]string, index string) 
     // 完整的可执行SQL语句
     sqlStr = util.Substr(sqlStr, 0, len(sqlStr)-2) + where
 
-    res, err := db.Conn.Exec(sqlStr)
+    res, err := db.C.Exec(sqlStr)
     if err != nil {
         return false, err
     }
@@ -390,12 +417,12 @@ func (db *DB) AffectedRows() int64 {
 
 // Close is the function for close db connection
 func (db *DB) Close() (err error) {
-    if db.Conn.netConn == nil {
+    if db.C.netConn == nil {
         return nil  // closed before
     }
 
     // 连接将会被释放回到连接池，而不是真的断开了链接
-    err = db.Conn.Close()
+    err = db.C.Close()
     return err
 }
 
