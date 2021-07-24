@@ -8,6 +8,8 @@ import(
     "strings"
     "regexp"
     "fmt"
+    "io"
+	"runtime"
     //"sync"
 )
 
@@ -49,12 +51,46 @@ func (g *Singleton) GetName() string {
     //return instance
 //}
 
+// CatchError is...
+func catchError(err *error) {
+	if pv := recover(); pv != nil {
+		switch e := pv.(type) {
+		case runtime.Error:
+			panic(pv)
+		case error:
+			if e == io.EOF {
+				*err = io.ErrUnexpectedEOF
+			} else {
+				*err = e
+			}
+		default:
+			panic(pv)
+		}
+	}
+}
+
+//func TryFuncError() (err error) {
+    //defer catchError(&err)
+
+    //panic("hello world")
+//}
+
+//func TestTryFuncError(t *testing.T) {
+    //TryFuncError()
+//}
+
 func TryFuncArgsInterface(args interface{}) bool{
+
+    index := strings.Index("chicken", "cjj")
+    fmt.Printf("TryFuncArgsInterface Index: %T=[%v]\n", index, index)
 
     //sqlStr := "hypertext, language, programming"
     sqlStr := "Select * From user where id = 10"
     a := regexp.MustCompile(`[\s]+`).Split(strings.TrimLeft(sqlStr[0:11], "("), 2)
     fmt.Printf("TryFuncArgsInterface sqlStr: %T=[%v]\n", a[0], a[0])
+    parts := regexp.MustCompile(`\.`).Split("tablecolumn", 2)
+    fmt.Printf("TryFuncArgsInterface sqlStr: %T=[%v]\n", parts, parts)
+
 
     //sqlStr := "Select * From user where id = 10"
     //sqlStr = sqlStr[0:11]

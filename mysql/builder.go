@@ -90,8 +90,7 @@ func (b *Builder) CompileConditions(db *DB, conditions map[string][][]string) st
                         max = b.parameters[max]
                     }
 
-                    ////value = db.Quote(min) + " AND " + db.Quote(max)
-                    value = min + " AND " + max
+                    value = quote(min) + " AND " + quote(max)
                 } else {
                     if b.parameters[value] != "" {
                         // Set the parameter as the value
@@ -99,13 +98,11 @@ func (b *Builder) CompileConditions(db *DB, conditions map[string][][]string) st
                     }
                     
                     // Quote the entire value normally
-                    //value = db.Quote(value)
+                    value = quote(value)
                 }
 
-                // 注意不是 QuoteIdent()
-                //column = db.Quote(column)
                 // Append the statement to the query
-                sqlStr += column + " " + op + " " + value
+                sqlStr += quoteIdentifier(column) + " " + op + " " + value
             }
 
             lastCondition = strings.Join(condition, "")
@@ -122,8 +119,8 @@ func (b *Builder) CompileSet(db *DB, values [][]string) string {
         column := group[0]
         value  := group[1]
 
-        //column = db.QuoteIdent(column)
-        //value  = db.Quote(value)
+        column = quoteIdentifier(column)
+        value  = quote(value)
 
         sets = append(sets, column + " = " + value)
     }
@@ -139,8 +136,8 @@ func (b *Builder) CompileOrderBy(db *DB, columns [][2]string) string {
         column    := group[0]
         direction := group[1]
 
-        //column    = db.QuoteIdent(column)
-        //direction = db.Quote(direction)
+        column    = quoteIdentifier(column)
+        direction = quote(direction)
 
         direction = strings.ToUpper(direction)
         if direction != "" {

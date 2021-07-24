@@ -27,8 +27,7 @@ func (d *Delete) Compile(db *DB) string {
     db.Conn.Connect()   // 这里要返回database connection instance
 
     // Start a deletion query
-    //sqlStr := "DELETE FROM " + db.QuoteTable(d.table)
-    sqlStr := "DELETE FROM " + d.table
+    sqlStr := "DELETE FROM " + quoteTable(d.table)
 
     if len(d.wheres) == 0 {
         //sqlStr += " WHERE " + d.compileConditions(db, d.wheres)

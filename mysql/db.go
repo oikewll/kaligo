@@ -9,14 +9,14 @@
 package mysql
 
 import (
-    "database/sql"
+    //"database/sql"
     "fmt"
     _ "github.com/go-sql-driver/mysql" // 空白导入必须在main.go、testing，否则就必须在这里写注释
-    "log"
-    "regexp"
-    "sort"
+    //"log"
+    //"regexp"
+    //"sort"
     "strings"
-    "time"
+    //"time"
     //"container/list"
     //"sync"
     //"reflect"
@@ -27,6 +27,8 @@ import (
     ////_ "github.com/ziutek/mymysql/native"    // 普通模式
     //_ "github.com/ziutek/mymysql/thrsafe" // 用了连接池之后连接都是重复利用的，没必要用线程安全模式
 )
+
+var instances = map[string]*DB{}    
 
 const (
     // SELECT Query select type
@@ -41,8 +43,11 @@ const (
 
 // DB is the struct for MySQL connection handler
 type DB struct {
+    name string       // instance name
     queryCount int
-    C *Connection          // MySQL connection
+    lastQuery string
+
+    C *Connection          // Current MySQL connection
     S *Select
     I *Insert
     U *Update
@@ -56,44 +61,81 @@ type DB struct {
     ////res mysql.Result
     //Conn *sql.DB      // MySQL connection
     //rows sql.Rows
-    res sql.Result
-    initCmds []string   // MySQL commands/queries executed after connect
-    queryType string
-    //lastSqlStr string
-    logSlowQuery bool
-    logSlowTime int64
+    //res sql.Result
 }
-
 
 // NewDB is the function for Create new MySQL handler.
 // (读+写)连接数据库+选择数据库
-//func New() *DB {
-func NewDB() *DB {
-    c := NewConnection()
-    err := c.Connect()
-    if err != nil {
-        return nil
+func NewDB(name string) *DB {
+    if db, ok := instances[name]; ok {
+        return db
     }
-    // 生成指针类型的实例
+
+    dbuser := conf.Get("db", "user")
+    dbpass := conf.Get("db", "pass")
+    dbhost := conf.Get("db", "host")
+    dbport := conf.Get("db", "port")
+    dbname := conf.Get("db", "name")
+    dbDsn  := fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=%s", dbuser, dbpass, dbhost+":"+dbport, dbname, "utf8mb4")
+    //fmt.Printf("%v", dbDsn)
+
+    c := NewConnection(name, dbDsn, util.StrToInt(conf.Get("db", "max_idle_conns")), false)
     db := &DB{
-        C: c,
-        logSlowQuery: util.StrToBool(conf.Get("db", "log_slow_query")),
-        logSlowTime:  util.StrToInt64(conf.Get("db", "log_slow_time")),
+        name      :name,
+        queryCount: 0,
+        C         : c,
     }
+    instances[name] = db
 
     return db
 }
 
 // Query func is use for create a new [*Query]
-//func (db *DB) Query(sqlStr string, queryType int) *Query {
-    //q := &Query{
-        //sqlStr:    sqlStr,
-        //queryType: queryType,
-    //}
-    //return q 
-//}
+//     Create a new SELECT query
+//     Query("SELECT * FROM users")
+//     Create a new DELETE query
+//     Query("DELETE FROM users WHERE id = 5")
+// @param sqlStr string  SQL statement
+// @param queryType int  type:SELECT, UPDATE, etc
+// @return *Query
+func (db *DB) Query(sqlStr string, queryType int) *Query {
+    q := &Query{
+        sqlStr:    sqlStr,
+        queryType: queryType,
+    }
+    q.SetConnection(db.C)
+    return q 
+}
+
+// LastQuery Returns the last query
+func (db *DB) LastQuery() string {
+    return db.lastQuery
+}
+
+// Select func is use for create a new [*Select]
+// Select -> Where -> Builder -> Query
+//     SELECT id, username
+//     Select("id", "username")
+//     Select([]string{"id", "username"})
+//     SELECT id AS user_id
+//     select("id AS user_id")
+// @param columns []string  columns to select
+// @return *Select
+func (db *DB) Select(columns ...string) *Select {
+    s := &Select{
+        selects: columns,
+    }
+    s.SetConnection(db.C)
+    return s 
+}
 
 // Insert func is use for create a new [*Insert]
+// Insert -> Builder -> Query
+//     INSERT INTO users (id, username)
+//     Insert("users", []string{"id", "username"})
+// @param table   string   table to insert into
+// @param columns []string list of column names
+// @return *Insert
 func (db *DB) Insert(table string, columns []string) *Insert {
     // 生成指针类型的实例，下面两个用法一样，记得要加取址符
     //i := new(Insert)
@@ -103,47 +145,94 @@ func (db *DB) Insert(table string, columns []string) *Insert {
         table: table,
         columns: columns,
     }
+    i.SetConnection(db.C)
     return i 
 }
 
 // Update func is use for create a new [*Update]
+// Update -> Where -> Builder -> Query
+//     UPDATE users
+//     Update("users")
+// @param table   string    table to update
+// @return *Update
 func (db *DB) Update(table string) *Update {
     u := &Update{
         table: table,
     }
+    u.SetConnection(db.C)
     return u 
+}
+
+// Delete func is use for create a new [*Delete]
+// Delete -> Where -> Builder -> Query
+//     DELETE users
+//     Delete("users")
+// @param table   string    table to delete from
+// @return *Delete
+func (db *DB) Delete(table string) *Delete {
+    d := &Delete{
+        table: table,
+    }
+    d.SetConnection(db.C)
+    return d 
+}
+
+// Expr func is use for create a new [*Expression] which is not escaped. An expression
+// is the only way to use SQL functions within query builders.
+func (db *DB) Expr(table string) *Expression {
+    return &Expression{
+
+    }
+}
+
+// ListTables If a table name is given it will return the table name with the configured
+// prefix. If not, then just the prefix is returnd
+func (db *DB) ListTables(like string) []string {
+    return db.C.ListTables(like)
+}
+
+// ListColumns Lists all of the columns in a table. Optionally, a LIKE string can be
+// used to search for specific fields.
+func (db *DB) ListColumns(table string, like string) map[string] map[string]string {
+    return db.C.ListColumns(table, like)
+}
+
+// ListIndexes Lists all of the idexes in a table. Optionally, a LIKE string can be
+// used to search for specific indexes by name.
+func (db *DB) ListIndexes(table string, like string) []map[string]string {
+    return db.C.ListIndexes(table, like)
 }
 
 // slowQueryLog is the function for record the slow query log
 // 记录慢查询日志
-func (db *DB) slowQueryLog(sql string, queryTime int64) {
-    msg := fmt.Sprintf("Time: %d --- %s --- %s \n",
-		queryTime,
-		time.Now().Format("2006-01-02 15:04:05"),
-		sql,
-	)
-    if ok, err := util.WriteLog("slow_query.log", msg); !ok {
-        log.Print(err)
-    }
-}
+//func (db *DB) slowQueryLog(sql string, queryTime int64) {
+    //msg := fmt.Sprintf("Time: %d --- %s --- %s \n",
+		//queryTime,
+		//time.Now().Format("2006-01-02 15:04:05"),
+		//sql,
+	//)
+    //if ok, err := util.WriteLog("slow_query.log", msg); !ok {
+        //log.Print(err)
+    //}
+//}
 
-// 记录错误查询日志
-func (db *DB) errorSQLLog(sql string, err error) {
-    msg := fmt.Sprintf("Time: %s --- %s --- %s \n",
-		time.Now().Format("2006-01-02 15:04:05"),
-		sql,
-        err,
-	)
-    if ok, err := util.WriteLog("error_sql.log", msg); !ok {
-        log.Print(err)
-    }
-}
+//// 记录错误查询日志
+//func (db *DB) errorSQLLog(sql string, err error) {
+    //msg := fmt.Sprintf("Time: %s --- %s --- %s \n",
+		//time.Now().Format("2006-01-02 15:04:05"),
+		//sql,
+        //err,
+	//)
+    //if ok, err := util.WriteLog("error_sql.log", msg); !ok {
+        //log.Print(err)
+    //}
+//}
 
 // Register registers initialization commands.
 // This is workaround, see http://codereview.appspot.com/5706047
-func (db *DB) Register(query string) {
-	db.initCmds = append(db.initCmds, query)
-}
+//func (db *DB) Register(query string) {
+	//db.initCmds = append(db.initCmds, query)
+//}
 
 // Query is the function for query
 // 执行一条语句(读 + 写)
@@ -178,82 +267,82 @@ func (db *DB) Register(query string) {
 
 // GetOne is the function for get one record
 // (读)直接从一个sql语句返回一条记录数据
-func (db *DB) GetOne(sql string) (row map[string]string, err error) {
-    // 判断SQL语句是否包含 Limit 1
-    reg, _ := regexp.Compile(`(?i:limit)`)
-    if !reg.MatchString(sql) {
-        sql = strings.TrimSpace(sql)
-        reg, _ = regexp.Compile(`(?i:[,;])$`)
-        sql = reg.ReplaceAllString(sql, "")
-    }
-    sql = fmt.Sprintf("%s Limit 1", sql)
-    //fmt.Println(sql)
+//func (db *DB) GetOne(sql string) (row map[string]string, err error) {
+    //// 判断SQL语句是否包含 Limit 1
+    //reg, _ := regexp.Compile(`(?i:limit)`)
+    //if !reg.MatchString(sql) {
+        //sql = strings.TrimSpace(sql)
+        //reg, _ = regexp.Compile(`(?i:[,;])$`)
+        //sql = reg.ReplaceAllString(sql, "")
+    //}
+    //sql = fmt.Sprintf("%s Limit 1", sql)
+    ////fmt.Println(sql)
 
-    // 非常重要：确保QueryRow之后调用Scan方法，否则持有的数据库链接不会被释放
-	//err := db.QueryRow(sqlStr, 1).Scan(&u.id, &u.name, &u.age)
-    rows, err := db.GetAll(sql)
+    //// 非常重要：确保QueryRow之后调用Scan方法，否则持有的数据库链接不会被释放
+	////err := db.QueryRow(sqlStr, 1).Scan(&u.id, &u.name, &u.age)
+    //rows, err := db.GetAll(sql)
 
-    if _, ok := rows[0]; ok {
-        row = rows[0]
-    }
+    //if _, ok := rows[0]; ok {
+        //row = rows[0]
+    //}
 
-    //fmt.Println(row)
-    return row, err
-}
+    ////fmt.Println(row)
+    //return row, err
+//}
 
 // GetAll is the function for get all record
 // (读)直接从一个sql语句返回多条记录数据
-func (db *DB) GetAll(sql string) (row map[int]map[string]string, err error) {
+//func (db *DB) GetAll(sql string) (row map[int]map[string]string, err error) {
 
-    // 最后得到的map
-    results := make(map[int]map[string]string)
+    //// 最后得到的map
+    //results := make(map[int] map[string]string)
 
-    //row := db.Conn.QueryRow(sql)  // 查询一条，因为不存在Columns()方法，所以统一用Query吧
-    rows, err := db.C.Query(sql) // 查询多条
-    if err != nil {
-        fmt.Println("查询数据库失败", err.Error())
-        return results, err
-    }
-
-    // 非常重要：关闭rows释放持有的数据库链接
-    defer rows.Close()
-
-    // 读出查询出的列字段名
-	cols, _ := rows.Columns()
-	// vals是每个列的值，这里获取到byte里
-	vals := make([][]byte, len(cols))
-	// rows.Scan的参数，因为每次查询出来的列是不定长的，用len(cols)定住当次查询的长度
-	scans := make([]interface{}, len(cols))
-	// 让每一行数据都填充到[][]byte里面
-	for i := range vals {
-		scans[i] = &vals[i]
-	}
-
-    i := 0
-    // 循环读取结果集中的数据
-    for rows.Next() { //循环，让游标往下推
-        if err := rows.Scan(scans...); err != nil { //rows.Scan查询出来的不定长值放到scans[i] = &vals[i],也就是每行都放在vals里
-            fmt.Println(err)
-            return results, err
-        }
-
-        row := make(map[string]string) //每行数据
-
-        for k, v := range vals { //每行数据是放在values里面，现在把它挪到row里
-            key := cols[k]
-            row[key] = string(v)
-        }
-        results[i] = row //装入结果集中
-        i++
-    }
-
-    // 查询出来的数组
-    //for k, v := range results {
-        //fmt.Println(k, v)
+    ////row := db.Conn.QueryRow(sql)  // 查询一条，因为不存在Columns()方法，所以统一用Query吧
+    //rows, err := db.C.Query(sql) // 查询多条
+    //if err != nil {
+        //fmt.Println("查询数据库失败", err.Error())
+        //return results, err
     //}
 
-    return results, err
-}
+    //// 非常重要：关闭rows释放持有的数据库链接
+    //defer rows.Close()
+
+    //// 读出查询出的列字段名
+	//cols, _ := rows.Columns()
+	//// vals是每个列的值，这里获取到byte里
+	//vals := make([][]byte, len(cols))
+	//// rows.Scan的参数，因为每次查询出来的列是不定长的，用len(cols)定住当次查询的长度
+	//scans := make([]interface{}, len(cols))
+	//// 让每一行数据都填充到[][]byte里面
+	//for i := range vals {
+		//scans[i] = &vals[i]
+	//}
+
+    //i := 0
+    //// 循环读取结果集中的数据
+    //for rows.Next() { //循环，让游标往下推
+        //if err := rows.Scan(scans...); err != nil { //rows.Scan查询出来的不定长值放到scans[i] = &vals[i],也就是每行都放在vals里
+            //fmt.Println(err)
+            //return results, err
+        //}
+
+        //row := make(map[string]string) //每行数据
+
+        //for k, v := range vals { //每行数据是放在values里面，现在把它挪到row里
+            //key := cols[k]
+            //row[key] = string(v)
+        //}
+        //results[i] = row //装入结果集中
+        //i++
+    //}
+
+    //// 查询出来的数组
+    ////for k, v := range results {
+        ////fmt.Println(k, v)
+    ////}
+
+    //return results, err
+//}
 
 // Insert is the function for insert data
 // (写)拼凑一个sql语句插入一条记录数据
@@ -282,42 +371,42 @@ func (db *DB) GetAll(sql string) (row map[int]map[string]string, err error) {
 
 // InsertBatch is the function for insert data in bulk
 // (写)拼凑一个sql语句批量插入多条记录数据
-func (db *DB) InsertBatch(table string, data []map[string]string) (bool, error) {
+//func (db *DB) InsertBatch(table string, data []map[string]string) (bool, error) {
 
-    var keys string
-    var vals string
-    var valsArr []string
-    for _, d := range data {
-        keys = ""
-        vals = ""
-        // slice是无序的，这里是保证他有顺序
-        ms := util.NewSortMap(d)
-        sort.Sort(ms)
-        for k, v := range ms {
-            if k == 0 {
-                keys = v.Key
-                vals = v.Val
-            } else {
-                keys = keys+"`,`"+v.Key
-                vals = vals+"\",\""+db.AddSlashes(db.StripSlashes(v.Val))
-            }
-        }
-        keys = "`"+keys+"`"
-        vals = "(\""+vals+"\")"
-        valsArr = append(valsArr, vals)
-    }
-    var sqlStr = "Insert Into `"+table+"`("+keys+") Values "+strings.Join(valsArr, ", ")
-    //fmt.Println(sql)
+    //var keys string
+    //var vals string
+    //var valsArr []string
+    //for _, d := range data {
+        //keys = ""
+        //vals = ""
+        //// slice是无序的，这里是保证他有顺序
+        //ms := util.NewSortMap(d)
+        //sort.Sort(ms)
+        //for k, v := range ms {
+            //if k == 0 {
+                //keys = v.Key
+                //vals = v.Val
+            //} else {
+                //keys = keys+"`,`"+v.Key
+                //vals = vals+"\",\""+db.AddSlashes(db.StripSlashes(v.Val))
+            //}
+        //}
+        //keys = "`"+keys+"`"
+        //vals = "(\""+vals+"\")"
+        //valsArr = append(valsArr, vals)
+    //}
+    //var sqlStr = "Insert Into `"+table+"`("+keys+") Values "+strings.Join(valsArr, ", ")
+    ////fmt.Println(sql)
 
-    res, err := db.C.Exec(sqlStr)
-    if err != nil {
-        return false, err
-    }
+    //res, err := db.C.Exec(sqlStr)
+    //if err != nil {
+        //return false, err
+    //}
 
-    db.res = res
+    //db.res = res
 
-    return true, err
-}
+    //return true, err
+//}
 
 // Update is the function for update data
 // (写)拼凑一个sql语句修改一条记录数据
@@ -342,112 +431,112 @@ func (db *DB) InsertBatch(table string, data []map[string]string) (bool, error) 
 
 // UpdateBatch is the function for update data in bulk
 // (写)拼凑一个sql语句批量插入多条记录数据
-func (db *DB) UpdateBatch(table string, data []map[string]string, index string) (bool, error) {
+//func (db *DB) UpdateBatch(table string, data []map[string]string, index string) (bool, error) {
 
-    var sqlStr = "Update `"+table+"` Set "
-    ids := []string{}
-    rows := map[string][]string {}
+    //var sqlStr = "Update `"+table+"` Set "
+    //ids := []string{}
+    //rows := map[string][]string {}
 
-    // 下面两段是拆解过程
-    //rows := map[string][]string {
-        //"channel":[]string {
-            //"When `plat_user_name` = 'test111' Then 'kkk5'",
-            //"When `plat_user_name` = 'test222' Then '360'",
-        //},
-        //"plat_name":[]string {
-            //"When `plat_user_name` = 'test111' Then 'kkk5_xxx'",
-            //"When `plat_user_name` = 'test222' Then '360_xxx'",
-        //},
+    //// 下面两段是拆解过程
+    ////rows := map[string][]string {
+        ////"channel":[]string {
+            ////"When `plat_user_name` = 'test111' Then 'kkk5'",
+            ////"When `plat_user_name` = 'test222' Then '360'",
+        ////},
+        ////"plat_name":[]string {
+            ////"When `plat_user_name` = 'test111' Then 'kkk5_xxx'",
+            ////"When `plat_user_name` = 'test222' Then '360_xxx'",
+        ////},
+    ////}
+
+    ////rows["channel"] = []string{}
+    ////rows["channel"] = append(rows["channel"], "When `plat_user_name` = 'test111' Then 'kkk5'")
+    ////rows["channel"] = append(rows["channel"], "When `plat_user_name` = 'test222' Then '360'")
+    ////rows["plat_name"] = []string{}
+    ////rows["plat_name"] = append(rows["plat_name"], "When `plat_user_name` = 'test111' Then 'kkk5_xxx'")
+    ////rows["plat_name"] = append(rows["plat_name"], "When `plat_user_name` = 'test222' Then '360_xxx'")
+
+    //// 拼凑上面的Map结构出来
+    //for _, d := range data {
+        //ids = append(ids, d[index])
+        //for k, v := range d {
+            //if k != index {
+                //str := "When `"+index+"` = '" + d[index]+"' Then '"+v+"'"
+                //rows[k] = append(rows[k], str)
+            //}
+        //}
+    //}
+    //// 拼凑批量修改SQL语句
+    //for k, v := range rows {
+        //sqlStr += "`"+k+"` = Case "
+        //for _, vv := range v {
+            //sqlStr += " "+vv
+        //}
+        //sqlStr += " Else `"+k+"` End, "
+    //}
+    //// 拼凑Where条件
+    //join := "'"+strings.Join(ids, "', '")+"'"
+    //where := " Where `"+index+"` In ("+join+")"
+    //// 完整的可执行SQL语句
+    //sqlStr = util.Substr(sqlStr, 0, len(sqlStr)-2) + where
+
+    //res, err := db.C.Exec(sqlStr)
+    //if err != nil {
+        //return false, err
     //}
 
-    //rows["channel"] = []string{}
-    //rows["channel"] = append(rows["channel"], "When `plat_user_name` = 'test111' Then 'kkk5'")
-    //rows["channel"] = append(rows["channel"], "When `plat_user_name` = 'test222' Then '360'")
-    //rows["plat_name"] = []string{}
-    //rows["plat_name"] = append(rows["plat_name"], "When `plat_user_name` = 'test111' Then 'kkk5_xxx'")
-    //rows["plat_name"] = append(rows["plat_name"], "When `plat_user_name` = 'test222' Then '360_xxx'")
+    //db.res = res
 
-    // 拼凑上面的Map结构出来
-    for _, d := range data {
-        ids = append(ids, d[index])
-        for k, v := range d {
-            if k != index {
-                str := "When `"+index+"` = '" + d[index]+"' Then '"+v+"'"
-                rows[k] = append(rows[k], str)
-            }
-        }
-    }
-    // 拼凑批量修改SQL语句
-    for k, v := range rows {
-        sqlStr += "`"+k+"` = Case "
-        for _, vv := range v {
-            sqlStr += " "+vv
-        }
-        sqlStr += " Else `"+k+"` End, "
-    }
-    // 拼凑Where条件
-    join := "'"+strings.Join(ids, "', '")+"'"
-    where := " Where `"+index+"` In ("+join+")"
-    // 完整的可执行SQL语句
-    sqlStr = util.Substr(sqlStr, 0, len(sqlStr)-2) + where
+    //return true, err
+//}
 
-    res, err := db.C.Exec(sqlStr)
-    if err != nil {
-        return false, err
-    }
+//// InsertID is the function for get last insert id
+//// 取得最后一次插入记录的自增ID值
+//func (db *DB) InsertID() int64 {
+    //id, _ := db.res.LastInsertId()
+    //return id
+//}
 
-    db.res = res
+//// AffectedRows is the function for return affected rows
+//// 返回受影响数目
+//func (db *DB) AffectedRows() int64 {
+    //rowsAffected, _ := db.res.RowsAffected()
+    //return rowsAffected
+//}
 
-    return true, err
-}
+//// Close is the function for close db connection
+//func (db *DB) Close() (err error) {
+    //if db.C.netConn == nil {
+        //return nil  // closed before
+    //}
 
-// InsertID is the function for get last insert id
-// 取得最后一次插入记录的自增ID值
-func (db *DB) InsertID() int64 {
-    id, _ := db.res.LastInsertId()
-    return id
-}
-
-// AffectedRows is the function for return affected rows
-// 返回受影响数目
-func (db *DB) AffectedRows() int64 {
-    rowsAffected, _ := db.res.RowsAffected()
-    return rowsAffected
-}
-
-// Close is the function for close db connection
-func (db *DB) Close() (err error) {
-    if db.C.netConn == nil {
-        return nil  // closed before
-    }
-
-    // 连接将会被释放回到连接池，而不是真的断开了链接
-    err = db.C.Close()
-    return err
-}
-
-// Transaction ...
-type Transaction struct {
-	*DB
-}
-
-// Begin is the function for close db connection
-//func (db *DB) Begin() error {
-    //tx, err := db.Conn.Begin()
+    //// 连接将会被释放回到连接池，而不是真的断开了链接
+    //err = db.C.Close()
     //return err
 //}
 
-// Commit is the function for close db connection
-func (db *DB) Commit() error {
-    err := db.Close()
-    return err
-}
+//// Transaction ...
+//type Transaction struct {
+	//*DB
+//}
 
-// Rollback is the function for close db connection
-func (db *DB) Rollback() error {
-    err := db.Close()
-    return err
-}
+//// Begin is the function for close db connection
+////func (db *DB) Begin() error {
+    ////tx, err := db.Conn.Begin()
+    ////return err
+////}
+
+//// Commit is the function for close db connection
+//func (db *DB) Commit() error {
+    //err := db.Close()
+    //return err
+//}
+
+//// Rollback is the function for close db connection
+//func (db *DB) Rollback() error {
+    //err := db.Close()
+    //return err
+//}
 
 // AddSlashes is ...
 // 转义：引号、双引号添加反斜杠
