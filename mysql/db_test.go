@@ -4,15 +4,15 @@ package mysql
 
 import(
     "testing"
-    "os"
-    "log"
+    //"os"
+    //"log"
     //"strconv"
     //"reflect"
     //"encoding/json"
     //"database/sql"
     //_ "github.com/go-sql-driver/mysql"
     //"github.com/owner888/kaligo"
-    "github.com/owner888/kaligo/conf"
+    //"github.com/owner888/kaligo/conf"
     //"github.com/owner888/kaligo/util"
     //"github.com/owner888/kaligo/mysql"
     //"github.com/owner888/kaligo/cache"
@@ -28,17 +28,17 @@ func TestDB(t *testing.T) {
     //memory.Set("name", "kaka", 10)
     //name := memory.Get("name")
     //t.Logf("name: [ %v ]", name)
-    str, _ := os.Getwd()
-    conf.AppPath = str + "/../"
-    log.Printf("TestDB AppPath: [ %v ]", conf.AppPath)
+    //str, _ := os.Getwd()
+    //conf.AppPath = str + "/../"
+    //log.Printf("TestDB AppPath: [ %v ]", conf.AppPath)
 
     //define('APPPATH', __DIR__.'/../app');
 
     //t.Logf("%s", kaligo.Int64ToStr(100))
 
-    db := NewDB()
-    //db := NewDB()
+    db := NewDB("default")
     //db.Debug = false
+    db.Query("SELECT * FROM user", SELECT)
 
     //// Register initialisation commands
 	//db.Register("set names utf8")
@@ -74,10 +74,9 @@ func TestDB(t *testing.T) {
     //}
 
     //sql := "Select a.id,a.name,b.date From `test` a Left Join `test_part` b On a.id=b.test_id;"
-    sql := "Select * From user"
-
-    row, _ := db.GetOne(sql)
-    t.Logf("%v", row)
+    //sql := "Select * From user"
+    //row, _ := db.GetOne(sql)
+    //t.Logf("%v", row)
     //fmt.Println(row["id"], " --- ", row["name"])
 
     //rows, _ := db.GetAll(sql)

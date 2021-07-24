@@ -236,9 +236,9 @@ func (s *Select) Compile(db *DB) string {
     if len(s.froms) != 0 {
         s.froms = arrayUnique(s.froms)
         // Set tables to select from
-        //for k, v := range s.froms {
-            //s.froms[k] = db.QuoteTable(v)
-        //}
+        for k, v := range s.froms {
+            s.froms[k] = quoteTable(v)
+        }
         sqlStr += strings.Join(s.froms, ", ")
     }
 

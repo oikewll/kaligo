@@ -33,15 +33,22 @@ type Query struct {
     //asObject : false,
 //}
 
-func init() {
-}
-
 // NewQuery Creates a new SQL query of the specified type.
 func NewQuery(sqlStr string, queryType int) *Query {
     return &Query{
         sqlStr   : sqlStr,
         queryType: queryType,
     }
+}
+
+// SetConnection Set a DB Connection to use when compiling the SQL.
+func (q *Query) SetConnection(c *Connection) *Query {
+    //if c == nil {
+    //}
+
+    q.connection = c
+
+    return q
 }
 
 // QueryType get the type of the query
@@ -98,16 +105,6 @@ func (q *Query) Parameters(params map[string]string) *Query {
     return q
 }
 
-// SetConnection Set a DB Connection to use when compiling the SQL.
-func (q *Query) SetConnection(c *Connection) *Query {
-    //if c == nil {
-    //}
-
-    q.connection = c
-
-    return q
-}
-
 // Compile the SQL query and return it. Raplaces and parameters with their
 // @return result Result DatabaseResult for SELECT queries
 // @return result interface{} the insert id for INSERT queries
@@ -119,8 +116,7 @@ func (q *Query) Compile() string {
         // Quote all of the values
         values := q.parameters
         for k, v := range values {
-            //values[k] = db.Quote(v)
-            values[k] = v
+            values[k] = quote(v)
         }
 
         //sqlStr = Str.Tr(sqlStr, values)

@@ -93,14 +93,13 @@ func (j *Join) Compile(db *DB) string {
         //sqlStr += " " + trim(expression.value(), " ()") + ")"
     //} else {
         // Quote the table name that is being joined
-        //sqlStr += " " + db.QuoteTable(j.table)
-        sqlStr += " " +j.table
+        //sqlStr += " " + quoteTable(j.table)
     //}
+    sqlStr += " " + quoteTable(j.table)
 
     // Add the alias if needed
     if j.alias != "" {
-        //sqlStr += " AS " + db.QuoteTable(j.alias)
-        sqlStr += " AS " + j.alias
+        sqlStr += " AS " + quoteTable(j.alias)
     }
 
     var conditions []string    
@@ -156,6 +155,6 @@ func (j *Join) Compile(db *DB) string {
 }
 
 // Reset the query parameters
-//func (j *Join) reset() *Join {
+//func (j *Join) Reset() *Join {
     //return j
 //}

@@ -51,8 +51,7 @@ func (u *Update) Compile(db *DB) string {
     // db 链接是否存在 ？
 
     // Start and update query
-    //sqlStr := "UPDATE " + db.QuoteTable(u.table)
-    sqlStr := "UPDATE " + u.table
+    sqlStr := "UPDATE " + quoteTable(u.table)
 
     if len(u.joinObjs) != 0 {
         // Builder.CompileJoin()
