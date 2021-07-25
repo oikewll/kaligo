@@ -9,13 +9,13 @@
 package mysql
 
 import (
-    //"database/sql"
+    "database/sql"
+    //_ "github.com/go-sql-driver/mysql" // 空白导入必须在main.go、testing，否则就必须在这里写注释
     "fmt"
-    _ "github.com/go-sql-driver/mysql" // 空白导入必须在main.go、testing，否则就必须在这里写注释
     //"log"
     //"regexp"
     //"sort"
-    "strings"
+    //"strings"
     //"time"
     //"container/list"
     //"sync"
@@ -44,8 +44,9 @@ const (
 // DB is the struct for MySQL connection handler
 type DB struct {
     name string       // instance name
-    queryCount int
-    lastQuery string
+    // 基本上所有操作都是用的Connection类，这个类无法访问DB类，所以这些参数不要放这里
+    //queryCount int
+    //lastQuery string
 
     C *Connection          // Current MySQL connection
     S *Select
@@ -82,12 +83,16 @@ func NewDB(name string) *DB {
     c := NewConnection(name, dbDsn, util.StrToInt(conf.Get("db", "max_idle_conns")), false)
     db := &DB{
         name      :name,
-        queryCount: 0,
         C         : c,
     }
     instances[name] = db
 
     return db
+}
+
+// DB Returns *sql.DB
+func (db *DB) DB() *sql.DB {
+    return db.C.DB()
 }
 
 // Query func is use for create a new [*Query]
@@ -107,11 +112,6 @@ func (db *DB) Query(sqlStr string, queryType int) *Query {
     return q 
 }
 
-// LastQuery Returns the last query
-func (db *DB) LastQuery() string {
-    return db.lastQuery
-}
-
 // Select func is use for create a new [*Select]
 // Select -> Where -> Builder -> Query
 //     SELECT id, username
@@ -123,7 +123,9 @@ func (db *DB) LastQuery() string {
 // @return *Select
 func (db *DB) Select(columns ...string) *Select {
     s := &Select{
-        selects: columns,
+        selects : columns,
+        distinct: false,
+        offset  : 0,
     }
     s.SetConnection(db.C)
     return s 
@@ -179,9 +181,9 @@ func (db *DB) Delete(table string) *Delete {
 
 // Expr func is use for create a new [*Expression] which is not escaped. An expression
 // is the only way to use SQL functions within query builders.
-func (db *DB) Expr(table string) *Expression {
+func (db *DB) Expr(value string) *Expression {
     return &Expression{
-
+        value: value,
     }
 }
 
@@ -201,6 +203,11 @@ func (db *DB) ListColumns(table string, like string) map[string] map[string]stri
 // used to search for specific indexes by name.
 func (db *DB) ListIndexes(table string, like string) []map[string]string {
     return db.C.ListIndexes(table, like)
+}
+
+// LastQuery Returns the last query
+func (db *DB) LastQuery() string {
+    return db.C.lastQuery
 }
 
 // slowQueryLog is the function for record the slow query log
@@ -538,29 +545,29 @@ func (db *DB) ListIndexes(table string, like string) []map[string]string {
     //return err
 //}
 
-// AddSlashes is ...
-// 转义：引号、双引号添加反斜杠
-func (db *DB) AddSlashes(val string) string {
-    val = strings.Replace(val, "\"", "\\\"", -1)
-    val = strings.Replace(val, "'", "\\'", -1)
-    return val
-}
+//// AddSlashes is ...
+//// 转义：引号、双引号添加反斜杠
+//func (db *DB) AddSlashes(val string) string {
+    //val = strings.Replace(val, "\"", "\\\"", -1)
+    //val = strings.Replace(val, "'", "\\'", -1)
+    //return val
+//}
 
-// StripSlashes is ...
-// 反转义：引号、双引号去除反斜杠
-func (db *DB) StripSlashes(val string) string {
-    val = strings.Replace(val, "\\\"", "\"", -1)
-    val = strings.Replace(val, "\\'", "'", -1)
-    return val
-}
+//// StripSlashes is ...
+//// 反转义：引号、双引号去除反斜杠
+//func (db *DB) StripSlashes(val string) string {
+    //val = strings.Replace(val, "\\\"", "\"", -1)
+    //val = strings.Replace(val, "\\'", "'", -1)
+    //return val
+//}
 
-// GetSafeParam is ...
-// 防止XSS跨站攻击
-func (db *DB) GetSafeParam(val string) string {
-    val = strings.Replace(val, "&", "&amp;", -1)
-    val = strings.Replace(val, "<", "&lt;", -1)
-    val = strings.Replace(val, ">", "&gt;", -1)
-    val = strings.Replace(val, "\"", "&quot;", -1)
-    val = strings.Replace(val, "'", "&#039;", -1)
-    return val
-}
+//// GetSafeParam is ...
+//// 防止XSS跨站攻击
+//func (db *DB) GetSafeParam(val string) string {
+    //val = strings.Replace(val, "&", "&amp;", -1)
+    //val = strings.Replace(val, "<", "&lt;", -1)
+    //val = strings.Replace(val, ">", "&gt;", -1)
+    //val = strings.Replace(val, "\"", "&quot;", -1)
+    //val = strings.Replace(val, "'", "&#039;", -1)
+    //return val
+//}

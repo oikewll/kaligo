@@ -24,8 +24,6 @@ func (d *Delete) Table(table string) *Delete {
 
 // Compile the SQL query and return it.
 func (d *Delete) Compile(db *DB) string {
-    db.Conn.Connect()   // 这里要返回database connection instance
-
     // Start a deletion query
     sqlStr := "DELETE FROM " + quoteTable(d.table)
 

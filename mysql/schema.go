@@ -3,8 +3,8 @@ package mysql
 import (
     //"errors"
     //"strconv"
-    "strings"
-    "regexp"
+    //"strings"
+    //"regexp"
     //"fmt"
     //"crypto/md5"
     //"io"

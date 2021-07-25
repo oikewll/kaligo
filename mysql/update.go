@@ -22,7 +22,6 @@ type Update struct {
 // Table Sets the table to update.
 func (u *Update) Table(table string) *Update {
     u.table = table
-
     return u
 }
 
@@ -33,7 +32,6 @@ func (u *Update) Set(pairs map[string]string) *Update {
         sets = append(sets, column, value)
         u.sets = append(u.sets, sets)
     }
-
     return u
 }
 
@@ -42,7 +40,6 @@ func (u *Update) Value(column string, value string) *Update {
     var sets []string    
     sets = append(sets, column, value)
     u.sets = append(u.sets, sets)
-
     return u
 }
 
@@ -99,9 +96,47 @@ func (u *Update) Reset() *Update {
 }
 
 // Join Adds addition tables to "JOIN ...".
+// @param joinType string join type (LEFT, RIGHT, INNER, etc)
 func (u *Update) Join(table string, joinType string) *Update {
-    //u.lastJoin = new(QueryJoin)
-    //u.joins = append(u.joins, u.lastJoin)
+    u.lastJoin = &Join{
+        table: table,
+        joinType: joinType,
+    }
+    u.joinObjs = append(u.joinObjs, u.lastJoin)
     return u
 }
 
+// On Adds "ON ..." condition for the last created JOIN statement.
+// @param joinType string join type (LEFT, RIGHT, INNER, etc)
+func (u *Update) On(c1 string, op string, c2 string) *Update {
+    u.lastJoin.On(c1, op, c2)
+    return u
+}
+
+// AndOn Adds "ON ..." condition for the last created JOIN statement.
+// @param joinType string join type (LEFT, RIGHT, INNER, etc)
+func (u *Update) AndOn(c1 string, op string, c2 string) *Update {
+    u.lastJoin.AndOn(c1, op, c2)
+    return u
+}
+
+// OrOn Adds "OR ON ..." condition for the last created JOIN statement.
+// @param joinType string join type (LEFT, RIGHT, INNER, etc)
+func (u *Update) OrOn(c1 string, op string, c2 string) *Update {
+    u.lastJoin.OrOn(c1, op, c2)
+    return u
+}
+
+// OnOpen Adds an opening bracket the last created JOIN statement.
+// @param joinType string join type (LEFT, RIGHT, INNER, etc)
+func (u *Update) OnOpen() *Update {
+    u.lastJoin.OnOpen()
+    return u
+}
+
+// OnClose Adds an closing bracket the last created JOIN statement.
+// @param joinType string join type (LEFT, RIGHT, INNER, etc)
+func (u *Update) OnClose() *Update {
+    u.lastJoin.OnClose()
+    return u
+}

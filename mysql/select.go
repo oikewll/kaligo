@@ -27,16 +27,6 @@ type Select struct {
     Where
 }
 
-// NewSelect creates a new Select Object
-func NewSelect(columns []string) *Select {
-    NewWhere()  // 要验证一下这里调用以后，当前调用 Where 里面的 limitValue 的值是否有被赋值
-    return &Select{
-        selects  : columns,
-        distinct : false,
-        offset   : 0,
-    }
-}
-
 // Distinct the query parameters
 func (s *Select) Distinct(value bool) *Select {
     s.distinct = value

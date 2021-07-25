@@ -12,7 +12,8 @@ package mysql
 
 import (
     "database/sql"
-    //"fmt"
+    //_ "github.com/go-sql-driver/mysql"
+    "fmt"
     //"log"
     "time"
     //"regexp"
@@ -49,12 +50,15 @@ type Connection struct {
     dbDsn  string       // Database Dsn URL
     dbIdle int          // Database Max Idle Conns
 
+    queryCount int
+    lastQuery string
     info  serverInfo    // MySQL server information
     seq   byte          // MySQL sequence number
 
     timeout time.Duration   // Timeout for connect SetConnMaxLifetime(timeout)
     lastUse time.Time       // The last use time
 
+    inTransaction bool
     //db    *autorc.Conn    // MySQL connection
     db          *sql.DB     // MySQL connection
     tx          *sql.Tx     // MySQL connection for Transaction
@@ -73,9 +77,73 @@ func NewConnection(name string, dbDsn string, dbIdle int, writable bool) *Connec
     c := &Connection{
         dbDsn:  dbDsn,
         dbIdle: dbIdle,
+        queryCount: 0,
     }
     c.Connect()
     return c
+}
+
+// DB Returns *sql.DB
+func (c *Connection) DB() *sql.DB {
+    return c.db
+}
+
+// SetMaxOpenConns sets the maximum number of open connections to the database.
+// 数据库的最大连接数，超过请求就只能等待了，所以不要设置，直接用mysql默认100个就好了
+func (c *Connection) SetMaxOpenConns(number int) (err error) {
+    defer catchError(&err)
+    c.db.SetMaxOpenConns(number)
+    return
+}
+
+// SetMaxIdleConns sets the maximum number of connections in the idle connection pool.
+// 连接池中的保持连接的最大连接数
+func (c *Connection) SetMaxIdleConns(number int) (err error) {
+    defer catchError(&err)
+    c.db.SetMaxIdleConns(number)         
+    return
+}
+
+// SetConnMaxLifetime sets the maximum amount of time a connection may be reused.
+// 设置为0的话意味着没有最大生命周期，连接总是可重用(默认行为)
+func (c *Connection) SetConnMaxLifetime(time time.Duration) (err error) {
+    defer catchError(&err)
+    c.db.SetConnMaxLifetime(time)
+    return
+}
+
+// Ping is Establishes a connection with MySQL server version 4.1 or later.
+func (c *Connection) Ping() (err error) {
+    defer catchError(&err)
+
+    // 当前函数推出时不能释放链接资源
+    // 会导致无法调用 Query()、Execute() ，应该在调用 Execute()后Close()，释放链接到链接池去
+    //defer c.db.Close()
+
+    // 数据库的抽象（*sql.DB），并不是真的数据库连接
+    //c.db := autorc.New("tcp", "", address, user, pass, name)
+    c.db, err = sql.Open("mysql", c.dbDsn)
+    if err != nil {
+        c.db = nil
+        return ErrAuthentication
+    }
+
+    // Connection Pool Setting.
+    //c.SetConnMaxLifetime(0)
+    //c.SetMaxOpenConns(0)
+    c.SetMaxIdleConns(c.dbIdle)
+
+    // 初始化一个数据库连接
+    // sql.Open 的时候实际上是返回一个数据库的抽象而已，并没有真的和mysql链接上
+    err = c.Ping()
+    if err != nil {
+        c.db = nil
+        return ErrAuthentication
+    }
+
+    c.db.Query("SET NAMES utf8");
+
+    return
 }
 
 // Connect is Establishes a connection with MySQL server version 4.1 or later.
@@ -132,6 +200,12 @@ func (c *Connection) Close() (err error) {
     return err
 }
 
+// Stats Returns database statistics
+// 待实现...
+func (c *Connection) Stats() (err error) {
+    return err
+}
+
 // Caching Per connection cache controller setter/getter
 func (c *Connection) Caching() bool {
     //return \Arr::get($this->_config, 'enable_cache', true);
@@ -145,10 +219,46 @@ func (c *Connection) QueryRow(query string) *sql.Row {
 }
 
 // Query is the function for query multi rows
-func (c *Connection) Query(query string) (*sql.Rows, error) {
-    rows, err := c.db.Query(query) // 查询多条
-    return rows, err
+func (c *Connection) Query(queryType int, sqlStr string, asObject interface{}) *Result {
+    fmt.Println("Connection.Query()")
+    // var stacktrace []map[string]string   // 储存所有调用函数，一层一层的
+    // benchmark := Profiler.Start(c.name, sqlstr, stacktrace)
+    // Profiler.Stop(benchmark)
+
+    // golang 好像不需要处理执行时因为mysql链接闲置超过8小时的问题：MySQL server has gone away
+
+    // Set the last query
+    c.lastQuery = sqlStr
+
+    r := &Result{
+        sqlStr: sqlStr,
+    //result              sql.Result      // row result resource
+    //totalRows           int             // total number of rows
+    //currentRow          int             // current row number
+    //asObject            interface{}     // return rows as an object or associative array
+    //sanitizationEnabled bool            // If this is a records data will be anitized on get
+    //rows                *sql.Rows
+    }
+
+    if queryType == SELECT {
+        // if Config.Get("enable_cache") { return cached() }
+        // return Result{result:sql.Result, sqlstr: sqlstr, asObject: asObject}
+        //r.result = 
+        rows, err := c.db.Query(sqlStr) // 查询多条
+        fmt.Printf("%v %v\n", rows, err)
+    } else if queryType == INSERT {
+        // return []string{connection.insertID, connection.affectedRows}
+    } else if queryType == UPDATE || queryType == DELETE {
+        // return connection.affectedRows
+    }
+
+    return r
 }
+//func (c *Connection) Query(queryType int, sqlStr string, asObject interface{}) (*sql.Rows, error) {
+    //c.lastQuery = sqlStr
+    //rows, err := c.db.Query(query) // 查询多条
+    //return rows, err
+//}
 
 // Exec is the function for Insert、Update、Delete
 func (c *Connection) Exec(query string) (sql.Result, error) {
@@ -219,3 +329,20 @@ func (c *Connection) ListIndexes(table string, like string) []map[string]string 
     return indexes
 }
 
+// StartTransaction is ...
+func (c *Connection) StartTransaction() bool {
+    c.inTransaction = true
+    return true
+}
+
+// CommitTransaction is ...
+func (c *Connection) CommitTransaction() bool {
+    c.inTransaction = false
+    return true
+}
+
+// RollbackTransaction is ...
+func (c *Connection) RollbackTransaction(rollbackAll bool) bool {
+    c.inTransaction = false
+    return true
+}

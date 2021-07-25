@@ -2,6 +2,74 @@ package mysql
 
 import (
 	"fmt"
+    "errors"
+)
+
+var (
+	// ErrRecordNotFound record not found error
+	ErrRecordNotFound = errors.New("record not found")
+	// ErrInvalidTransaction invalid transaction when you are trying to `Commit` or `Rollback`
+	ErrInvalidTransaction = errors.New("invalid transaction")
+)
+
+// ClientError is a type for mymysql client errors.
+type ClientError string
+
+func (e ClientError) Error() string {
+	return string(e)
+}
+
+var (
+    // ErrSeq packet sequence error
+	ErrSeq            = ClientError("packet sequence error")
+    // ErrPkt malformed packet
+	ErrPkt            = ClientError("malformed packet")
+    // ErrPktLong packet too long
+	ErrPktLong        = ClientError("packet too long")
+    // ErrUnexpNullLCS unexpected NULL LCS
+	ErrUnexpNullLCS   = ClientError("unexpected NULL LCS")
+    // ErrUnexpNullLCB unexpected NULL LCB
+	ErrUnexpNullLCB   = ClientError("unexpected NULL LCB")
+    // ErrUnexpNullDate unexpected NULL DATETIME
+	ErrUnexpNullDate  = ClientError("unexpected NULL DATETIME")
+    // ErrUnexpNullTime unexpected NULL TIME
+	ErrUnexpNullTime  = ClientError("unexpected NULL TIME")
+    // ErrUnkResultPkt unexpected or unknown result packet
+	ErrUnkResultPkt   = ClientError("unexpected or unknown result packet")
+    // ErrNotConn not connected
+	ErrNotConn        = ClientError("not connected")
+    // ErrAlredyConn already connected
+	ErrAlredyConn     = ClientError("already connected")
+    // ErrBadResult unexpected result
+	ErrBadResult      = ClientError("unexpected result")
+    // ErrUnreadedReply reply is not completely read
+	ErrUnreadedReply  = ClientError("reply is not completely read")
+    // ErrBindCount wrong number of values for bind
+	ErrBindCount      = ClientError("wrong number of values for bind")
+    // ErrBindUnkType unknown value type for bind
+	ErrBindUnkType    = ClientError("unknown value type for bind")
+    // ErrRowLength wrong length of row slice
+	ErrRowLength      = ClientError("wrong length of row slice")
+    // ErrBadCommand comand isn't text SQL nor *Stmt
+	ErrBadCommand     = ClientError("comand isn't text SQL nor *Stmt")
+    // ErrWrongDateLen wrong datetime/timestamp length
+	ErrWrongDateLen   = ClientError("wrong datetime/timestamp length")
+    // ErrWrongTimeLen wrong time length
+	ErrWrongTimeLen   = ClientError("wrong time length")
+    // ErrUnkMySQLType unknown MySQL type
+	ErrUnkMySQLType   = ClientError("unknown MySQL type")
+    // ErrWrongParamNum wrong parameter number
+	ErrWrongParamNum  = ClientError("wrong parameter number")
+    // ErrUnkDataType unknown data source type
+	ErrUnkDataType    = ClientError("unknown data source type")
+    // ErrSmallPktSize specified packet size is to small
+	ErrSmallPktSize   = ClientError("specified packet size is to small")
+    // ErrReadAfterEOR previous ScanRow call returned io.EOF
+	ErrReadAfterEOR   = ClientError("previous ScanRow call returned io.EOF")
+    // ErrOldProtocol server does not support 4.1 protocol
+	ErrOldProtocol    = ClientError("server does not support 4.1 protocol")
+    // ErrAuthentication authentication error
+	ErrAuthentication = ClientError("authentication error")
 )
 
 // Error is a mymysql error.
@@ -499,37 +567,3 @@ const (
 	//ErNON_INSERTABLE_TABLE                    = 1471
 )
 
-// ClientError is a type for mymysql client errors.
-type ClientError string
-
-func (e ClientError) Error() string {
-	return string(e)
-}
-
-var (
-	ErrSeq            = ClientError("packet sequence error")
-	ErrPkt            = ClientError("malformed packet")
-	ErrPktLong        = ClientError("packet too long")
-	ErrUnexpNullLCS   = ClientError("unexpected NULL LCS")
-	ErrUnexpNullLCB   = ClientError("unexpected NULL LCB")
-	ErrUnexpNullDate  = ClientError("unexpected NULL DATETIME")
-	ErrUnexpNullTime  = ClientError("unexpected NULL TIME")
-	ErrUnkResultPkt   = ClientError("unexpected or unknown result packet")
-	ErrNotConn        = ClientError("not connected")
-	ErrAlredyConn     = ClientError("already connected")
-	ErrBadResult      = ClientError("unexpected result")
-	ErrUnreadedReply  = ClientError("reply is not completely read")
-	ErrBindCount      = ClientError("wrong number of values for bind")
-	ErrBindUnkType    = ClientError("unknown value type for bind")
-	ErrRowLength      = ClientError("wrong length of row slice")
-	ErrBadCommand     = ClientError("comand isn't text SQL nor *Stmt")
-	ErrWrongDateLen   = ClientError("wrong datetime/timestamp length")
-	ErrWrongTimeLen   = ClientError("wrong time length")
-	ErrUnkMySQLType   = ClientError("unknown MySQL type")
-	ErrWrongParamNum  = ClientError("wrong parameter number")
-	ErrUnkDataType    = ClientError("unknown data source type")
-	ErrSmallPktSize   = ClientError("specified packet size is to small")
-	ErrReadAfterEOR   = ClientError("previous ScanRow call returned io.EOF")
-	ErrOldProtocol    = ClientError("server does not support 4.1 protocol")
-	ErrAuthentication = ClientError("authentication error")
-)
