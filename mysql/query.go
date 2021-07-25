@@ -26,33 +26,8 @@ type Query struct {
     // select、insert、update、delete、builder、join 都有嵌入其他类，只有这个 Query 是独立的
 }
 
-// QueryObj is ...
-//var QueryObj Query = Query{
-    //queryType: SELECT,
-    //cacheAll : false,
-    //asObject : false,
-//}
-
-// NewQuery Creates a new SQL query of the specified type.
-func NewQuery(sqlStr string, queryType int) *Query {
-    return &Query{
-        sqlStr   : sqlStr,
-        queryType: queryType,
-    }
-}
-
-// SetConnection Set a DB Connection to use when compiling the SQL.
-func (q *Query) SetConnection(c *Connection) *Query {
-    //if c == nil {
-    //}
-
-    q.connection = c
-
-    return q
-}
-
 // QueryType get the type of the query
-func (q *Query) QueryType(c1 string, op string, c2 string) int {
+func (q *Query) QueryType() int {
     return q.queryType
 }
 
@@ -105,6 +80,12 @@ func (q *Query) Parameters(params map[string]string) *Query {
     return q
 }
 
+// SetConnection Set a DB Connection to use when compiling the SQL.
+func (q *Query) SetConnection(c *Connection) *Query {
+    q.connection = c
+    return q
+}
+
 // Compile the SQL query and return it. Raplaces and parameters with their
 // @return result Result DatabaseResult for SELECT queries
 // @return result interface{} the insert id for INSERT queries
@@ -116,10 +97,15 @@ func (q *Query) Compile() string {
         // Quote all of the values
         values := q.parameters
         for k, v := range values {
+            // 前面加 :
+            if k[0:1] != ":" {
+                k = ":" + k
+            }
             values[k] = quote(v)
         }
 
-        //sqlStr = Str.Tr(sqlStr, values)
+        // 一对一的替换
+        sqlStr = Strtr(sqlStr, values)
     }
 
     return strings.TrimSpace(sqlStr)
@@ -146,35 +132,31 @@ func (q *Query) Execute() interface{} {
         default:
             q.queryType = 0
         }
-
-        //cacheObj = cache.Forge(cacheKey)
-        //if q.connection.Caching() && q.lifeTime != 0 && q.queryType == SELECT {
-            //var cacheKey string    
-            //if q.cacheKey == "" {
-                //h := md5.New()
-                //io.WriteString(h, "Connection.Query(\"" + sqlStr + "\")")
-                //cacheKey += fmt.Sprintf("db.%x", h.Sum(nil))
-                //return db.Cache(cache.Get(cacheKey), sqlStr, q.AsObject)
-            //} else {
-                //cacheKey += q.cacheKey
-            //}
-        //}
-
-        // Execute the query
-        //db.queryCount++
-        // 调用db.go 还是 connection.go ？？？
-        //result := db.Query(q.queryType, sqlStr, q.AsObject)
-
-        // Cache the result if needed
-        //if  cacheObj != nil && (q.cacheAll || result.count() != 0) {
-            //cacheObj.setExpiration(q.lifeTime).SetContents(result.asArray()).Set()
-        //}
     }
 
-    result := 10
+    // 处理查询缓存
+    //cacheObj = cache.Forge(cacheKey)
+    //if q.connection.Caching() && q.lifeTime != 0 && q.queryType == SELECT {
+        //var cacheKey string    
+        //if q.cacheKey == "" {
+            //h := md5.New()
+            //io.WriteString(h, "Connection.Query(\"" + sqlStr + "\")")
+            //cacheKey += fmt.Sprintf("db.%x", h.Sum(nil))
+            //return db.Cache(cache.Get(cacheKey), sqlStr, q.AsObject)
+        //} else {
+            //cacheKey += q.cacheKey
+        //}
+    //}
+
+    //Execute the query
+    q.connection.queryCount++
+    result := q.connection.Query(q.queryType, sqlStr, q.AsObject)
+
+    //Cache the result if needed
+    //if  cacheObj != nil && (q.cacheAll || result.count() != 0) {
+        //cacheObj.setExpiration(q.lifeTime).SetContents(result.asArray()).Set()
+    //}
+
     return result
 }
-// Reset the query parameters
-//func (q *Query) reset() *Query {
-    //return q
-//}
+

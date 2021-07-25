@@ -59,8 +59,6 @@ func quote(values interface{}) string {
     default:
         return vals.(string)
     }
-
-    return ""
 }
 
 // 表名添加引用符号(`)
@@ -97,9 +95,92 @@ func quoteIdentifier(values interface{}) string {
     default:
         return vals.(string)
     }
-
-    return ""
 }
+
+// Strtr strtr()
+//
+// If the parameter length is 1, type is: map[string]string
+// Strtr("baab", map[string]string{"ab": "01"}) will return "ba01"
+// If the parameter length is 2, type is: string, string
+// Strtr("baab", "ab", "01") will return "1001", a => 0; b => 1.
+func Strtr(haystack string, params ...interface{}) string {
+	ac := len(params)
+	if ac == 1 {
+		pairs := params[0].(map[string]string)
+		length := len(pairs)
+		if length == 0 {
+			return haystack
+		}
+		oldnew := make([]string, length*2)
+		for o, n := range pairs {
+			if o == "" {
+				return haystack
+			}
+			oldnew = append(oldnew, o, n)
+		}
+		return strings.NewReplacer(oldnew...).Replace(haystack)
+	} else if ac == 2 {
+		from := params[0].(string)
+		to := params[1].(string)
+		trlen, lt := len(from), len(to)
+		if trlen > lt {
+			trlen = lt
+		}
+		if trlen == 0 {
+			return haystack
+		}
+
+		str := make([]uint8, len(haystack))
+		var xlat [256]uint8
+		var i int
+		var j uint8
+		if trlen == 1 {
+			for i = 0; i < len(haystack); i++ {
+				if haystack[i] == from[0] {
+					str[i] = to[0]
+				} else {
+					str[i] = haystack[i]
+				}
+			}
+			return string(str)
+		}
+		// trlen != 1
+		for {
+			xlat[j] = j
+			if j++; j == 0 {
+				break
+			}
+		}
+		for i = 0; i < trlen; i++ {
+			xlat[from[i]] = to[i]
+		}
+		for i = 0; i < len(haystack); i++ {
+			str[i] = xlat[haystack[i]]
+		}
+		return string(str)
+	}
+
+	return haystack
+}
+
+// MysqlRealEscapeString is ...
+//func MysqlRealEscapeString(value string) string {
+    //var sb strings.Builder
+    //for i := 0; i < len(value); i++ {
+        //c := value[i]
+        //switch c {
+        //case '\\', 0, '\n', '\r', '\'', '"':
+            //sb.WriteByte('\\')
+            //sb.WriteByte(c)
+        //case '\032':
+            //sb.WriteByte('\\')
+            //sb.WriteByte('Z')
+        //default:
+            //sb.WriteByte(c)
+        //}
+    //}
+    //return sb.String()
+//}
 
 // Escape is use for Escapes special characters in the txt, so it is safe to place returned string
 func Escape(sql string) string {
@@ -140,78 +221,61 @@ func Escape(sql string) string {
         }
     }
 
-    return string(dest)
+    // SQL standard is to use single-quotes for all values
+    return "'" + string(dest) + "'"
 }
 
-//func MysqlRealEscapeString(value string) string {
-    //var sb strings.Builder
-    //for i := 0; i < len(value); i++ {
-        //c := value[i]
-        //switch c {
-        //case '\\', 0, '\n', '\r', '\'', '"':
-            //sb.WriteByte('\\')
-            //sb.WriteByte(c)
-        //case '\032':
-            //sb.WriteByte('\\')
-            //sb.WriteByte('Z')
-        //default:
-            //sb.WriteByte(c)
-        //}
-    //}
-    //return sb.String()
-//}
-
 // 转义可能导致 SQL 注入攻击的字符
-//func escapeString(txt string) string {
-    //var (
-        //esc string
-        //buf bytes.Buffer
-    //)
-    //last := 0
-    //for ii, bb := range txt {
-        //switch bb {
-        //case 0:
-            //esc = `\0`
-        //case '\n':
-            //esc = `\n`
-        //case '\r':
-            //esc = `\r`
-        //case '\\':
-            //esc = `\\`
-        //case '\'':
-            //esc = `\'`
-        //case '"':
-            //esc = `\"`
-        //case '\032':
-            //esc = `\Z`
-        //default:
-            //continue
-        //}
-        //io.WriteString(&buf, txt[last:ii])
-        //io.WriteString(&buf, esc)
-        //last = ii + 1
-    //}
-    //io.WriteString(&buf, txt[last:])
-    //return buf.String()
-//}
+func escapeString(txt string) string {
+    var (
+        esc string
+        buf bytes.Buffer
+    )
+    last := 0
+    for ii, bb := range txt {
+        switch bb {
+        case 0:
+            esc = `\0`
+        case '\n':
+            esc = `\n`
+        case '\r':
+            esc = `\r`
+        case '\\':
+            esc = `\\`
+        case '\'':
+            esc = `\'`
+        case '"':
+            esc = `\"`
+        case '\032':
+            esc = `\Z`
+        default:
+            continue
+        }
+        io.WriteString(&buf, txt[last:ii])
+        io.WriteString(&buf, esc)
+        last = ii + 1
+    }
+    io.WriteString(&buf, txt[last:])
+    return buf.String()
+}
 
-//// 转义可能导致 SQL 注入攻击的 引用字符
-//func escapeQuotes(txt string) string {
-    //var buf bytes.Buffer
-    //last := 0
-    //for ii, bb := range txt {
-        //if bb == '\'' {
-            //io.WriteString(&buf, txt[last:ii])
-            //io.WriteString(&buf, `''`)
-            //last = ii + 1
-        //}
-    //}
-    //io.WriteString(&buf, txt[last:])
-    //return buf.String()
-//}
+// 转义可能导致 SQL 注入攻击的 引用字符
+func escapeQuotes(txt string) string {
+    var buf bytes.Buffer
+    last := 0
+    for ii, bb := range txt {
+        if bb == '\'' {
+            io.WriteString(&buf, txt[last:ii])
+            io.WriteString(&buf, `''`)
+            last = ii + 1
+        }
+    }
+    io.WriteString(&buf, txt[last:])
+    return buf.String()
+}
 
-// Escape: Escapes special characters in the txt, so it is safe to place returned string
-// to Query method.
+ //Escape Escapes special characters in the txt, so it is safe to place returned string
+ //to Query method.
 //func Escape(c Conn, txt string) string {
     //if c.Status()&SERVER_STATUS_NO_BACKSLASH_ESCAPES != 0 {
         //return escapeQuotes(txt)

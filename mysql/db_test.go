@@ -4,9 +4,15 @@ package mysql
 
 import(
     "testing"
+    //"github.com/go-gorm/gorm"
+    //"gorm.io/gorm"
     //"os"
     //"log"
-    //"strconv"
+    "fmt"
+    "runtime"
+    "strconv"
+    "strings"
+    "regexp"
     //"reflect"
     //"encoding/json"
     //"database/sql"
@@ -22,8 +28,37 @@ import(
     // _ "github.com/ziutek/mymysql/thrsafe" // Thread safe engine
 )
 
+var gormSourceDir string
+
+// FileWithLineNum return the file name and line number of the current file
+func FileWithLineNum() string {
+    _, file, _, _ := runtime.Caller(0)
+    fmt.Printf("%v\n", file)
+    // compatible solution to get gorm source directory with various operating systems
+    //gormSourceDir = regexp.MustCompile(`utils.utils\.go`).ReplaceAllString(file, "")
+    gormSourceDir = regexp.MustCompile(``).ReplaceAllString(file, "")
+    fmt.Printf("%v\n", gormSourceDir)
+
+	// the second caller usually from gorm internal, so set i start from 2
+	for i := 2; i < 15; i++ {
+		_, file, line, ok := runtime.Caller(i)
+		if ok && (!strings.HasPrefix(file, gormSourceDir) || strings.HasSuffix(file, "_test.go")) {
+			return file + ":" + strconv.FormatInt(int64(line), 10)
+		}
+	}
+
+	return ""
+}
+
 func TestDB(t *testing.T) {
 
+    str := FileWithLineNum()
+    t.Logf("FileWithLineNum=%v\n", str)
+    //db, err := gorm.Open(sqlite.Open("test.db"), &gorm.Config{})
+    //if err != nil {
+        //panic("failed to connect database")
+    //}
+    //t.Logf("%v\n", Escape("ka'k`a\"ljljlj"))
     //memory := cache.NewMemory()
     //memory.Set("name", "kaka", 10)
     //name := memory.Get("name")
@@ -36,9 +71,12 @@ func TestDB(t *testing.T) {
 
     //t.Logf("%s", kaligo.Int64ToStr(100))
 
-    db := NewDB("default")
+    //db := NewDB("default")
     //db.Debug = false
-    db.Query("SELECT * FROM user", SELECT)
+    //db.Query("SELECT * FROM user", SELECT).Execute()
+
+    //sqlStr := db.Select("id", "name").From("user").Compile()
+    //fmt.Printf("%v\n", sqlStr)
 
     //// Register initialisation commands
 	//db.Register("set names utf8")
