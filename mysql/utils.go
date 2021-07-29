@@ -7,6 +7,7 @@ import (
 	"runtime"
 	"regexp"
 	"strings"
+    "strconv"
 )
 
 // Version returns version string
@@ -41,60 +42,6 @@ var reg = regexp.MustCompile(`\B[A-Z]`)
 // transFieldName 转换字段名称，驼峰写法转下划线写法
 func transFieldName(name string) string {
 	return strings.ToLower(reg.ReplaceAllString(name, "_$0"))
-}
-
-// 字段值处理
-func quote(values interface{}) string {
-    switch vals := values.(type) {
-    case string:
-        return Escape(vals)
-    case []string:
-        for k, v := range vals {
-            vals[k] = Escape(v)
-        }
-        return "(" + strings.Join(vals, ", ") + ")"
-    case *Query:
-        // Create a sub-query
-        return "(" + vals.Compile() + ")"
-    default:
-        return vals.(string)
-    }
-}
-
-// 表名添加引用符号(`)
-// 添加表前缀
-func quoteTable(table string) string {
-    //table = strings.Replace(table, "#DB#", "lrs", 1 )
-
-    // 表名前缀
-    tablePrefix := ""
-    table = tablePrefix + quoteIdentifier(table)
-
-    return table
-}
-
-// 字段名添加引用符号(`)
-func quoteIdentifier(values interface{}) string {
-    switch vals := values.(type) {
-    case string:
-        if vals == "*" || strings.Index(vals, "`") != -1 {
-            // * 不需要变成 `*`，已经有 `` 包含着的直接返回
-            return vals
-        } else if strings.Index(vals, ".") != -1 {
-            // table.column 的写法，变成 `table`.`column`
-            parts := regexp.MustCompile(`\.`).Split(vals, 2)
-            return quoteIdentifier(parts[0]) + "." + quoteIdentifier(parts[1])
-        } else {
-            return "`" + vals + "`"
-        }
-    case []string:
-        // Separate the column and alias
-        value := vals[0]
-        alias := vals[1]
-        return quoteIdentifier(value) + " AS " + quoteIdentifier(alias)
-    default:
-        return vals.(string)
-    }
 }
 
 // Strtr strtr()
@@ -163,68 +110,6 @@ func Strtr(haystack string, params ...interface{}) string {
 	return haystack
 }
 
-// MysqlRealEscapeString is ...
-//func MysqlRealEscapeString(value string) string {
-    //var sb strings.Builder
-    //for i := 0; i < len(value); i++ {
-        //c := value[i]
-        //switch c {
-        //case '\\', 0, '\n', '\r', '\'', '"':
-            //sb.WriteByte('\\')
-            //sb.WriteByte(c)
-        //case '\032':
-            //sb.WriteByte('\\')
-            //sb.WriteByte('Z')
-        //default:
-            //sb.WriteByte(c)
-        //}
-    //}
-    //return sb.String()
-//}
-
-// Escape is use for Escapes special characters in the txt, so it is safe to place returned string
-func Escape(sql string) string {
-    dest := make([]byte, 0, 2*len(sql))
-    var escape byte
-    for i := 0; i < len(sql); i++ {
-        c := sql[i]
-
-        escape = 0
-
-        switch c {
-        case 0: /* Must be escaped for 'mysql' */
-            escape = '0'
-            break
-        case '\n': /* Must be escaped for logs */
-            escape = 'n'
-            break
-        case '\r':
-            escape = 'r'
-            break
-        case '\\':
-            escape = '\\'
-            break
-        case '\'':
-            escape = '\''
-            break
-        case '"': /* Better safe than sorry */
-            escape = '"'
-            break
-        case '\032': //十进制26,八进制32,十六进制1a, /* This gives problems on Win32 */
-            escape = 'Z'
-        }
-
-        if escape != 0 {
-            dest = append(dest, '\\', escape)
-        } else {
-            dest = append(dest, c)
-        }
-    }
-
-    // SQL standard is to use single-quotes for all values
-    return "'" + string(dest) + "'"
-}
-
 // 转义可能导致 SQL 注入攻击的字符
 func escapeString(txt string) string {
     var (
@@ -274,11 +159,44 @@ func escapeQuotes(txt string) string {
     return buf.String()
 }
 
- //Escape Escapes special characters in the txt, so it is safe to place returned string
- //to Query method.
-//func Escape(c Conn, txt string) string {
-    //if c.Status()&SERVER_STATUS_NO_BACKSLASH_ESCAPES != 0 {
-        //return escapeQuotes(txt)
-    //}
-    //return escapeString(txt)
-//}
+// ToString is int to string
+func ToString(value interface{}) string {
+	switch v := value.(type) {
+	case string:
+		return v
+	case int:
+		return strconv.FormatInt(int64(v), 10)
+	case int8:
+		return strconv.FormatInt(int64(v), 10)
+	case int16:
+		return strconv.FormatInt(int64(v), 10)
+	case int32:
+		return strconv.FormatInt(int64(v), 10)
+	case int64:
+		return strconv.FormatInt(v, 10)
+	case uint:
+		return strconv.FormatUint(uint64(v), 10)
+	case uint8:
+		return strconv.FormatUint(uint64(v), 10)
+	case uint16:
+		return strconv.FormatUint(uint64(v), 10)
+	case uint32:
+		return strconv.FormatUint(uint64(v), 10)
+	case uint64:
+		return strconv.FormatUint(v, 10)
+	}
+	return ""
+}
+
+// InSlice like php in_array()
+func InSlice(a string, list *[]string) bool {
+	if list == nil {
+		return false
+	}
+	for _, b := range *list {
+		if b == a {
+			return true
+		}
+	}
+	return false
+}

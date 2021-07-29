@@ -21,21 +21,6 @@ import (
     //"reflect"
 )
 
-// Field is ...
-type Field struct {
-	Catalog  string
-	Db       string
-	Table    string
-	OrgTable string
-	Name     string
-	OrgName  string
-	DispLen  uint32
-	//  Charset  uint16
-	Flags uint16
-	Type  byte
-	Scale byte
-}
-
 // Result is the struct for MySQL stores the result locally.
 type Result struct {
     sqlStr              string          // string Executed SQL for this result

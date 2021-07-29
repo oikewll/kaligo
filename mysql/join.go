@@ -9,6 +9,7 @@
 package mysql
 
 import (
+    //"fmt"
     "strings"
 )
 
@@ -32,6 +33,7 @@ type Join struct {
 func NewJoin(table string, joinType string) *Join {
     return &Join{
         table   : table,
+        alias   : "",
         joinType: joinType,
     }
 }
@@ -66,17 +68,12 @@ func (j *Join) OnClose() *Join {
 }
 
 // Compile the SQL partial for a JOIN statement and return it.
-func (j *Join) Compile(db *DB) string {
+//func (j *Join) Compile(db *DB) string {
+func (j *Join) Compile() string {
 
     var sqlStr string    
 
-    // 操作句柄不存在的情况下
-    //if db == nil {
-        //db = dbConnection.instance(db)
-    //}
-
-    // j.joinType = "LEFT"
-    if j.joinType == "" {
+    if j.joinType != "" {
         sqlStr += strings.ToUpper(j.joinType) + " JOIN"
     } else {
         sqlStr += "JOIN"
@@ -93,13 +90,13 @@ func (j *Join) Compile(db *DB) string {
         //sqlStr += " " + trim(expression.value(), " ()") + ")"
     //} else {
         // Quote the table name that is being joined
-        //sqlStr += " " + quoteTable(j.table)
+        //sqlStr += " " + j.connection.QuoteTable(j.table)
     //}
-    sqlStr += " " + quoteTable(j.table)
+    sqlStr += " " + j.connection.QuoteTable(j.table)
 
     // Add the alias if needed
     if j.alias != "" {
-        sqlStr += " AS " + quoteTable(j.alias)
+        sqlStr += " AS " + j.connection.QuoteTable(j.alias)
     }
 
     var conditions []string    
@@ -135,16 +132,17 @@ func (j *Join) Compile(db *DB) string {
             if c2 == "" {
                 c2Str += "NULL"
             } else {
-                //c2Str += db.quoteIdentifier(c2)
-                c2Str += c2
+                c2Str += j.connection.QuoteIdentifier(c2)
             }
             conditions = append(conditions, c1 + op + " " + c2Str)
         }
     }
     
-    // remove the first chain type
-    conditions = conditions[1:] // 删除开头1个元素，直接移动数据指针方式
-    //conditions = append(conditions[:0], conditions[1:]...)    // 后面的数据向开头移动
+    if len(conditions) > 0 {
+        // remove the first chain type
+        conditions = conditions[1:] // 删除开头1个元素，直接移动数据指针方式
+        //conditions = append(conditions[:0], conditions[1:]...)    // 后面的数据向开头移动
+    }
 
     // if there are conditions, concat the conditions "... AND ..." and glue them on...
     if conditions != nil {

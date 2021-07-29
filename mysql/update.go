@@ -1,12 +1,8 @@
 package mysql
 
 import (
-    //"errors"
     //"fmt"
     "strconv"
-    //"strings"
-    //"time"
-    //"github.com/owner888/kaligo/util"
 )
 
 // Update is the struct for MySQL DATE type
@@ -44,33 +40,33 @@ func (u *Update) Value(column string, value string) *Update {
 }
 
 // Compile Set the value of a single column.
-func (u *Update) Compile(db *DB) string {
+func (u *Update) Compile() string {
     // db 链接是否存在 ？
 
     // Start and update query
-    sqlStr := "UPDATE " + quoteTable(u.table)
+    sqlStr := "UPDATE " + u.connection.QuoteTable(u.table)
 
     if len(u.joinObjs) != 0 {
         // Builder.CompileJoin()
-        sqlStr += u.CompileJoin(db, u.joinObjs)
+        sqlStr += u.CompileJoin(u.joinObjs)
     }
 
     // Add the columns to update
     // Builder.CompileSet()
-    sqlStr += u.CompileSet(db, u.sets)
+    sqlStr += u.CompileSet(u.sets)
 
     if len(u.wheres) != 0 {
         // Add selection conditions
         // Builder.CompileConditions()
         // Where.wheres 参数
-        sqlStr += "WHERE " + u.CompileConditions(db, u.wheres)
+        sqlStr += "WHERE " + u.CompileConditions(u.wheres)
     }
 
     if len(u.orderBys) != 0 {
         // Add sorting
         // Builder.CompileOrderBy()
         // Where.orderBys 参数
-        sqlStr += " " + u.CompileOrderBy(db, u.orderBys)
+        sqlStr += " " + u.CompileOrderBy(u.orderBys)
     }
 
     if u.limit != 0 {

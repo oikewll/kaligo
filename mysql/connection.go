@@ -12,48 +12,27 @@ package mysql
 
 import (
     "database/sql"
-    //_ "github.com/go-sql-driver/mysql"
     "fmt"
-    //"log"
     "time"
-    //"regexp"
-    //"strings"
-    //"sort"
-    //"container/list"
-    //"sync"
-    //"reflect"
-    //"github.com/owner888/kaligo/conf"
-    //"github.com/owner888/kaligo/util"
-    //_ "github.com/go-sql-driver/mysql"  // 空白导入必须在main.go、testing，否则就必须在这里写注释
+    "regexp"
+    "strings"
+    "sync"
     //"github.com/owner888/mymysql/autorc"
     //"github.com/owner888/mymysql/mysql"
     ////_ "github.com/ziutek/mymysql/native"    // 普通模式
     //_ "github.com/ziutek/mymysql/thrsafe" // 用了连接池之后连接都是重复利用的，没必要用线程安全模式
 )
 
-type serverInfo struct {
-    protVer byte
-    servVer []byte
-    thrID   uint32
-    scramble [20]byte
-    caps     uint32
-    lang     byte
-    plugin   []byte
-}
-
 // Connection is the struct for MySQL connection handler
 type Connection struct {
-    //readonlys map[string]*Connection 
-    //instances map[string]*Connection 
+    //readonlys map[string]*Connection
+    //instances map[string]*Connection
 
     active string       // instance name
     dbDsn  string       // Database Dsn URL
-    dbIdle int          // Database Max Idle Conns
 
     queryCount int
-    lastQuery string
-    info  serverInfo    // MySQL server information
-    seq   byte          // MySQL sequence number
+    lastQuery  string
 
     timeout time.Duration   // Timeout for connect SetConnMaxLifetime(timeout)
     lastUse time.Time       // The last use time
@@ -64,6 +43,8 @@ type Connection struct {
     tx          *sql.Tx     // MySQL connection for Transaction
 	autoCommit   bool
     initCmds     []string   // MySQL commands/queries executed after connect
+    cacheStore   *sync.Map
+    MytablePrefix  string
 
     schema      *Schema
     Debug        bool       // Debug logging. You may change it at any time.
@@ -73,11 +54,11 @@ type Connection struct {
 
 // NewConnection 实例化数据库连接
 // (读+写)连接数据库+选择数据库
-func NewConnection(name string, dbDsn string, dbIdle int, writable bool) *Connection {
+func NewConnection(name string, dbDsn string, writable bool) *Connection {
     c := &Connection{
-        dbDsn:  dbDsn,
-        dbIdle: dbIdle,
-        queryCount: 0,
+        dbDsn      : dbDsn,
+        queryCount : 0,
+        MytablePrefix: "",
     }
     c.Connect()
     return c
@@ -90,60 +71,25 @@ func (c *Connection) DB() *sql.DB {
 
 // SetMaxOpenConns sets the maximum number of open connections to the database.
 // 数据库的最大连接数，超过请求就只能等待了，所以不要设置，直接用mysql默认100个就好了
-func (c *Connection) SetMaxOpenConns(number int) (err error) {
-    defer catchError(&err)
-    c.db.SetMaxOpenConns(number)
-    return
+func (c *Connection) SetMaxOpenConns(n int) {
+    c.db.SetMaxOpenConns(n)
 }
 
 // SetMaxIdleConns sets the maximum number of connections in the idle connection pool.
 // 连接池中的保持连接的最大连接数
-func (c *Connection) SetMaxIdleConns(number int) (err error) {
-    defer catchError(&err)
-    c.db.SetMaxIdleConns(number)         
-    return
+func (c *Connection) SetMaxIdleConns(n int) {
+    c.db.SetMaxIdleConns(n)
+}
+
+// SetConnMaxIdleTime sets the maximum amount of time a connection may be reused.
+func (c *Connection) SetConnMaxIdleTime(d time.Duration) {
+    c.db.SetConnMaxIdleTime(d)
 }
 
 // SetConnMaxLifetime sets the maximum amount of time a connection may be reused.
 // 设置为0的话意味着没有最大生命周期，连接总是可重用(默认行为)
-func (c *Connection) SetConnMaxLifetime(time time.Duration) (err error) {
-    defer catchError(&err)
-    c.db.SetConnMaxLifetime(time)
-    return
-}
-
-// Ping is Establishes a connection with MySQL server version 4.1 or later.
-func (c *Connection) Ping() (err error) {
-    defer catchError(&err)
-
-    // 当前函数推出时不能释放链接资源
-    // 会导致无法调用 Query()、Execute() ，应该在调用 Execute()后Close()，释放链接到链接池去
-    //defer c.db.Close()
-
-    // 数据库的抽象（*sql.DB），并不是真的数据库连接
-    //c.db := autorc.New("tcp", "", address, user, pass, name)
-    c.db, err = sql.Open("mysql", c.dbDsn)
-    if err != nil {
-        c.db = nil
-        return ErrAuthentication
-    }
-
-    // Connection Pool Setting.
-    //c.SetConnMaxLifetime(0)
-    //c.SetMaxOpenConns(0)
-    c.SetMaxIdleConns(c.dbIdle)
-
-    // 初始化一个数据库连接
-    // sql.Open 的时候实际上是返回一个数据库的抽象而已，并没有真的和mysql链接上
-    err = c.Ping()
-    if err != nil {
-        c.db = nil
-        return ErrAuthentication
-    }
-
-    c.db.Query("SET NAMES utf8");
-
-    return
+func (c *Connection) SetConnMaxLifetime(d time.Duration) {
+    c.db.SetConnMaxLifetime(d)
 }
 
 // Connect is Establishes a connection with MySQL server version 4.1 or later.
@@ -160,11 +106,6 @@ func (c *Connection) Connect() (err error) {
         c.db = nil
         return ErrAuthentication
     }
-
-    // See "Important settings" section.
-    //c.db.SetConnMaxLifetime(0)      // 设置为0的话意味着没有最大生命周期，连接总是可重用(默认行为)。
-    //c.db.SetMaxOpenConns(0)         // 数据库的最大连接数，超过请求就只能等待了，所以不要设置，直接用mysql默认100个就好了
-    c.db.SetMaxIdleConns(c.dbIdle)    // 连接池中的保持连接的最大连接数
 
     // 初始化一个数据库连接，sql.Open 的时候实际上是返回一个数据库的抽象而已，并没有真的和mysql链接上
     err = c.db.Ping()
@@ -220,7 +161,6 @@ func (c *Connection) QueryRow(query string) *sql.Row {
 
 // Query is the function for query multi rows
 func (c *Connection) Query(queryType int, sqlStr string, asObject interface{}) *Result {
-    fmt.Println("Connection.Query()")
     // var stacktrace []map[string]string   // 储存所有调用函数，一层一层的
     // benchmark := Profiler.Start(c.name, sqlstr, stacktrace)
     // Profiler.Stop(benchmark)
@@ -232,20 +172,20 @@ func (c *Connection) Query(queryType int, sqlStr string, asObject interface{}) *
 
     r := &Result{
         sqlStr: sqlStr,
-    //result              sql.Result      // row result resource
-    //totalRows           int             // total number of rows
-    //currentRow          int             // current row number
-    //asObject            interface{}     // return rows as an object or associative array
-    //sanitizationEnabled bool            // If this is a records data will be anitized on get
-    //rows                *sql.Rows
+        //result              sql.Result      // row result resource
+        //totalRows           int             // total number of rows
+        //currentRow          int             // current row number
+        //asObject            interface{}     // return rows as an object or associative array
+        //sanitizationEnabled bool            // If this is a records data will be anitized on get
+        //rows                *sql.Rows
     }
 
     if queryType == SELECT {
         // if Config.Get("enable_cache") { return cached() }
         // return Result{result:sql.Result, sqlstr: sqlstr, asObject: asObject}
-        //r.result = 
+        //r.result =
         rows, err := c.db.Query(sqlStr) // 查询多条
-        fmt.Printf("%v %v\n", rows, err)
+        fmt.Printf("Connection.Query() = %v %v\n", rows, err)
     } else if queryType == INSERT {
         // return []string{connection.insertID, connection.affectedRows}
     } else if queryType == UPDATE || queryType == DELETE {
@@ -269,14 +209,14 @@ func (c *Connection) Exec(query string) (sql.Result, error) {
 // ListTables If a table name is given it will return the table name with the configured
 // prefix. If not, then just the prefix is returnd
 func (c *Connection) ListTables(like string) []string {
-    var sqlStr string    
+    var sqlStr string
     if  like != "" {
-        sqlStr += "SHOW TABLES LIKE " + quote(like)
+        sqlStr += "SHOW TABLES LIKE " + c.Quote(like)
     } else {
         sqlStr += "SHOW TABLES"
     }
 
-    var tables []string    
+    var tables []string
     tables = append(tables, "111")
     return tables
 }
@@ -284,11 +224,11 @@ func (c *Connection) ListTables(like string) []string {
 // ListColumns Lists all of the columns in a table. Optionally, a LIKE string can be
 // used to search for specific fields.
 func (c *Connection) ListColumns(table string, like string) map[string] map[string]string {
-    table = quoteTable(table)
+    table = c.QuoteTable(table)
 
-    var sqlStr string    
+    var sqlStr string
     if  like != "" {
-        sqlStr += "SHOW FULL COLUMNS FROM " + table + " LIKE " + quote(like)
+        sqlStr += "SHOW FULL COLUMNS FROM " + table + " LIKE " + c.Quote(like)
     } else {
         sqlStr += "SHOW FULL COLUMNS FROM " + table
     }
@@ -304,16 +244,16 @@ func (c *Connection) ListColumns(table string, like string) map[string] map[stri
 // ListIndexes Lists all of the idexes in a table. Optionally, a LIKE string can be
 // used to search for specific indexes by name.
 func (c *Connection) ListIndexes(table string, like string) []map[string]string {
-    table = quoteTable(table)
+    table = c.QuoteTable(table)
 
-    var sqlStr string    
+    var sqlStr string
     if  like != "" {
-        sqlStr += "SHOW INDEX FROM " + table + " WHERE " + quoteIdentifier("Key_name") + " LIKE " + quote(like)
+        sqlStr += "SHOW INDEX FROM " + table + " WHERE " + c.QuoteIdentifier("Key_name") + " LIKE " + c.Quote(like)
     } else {
-        sqlStr += "SHOW INDEX FROM " + table 
+        sqlStr += "SHOW INDEX FROM " + table
     }
 
-    var indexes []map[string]string    
+    var indexes []map[string]string
     mapName := map[string]string {
         "name"      : "Key_name",
         "column"    : "Column_name",
@@ -327,6 +267,117 @@ func (c *Connection) ListIndexes(table string, like string) []map[string]string 
     indexes = append(indexes, mapName)
 
     return indexes
+}
+
+// LastQuery Returns the last query sql
+func (c *Connection) LastQuery() string {
+    return c.lastQuery
+}
+
+// TablePrefix Return the table prefix defined in the current configuration.
+func (c *Connection) TablePrefix(table string) string {
+    fmt.Printf("TablePrefix=%T = %v 444\n", c.MytablePrefix, c.MytablePrefix)
+    fmt.Printf("TablePrefix=%T = %v 444\n", table, table)
+    return "jljljlj" + table
+    //fmt.Printf("TablePrefix=%v\n", c.tablePrefix + table)
+    //return c.tablePrefix + table
+}
+
+// Quote a value for an SQL query.
+func (c *Connection) Quote(values interface{}) string {
+    switch vals := values.(type) {
+    case string:
+        return c.Escape(vals)
+    case []string:
+        for k, v := range vals {
+            vals[k] = c.Escape(v)
+        }
+        return "(" + strings.Join(vals, ", ") + ")"
+    case *Query:
+        // Create a sub-query
+        return "(" + vals.Compile() + ")"
+    default:
+        return vals.(string)
+    }
+}
+
+// QuoteTable Quote a database table name and adds the table prefix if needed.
+//table = strings.Replace(table, "#DB#", "lrs", 1 )
+// 表名添加引用符号(`)
+// 添加表前缀
+func (c *Connection) QuoteTable(table string) string {
+    table = c.TablePrefix(table)
+    table = c.QuoteIdentifier(table)
+    return table
+}
+
+// QuoteIdentifier Quote a database identifier, such as a column name. Adds the
+// table prefix to the identifier if a table name is present.
+// 字段名添加引用符号(`)
+func (c *Connection) QuoteIdentifier(values interface{}) string {
+    switch vals := values.(type) {
+    case string:
+        if vals == "*" || strings.Index(vals, "`") != -1 {
+            // * 不需要变成 `*`，已经有 `` 包含着的直接返回
+            return vals
+        } else if strings.Index(vals, ".") != -1 {
+            // table.column 的写法，变成 `table`.`column`
+            parts := regexp.MustCompile(`\.`).Split(vals, 2)
+            return c.QuoteIdentifier( c.QuoteTable(parts[0]) ) + "." + c.QuoteIdentifier(parts[1])
+        } else {
+            return "`" + vals + "`"
+        }
+    case []string:
+        // Separate the column and alias
+        value := vals[0]
+        alias := vals[1]
+        return c.QuoteIdentifier(value) + " AS " + c.QuoteIdentifier(alias)
+    default:
+        return vals.(string)
+    }
+}
+
+// Escape is use for Escapes special characters in the txt, so it is safe to place returned string
+func (c *Connection) Escape(sql string) string {
+    dest := make([]byte, 0, 2*len(sql))
+    var escape byte
+    for i := 0; i < len(sql); i++ {
+        c := sql[i]
+
+        escape = 0
+
+        switch c {
+        case 0: /* Must be escaped for 'mysql' */
+            escape = '0'
+            break
+        case '\n': /* Must be escaped for logs */
+            escape = 'n'
+            break
+        case '\r':
+            escape = 'r'
+            break
+        case '\\':
+            escape = '\\'
+            break
+        case '\'':
+            escape = '\''
+            break
+        case '"': /* Better safe than sorry */
+            escape = '"'
+            break
+        case '\032': //十进制26,八进制32,十六进制1a, /* This gives problems on Win32 */
+            escape = 'Z'
+        }
+
+        if escape != 0 {
+            dest = append(dest, '\\', escape)
+        } else {
+            dest = append(dest, c)
+        }
+    }
+
+    // SQL standard is to use single-quotes for all values
+    return "'" + string(dest) + "'"
 }
 
 // StartTransaction is ...

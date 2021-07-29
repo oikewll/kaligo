@@ -1,12 +1,7 @@
 package mysql
 
 import (
-    //"errors"
-    //"fmt"
     "strconv"
-    //"strings"
-    //"time"
-    //"github.com/owner888/kaligo/util"
 )
 
 // Delete is the struct for MySQL DATE type
@@ -23,16 +18,16 @@ func (d *Delete) Table(table string) *Delete {
 }
 
 // Compile the SQL query and return it.
-func (d *Delete) Compile(db *DB) string {
+func (d *Delete) Compile() string {
     // Start a deletion query
-    sqlStr := "DELETE FROM " + quoteTable(d.table)
+    sqlStr := "DELETE FROM " + d.connection.QuoteTable(d.table)
 
     if len(d.wheres) == 0 {
-        //sqlStr += " WHERE " + d.compileConditions(db, d.wheres)
+        //sqlStr += " WHERE " + d.compileConditions(d.wheres)
     }
 
     if len(d.orderBys) == 0 {
-        //sqlStr += " WHERE " + d.compileOrderBy(db, d.orderBys)
+        //sqlStr += " WHERE " + d.compileOrderBy(d.orderBys)
     }
 
     // TODO limit 条件拼接
@@ -45,11 +40,11 @@ func (d *Delete) Compile(db *DB) string {
 
 // Reset the query parameters
 func (d *Delete) Reset() *Delete {
-    d.table  = ""
-    d.wheres   = nil
-    d.orderBys = nil
+    d.table      = ""
+    d.wheres     = nil
+    d.orderBys   = nil
     d.parameters = nil
-    d.limit   = 0
+    d.limit      = 0
     return d
 }
 

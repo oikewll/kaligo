@@ -9,6 +9,7 @@
 package mysql
 
 import (
+    //"fmt"
     "strconv"
     "strings"
 )
@@ -21,8 +22,8 @@ type Select struct {
     joinObjs []*Join     // join objects
     groupBys []string
     havings  map[string][][]string
-    offset    int
-    lastJoin  *Join      // last join statement
+    offset   int
+    lastJoin *Join      // last join statement
 
     Where
 }
@@ -54,7 +55,7 @@ func (s *Select) SelectArray(columns []string, reset bool) *Select {
 }
 
 // From Choose the tables to select "FROM ...".
-func (s *Select) From(tables []string) *Select {
+func (s *Select) From(tables ...string) *Select {
     s.froms = append(s.froms, tables...)
 
     return s
@@ -201,7 +202,7 @@ func arrayUnique(arr []string) []string{
 }
 
 // Compile Set the value of a single column.
-func (s *Select) Compile(db *DB) string {
+func (s *Select) Compile() string {
     // db 链接是否存在 ？
 
     // Start a selection query
@@ -217,25 +218,25 @@ func (s *Select) Compile(db *DB) string {
         sqlStr += "*"
     } else {
         s.selects = arrayUnique(s.selects)
-        //for k, v := range s.selects {
-            //s.selects[k] = db.QuoteIdent(v)
-        //}
+        for k, v := range s.selects {
+            s.selects[k] = s.connection.QuoteIdentifier(v)
+        }
         sqlStr += strings.Join(s.selects, ", ")
     }
 
     if len(s.froms) != 0 {
-        s.froms = arrayUnique(s.froms)
         // Set tables to select from
+        s.froms = arrayUnique(s.froms)
         for k, v := range s.froms {
-            s.froms[k] = quoteTable(v)
+            s.froms[k] = s.connection.QuoteTable(v)
         }
-        sqlStr += strings.Join(s.froms, ", ")
+        sqlStr += " FROM " + strings.Join(s.froms, ", ")
     }
 
     if len(s.joinObjs) != 0 {
         // Add tables to join
         // Builder.CompileJoin()
-        sqlStr += s.CompileJoin(db, s.joinObjs)
+        sqlStr += " " + s.CompileJoin(s.joinObjs)
     }
 
     // select 没有 set 用法
@@ -247,30 +248,30 @@ func (s *Select) Compile(db *DB) string {
         // Add selection conditions
         // Builder.CompileConditions()
         // Where.wheres 参数
-        sqlStr += "WHERE " + s.CompileConditions(db, s.wheres)
+        sqlStr += " WHERE " + s.CompileConditions(s.wheres)
     }
 
     if len(s.groupBys) != 0 {
         // Add sorting
         s.groupBys = arrayUnique(s.groupBys)
-        //for k, v := range s.groupBys {
-            //s.groupBys[k] = db.QuoteIdent(v)
-        //}
-        sqlStr += strings.Join(s.groupBys, ", ")
+        for k, v := range s.groupBys {
+            s.groupBys[k] = s.connection.QuoteIdentifier(v)
+        }
+        sqlStr += " GROUP BY " + strings.Join(s.groupBys, ", ")
     }
 
     if len(s.havings) != 0 {
         // Add filtering conditions
         // Builder.CompileConditions()
         // Where.havings 参数
-        sqlStr += "HAVING " + s.CompileConditions(db, s.havings)
+        sqlStr += " HAVING " + s.CompileConditions(s.havings)
     }
 
     if len(s.orderBys) != 0 {
         // Add sorting
         // Builder.CompileOrderBy()
         // Where.orderBys 参数
-        sqlStr += " " + s.CompileOrderBy(db, s.orderBys)
+        sqlStr += " " + s.CompileOrderBy(s.orderBys)
     }
 
     if s.limit != 0 {

@@ -11,7 +11,7 @@ import (
 
 // Insert is the struct for MySQL DATE type
 type Insert struct {
-    table string
+    table   string
     columns []string    // slice
     values  [][]string  // 多维slice
     //values  []map[string]string // map slice

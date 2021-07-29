@@ -1,15 +1,9 @@
 package mysql
 
 import (
-    //"errors"
-    //"strconv"
     "strings"
     "regexp"
     //"fmt"
-    //"crypto/md5"
-    //"io"
-    //"time"
-    //"github.com/owner888/kaligo/util"
 )
 
 // Query is the struct for MySQL DATE type
@@ -20,7 +14,7 @@ type Query struct {
     cacheAll    bool                // boolean Cache all results
     sqlStr      string              // SQL statement
     parameters  map[string]string   // Quoted query parameters
-    asObject    interface{}         // Return results as associative arrays(map[string]string) or objects(&User{ID:1, Name: "sam"})
+    asObject    interface{}         // Return results as associative arrays(map[string]string || []map[string]string) or objects(&User{ID:1, Name: "sam"})
     connection  *Connection         // db connection, Include *sql.DB
 
     // select、insert、update、delete、builder、join 都有嵌入其他类，只有这个 Query 是独立的
@@ -48,8 +42,8 @@ func (q *Query) AsAssoc() *Query {
 }
 
 // AsObject Returns results as objects.
-func (q *Query) AsObject(class interface{}) *Query {
-    q.asObject = class
+func (q *Query) AsObject(value interface{}) *Query {
+    q.asObject = value
 
     return q
 }
@@ -101,7 +95,7 @@ func (q *Query) Compile() string {
             if k[0:1] != ":" {
                 k = ":" + k
             }
-            values[k] = quote(v)
+            values[k] = q.connection.Quote(v)
         }
 
         // 一对一的替换
@@ -148,8 +142,9 @@ func (q *Query) Execute() interface{} {
         //}
     //}
 
-    //Execute the query
+    // Execute the query
     q.connection.queryCount++
+    // Connection.Query(queryType, sqlStr, AsObject)
     result := q.connection.Query(q.queryType, sqlStr, q.AsObject)
 
     //Cache the result if needed
