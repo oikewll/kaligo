@@ -10,25 +10,21 @@ package mysql
 
 import (
     "database/sql"
-    //_ "github.com/go-sql-driver/mysql" // 空白导入必须在main.go、testing，否则就必须在这里写注释
     "fmt"
-    //"log"
     //"regexp"
-    //"sort"
     //"strings"
     //"time"
-    //"container/list"
     //"sync"
     //"reflect"
     "github.com/owner888/kaligo/conf"
     "github.com/owner888/kaligo/util"
     //"github.com/owner888/mymysql/autorc"
     //"github.com/owner888/mymysql/mysql"
-    ////_ "github.com/ziutek/mymysql/native"    // 普通模式
-    //_ "github.com/ziutek/mymysql/thrsafe" // 用了连接池之后连接都是重复利用的，没必要用线程安全模式
+    ////_ "github.com/ziutek/mymysql/native"  // 普通模式
+    //_ "github.com/ziutek/mymysql/thrsafe"   // 用了连接池之后连接都是重复利用的，没必要用线程安全模式
 )
 
-var instances = map[string]*DB{}    
+var instances = map[string]*DB{}
 
 const (
     // SELECT Query select type
@@ -77,10 +73,18 @@ func NewDB(name string) *DB {
     dbhost := conf.Get("db", "host")
     dbport := conf.Get("db", "port")
     dbname := conf.Get("db", "name")
+
+    dbuser = "root"
+    dbpass = "root"
+    dbhost = "127.0.0.1"
+    dbport = "3306"
+    dbname = "test"
+
     dbDsn  := fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=%s", dbuser, dbpass, dbhost+":"+dbport, dbname, "utf8mb4")
     //fmt.Printf("%v", dbDsn)
 
-    c := NewConnection(name, dbDsn, util.StrToInt(conf.Get("db", "max_idle_conns")), false)
+    c := NewConnection(name, dbDsn, false)
+    c.SetMaxIdleConns(util.StrToInt(conf.Get("db", "max_idle_conns")))
     db := &DB{
         name      :name,
         C         : c,
@@ -95,7 +99,58 @@ func (db *DB) DB() *sql.DB {
     return db.C.DB()
 }
 
+// Debug start debug mode
+func (db *DB) Debug() {
+    db.C.Debug = true
+}
+
+
+// Set store value with key into current db instance's context
+func (db *DB) Set(key string, value interface{}) *Connection {
+	db.C.cacheStore.Store(key, value)
+	return db.C
+}
+
+// Get get value with key from current db instance's context
+func (db *DB) Get(key string) (interface{}, bool) {
+	return db.C.cacheStore.Load(key)
+}
+
+// InstanceSet store value with key into current db instance's context
+// db.InstanceSet("kalidb:started_transaction", true)
+func (db *DB) InstanceSet(key string, value interface{}) *Connection {
+    // %p 获取指针地址, ep:[0x140001341b0]
+	db.C.cacheStore.Store(fmt.Sprintf("%p", db.C) + key, value)
+	return db.C
+}
+
+// InstanceGet get value with key from current db instance's context
+// if _, ok := db.InstanceGet("kalidb:started_transaction"); ok {
+func (db *DB) InstanceGet(key string) (interface{}, bool) {
+	return db.C.cacheStore.Load(fmt.Sprintf("%p", db.C) + key)
+}
+
+//func (db *DB) First() *Query {
+
+//}
+
+
+//func (db *DB) Last() *Query {
+
+//}
+
+
+//func (db *DB) Find() *Query {
+
+//}
+
+
+//func (db *DB) Model() *Query {
+
+//}
+
 // Query func is use for create a new [*Query]
+// Query -> Connection.Query
 //     Create a new SELECT query
 //     Query("SELECT * FROM users")
 //     Create a new DELETE query
@@ -103,13 +158,20 @@ func (db *DB) DB() *sql.DB {
 // @param sqlStr string  SQL statement
 // @param queryType int  type:SELECT, UPDATE, etc
 // @return *Query
-func (db *DB) Query(sqlStr string, queryType int) *Query {
+func (db *DB) Query(sqlStr string, args ...int) *Query {
+    var queryType int
+    if len(args) == 0 {
+        queryType = 0
+    } else {
+        queryType = args[0]
+    }
+
     q := &Query{
         sqlStr:    sqlStr,
         queryType: queryType,
     }
     q.SetConnection(db.C)
-    return q 
+    return q
 }
 
 // Select func is use for create a new [*Select]
@@ -128,7 +190,7 @@ func (db *DB) Select(columns ...string) *Select {
         offset  : 0,
     }
     s.SetConnection(db.C)
-    return s 
+    return s
 }
 
 // Insert func is use for create a new [*Insert]
@@ -148,7 +210,7 @@ func (db *DB) Insert(table string, columns []string) *Insert {
         columns: columns,
     }
     i.SetConnection(db.C)
-    return i 
+    return i
 }
 
 // Update func is use for create a new [*Update]
@@ -162,7 +224,7 @@ func (db *DB) Update(table string) *Update {
         table: table,
     }
     u.SetConnection(db.C)
-    return u 
+    return u
 }
 
 // Delete func is use for create a new [*Delete]
@@ -176,7 +238,7 @@ func (db *DB) Delete(table string) *Delete {
         table: table,
     }
     d.SetConnection(db.C)
-    return d 
+    return d
 }
 
 // Expr func is use for create a new [*Expression] which is not escaped. An expression
@@ -207,7 +269,17 @@ func (db *DB) ListIndexes(table string, like string) []map[string]string {
 
 // LastQuery Returns the last query
 func (db *DB) LastQuery() string {
-    return db.C.lastQuery
+    return db.C.LastQuery()
+}
+
+// Schema Database schema operations
+// CREATE DATABASE database CHARACTER SET utf-8 DEFAULT utf-8
+// Schema.CreateDatabase(/*database*/ database, /*charset*/ 'utf-8', /*ifNotExists*/ true)
+func (db *DB) Schema() *Schema {
+    s := &Schema{
+        connection: db.C,
+    }
+    return s
 }
 
 // slowQueryLog is the function for record the slow query log

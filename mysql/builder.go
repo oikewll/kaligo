@@ -9,6 +9,7 @@
 package mysql
 
 import (
+    //"fmt"
     "strings"
     "strconv"
 )
@@ -19,18 +20,17 @@ type Builder struct {
 }
 
 // CompileJoin Compiles an array of JOIN statements into an SQL partial.
-func (b *Builder) CompileJoin(db *DB, joins []*Join) string {
+func (b *Builder) CompileJoin(joins []*Join) string {
     var statements []string    
     for _, join := range joins {
-        statements = append(statements, join.Compile(db))
+        statements = append(statements, join.Compile())
     }
 
     return strings.Join(statements, ", ")
 }
 
-
 // CompileConditions Compiles an array of conditions into an SQL partial. Used for WHERE and HAVING
-func (b *Builder) CompileConditions(db *DB, conditions map[string][][]string) string {
+func (b *Builder) CompileConditions(conditions map[string][][]string) string {
     var lastCondition string    
 
     var sqlStr string    
@@ -90,7 +90,7 @@ func (b *Builder) CompileConditions(db *DB, conditions map[string][][]string) st
                         max = b.parameters[max]
                     }
 
-                    value = quote(min) + " AND " + quote(max)
+                    value = b.connection.Quote(min) + " AND " + b.connection.Quote(max)
                 } else {
                     if b.parameters[value] != "" {
                         // Set the parameter as the value
@@ -98,11 +98,11 @@ func (b *Builder) CompileConditions(db *DB, conditions map[string][][]string) st
                     }
                     
                     // Quote the entire value normally
-                    value = quote(value)
+                    value = b.connection.Quote(value)
                 }
 
                 // Append the statement to the query
-                sqlStr += quoteIdentifier(column) + " " + op + " " + value
+                sqlStr += b.connection.QuoteIdentifier(column) + " " + op + " " + value
             }
 
             lastCondition = strings.Join(condition, "")
@@ -113,14 +113,14 @@ func (b *Builder) CompileConditions(db *DB, conditions map[string][][]string) st
 }
 
 // CompileSet Compiles an array of set values into an SQL partial. Used for UPDATE
-func (b *Builder) CompileSet(db *DB, values [][]string) string {
+func (b *Builder) CompileSet(values [][]string) string {
     var sets []string    
     for _, group := range values {
         column := group[0]
         value  := group[1]
 
-        column = quoteIdentifier(column)
-        value  = quote(value)
+        column = b.connection.QuoteIdentifier(column)
+        value  = b.connection.Quote(value)
 
         sets = append(sets, column + " = " + value)
     }
@@ -129,15 +129,15 @@ func (b *Builder) CompileSet(db *DB, values [][]string) string {
 }
 
 // CompileOrderBy Compiles an array of ORDER BY statements into an SQL partial..
-func (b *Builder) CompileOrderBy(db *DB, columns [][2]string) string {
+func (b *Builder) CompileOrderBy(columns [][2]string) string {
 
     var sorts []string    
     for _, group := range columns {
         column    := group[0]
         direction := group[1]
 
-        column    = quoteIdentifier(column)
-        direction = quote(direction)
+        column    = b.connection.QuoteIdentifier(column)
+        direction = b.connection.Quote(direction)
 
         direction = strings.ToUpper(direction)
         if direction != "" {

@@ -4,16 +4,17 @@ package mysql
 
 import(
     "testing"
+    _ "github.com/go-sql-driver/mysql"
     //"github.com/go-gorm/gorm"
     //"gorm.io/gorm"
     //"os"
     //"log"
     "fmt"
-    "runtime"
-    "strconv"
-    "strings"
-    "regexp"
-    //"reflect"
+    //"runtime"
+    //"strconv"
+    //"strings"
+    //"regexp"
+    "reflect"
     //"encoding/json"
     //"database/sql"
     //_ "github.com/go-sql-driver/mysql"
@@ -28,55 +29,76 @@ import(
     // _ "github.com/ziutek/mymysql/thrsafe" // Thread safe engine
 )
 
-var gormSourceDir string
+//var gormSourceDir string
 
-// FileWithLineNum return the file name and line number of the current file
-func FileWithLineNum() string {
-    _, file, _, _ := runtime.Caller(0)
-    fmt.Printf("%v\n", file)
-    // compatible solution to get gorm source directory with various operating systems
-    //gormSourceDir = regexp.MustCompile(`utils.utils\.go`).ReplaceAllString(file, "")
-    gormSourceDir = regexp.MustCompile(``).ReplaceAllString(file, "")
-    fmt.Printf("%v\n", gormSourceDir)
+//// FileWithLineNum return the file name and line number of the current file
+//func FileWithLineNum() string {
+    //_, file, _, _ := runtime.Caller(0)
+    //fmt.Printf("%v\n", file)
+    //// compatible solution to get gorm source directory with various operating systems
+    ////gormSourceDir = regexp.MustCompile(`utils.utils\.go`).ReplaceAllString(file, "")
+    //gormSourceDir = regexp.MustCompile(``).ReplaceAllString(file, "")
+    //fmt.Printf("%v\n", gormSourceDir)
 
-	// the second caller usually from gorm internal, so set i start from 2
-	for i := 2; i < 15; i++ {
-		_, file, line, ok := runtime.Caller(i)
-		if ok && (!strings.HasPrefix(file, gormSourceDir) || strings.HasSuffix(file, "_test.go")) {
-			return file + ":" + strconv.FormatInt(int64(line), 10)
-		}
-	}
+	//// the second caller usually from gorm internal, so set i start from 2
+	//for i := 2; i < 15; i++ {
+		//_, file, line, ok := runtime.Caller(i)
+		//if ok && (!strings.HasPrefix(file, gormSourceDir) || strings.HasSuffix(file, "_test.go")) {
+			//return file + ":" + strconv.FormatInt(int64(line), 10)
+		//}
+	//}
 
-	return ""
+	//return ""
+//}
+
+
+type User struct {
+    ID int
+    Name string
 }
 
 func TestDB(t *testing.T) {
+    u := &User{1, "kaka"}
+    modelType := reflect.ValueOf(u).Type()
+    fmt.Printf("modelType === %T = %v\n", modelType, modelType)                         //  *mysql.User
+    fmt.Printf("modelType.Kind() === %T = %v\n", modelType.Kind(), modelType.Kind())    // 类型：reflect.Slice reflect.Array reflect.Ptr(指针) reflect.Struct
+    fmt.Printf("modelType.Elem() === %T = %v\n", modelType.Elem(), modelType.Elem())    // 元素：mysql.User
+    fmt.Printf("modelType.Name() === %T = %v\n", modelType.Name(), modelType.Name())    // 类型：string
+    fmt.Printf("modelType.PkgPath() === %T = %v\n", modelType.PkgPath(), modelType.PkgPath())    // 类型：string
 
-    str := FileWithLineNum()
-    t.Logf("FileWithLineNum=%v\n", str)
+    //var str *[]string
+    //str = &[]string{}
+    //t.Logf("%T=%v", str, str)
+
+    //fmt.Printf("%T = %v\n", [...]int{1, 2, 3,4, 5}, [...]int{})
+
+    //str := FileWithLineNum()
+    //t.Logf("FileWithLineNum=%v\n", str)
     //db, err := gorm.Open(sqlite.Open("test.db"), &gorm.Config{})
     //if err != nil {
         //panic("failed to connect database")
     //}
-    //t.Logf("%v\n", Escape("ka'k`a\"ljljlj"))
+
     //memory := cache.NewMemory()
     //memory.Set("name", "kaka", 10)
     //name := memory.Get("name")
     //t.Logf("name: [ %v ]", name)
+
+
     //str, _ := os.Getwd()
     //conf.AppPath = str + "/../"
     //log.Printf("TestDB AppPath: [ %v ]", conf.AppPath)
-
     //define('APPPATH', __DIR__.'/../app');
 
-    //t.Logf("%s", kaligo.Int64ToStr(100))
 
-    //db := NewDB("default")
+    db := NewDB("default")
     //db.Debug = false
-    //db.Query("SELECT * FROM user", SELECT).Execute()
+    //sqlStr := db.Query("SELECT * FROM user").Compile()
+    //t.Logf("sqlStr=%v\n", sqlStr)
 
     //sqlStr := db.Select("id", "name").From("user").Compile()
-    //fmt.Printf("%v\n", sqlStr)
+    sqlStr := db.Select("id", "name").From("user").Join("player", "LEFT").Compile()
+    fmt.Printf("%v\n", sqlStr)
 
     //// Register initialisation commands
 	//db.Register("set names utf8")
