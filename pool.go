@@ -34,7 +34,7 @@ type idleConn struct {
 }
 
 // InitPool is 批量生成连接，并把连接放到连接池channel里面
-func (connPoll *ConnPool)InitPool() error{
+func (connPoll *ConnPool) InitPool() error{
     connPoll.idle = make(chan interface{}, connPoll.MaxActive)
     for x := 0; x < connPoll.MaxActive; x++ {
         //conn, err := this.Dial()
@@ -51,7 +51,7 @@ func (connPoll *ConnPool)InitPool() error{
 }
 
 // Get is 从连接池里取出连接
-func (connPoll *ConnPool)Get() interface{} {
+func (connPoll *ConnPool) Get() interface{} {
     // 如果空闲连接为空，初始化连接池
     if connPoll.idle == nil {
 		err := connPoll.InitPool()
@@ -78,7 +78,7 @@ func (connPoll *ConnPool)Get() interface{} {
 }
 
 // Release is 回收连接到连接池
-func (connPoll *ConnPool)Release(conn interface{}) {
+func (connPoll *ConnPool) Release(conn interface{}) {
     //connPoll.idle <-conn
     connPoll.idle <-idleConn{t: nowFunc(), c: conn}
 }

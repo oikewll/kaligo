@@ -1,18 +1,18 @@
 package mysql
 
 import (
+    "fmt"
     "strings"
     "regexp"
-    //"fmt"
 )
 
 // Query is the struct for MySQL DATE type
 type Query struct {
+    sqlStr      string              // SQL statement
     queryType   int                 // Query type
     lifeTime    int                 // Cache lifetime
     cacheKey    string              // Cache key
     cacheAll    bool                // boolean Cache all results
-    sqlStr      string              // SQL statement
     parameters  map[string]string   // Quoted query parameters
     asObject    interface{}         // Return results as associative arrays(map[string]string || []map[string]string) or objects(&User{ID:1, Name: "sam"})
     connection  *Connection         // db connection, Include *sql.DB
@@ -84,8 +84,21 @@ func (q *Query) SetConnection(c *Connection) *Query {
 // @return result Result DatabaseResult for SELECT queries
 // @return result interface{} the insert id for INSERT queries
 // @return result integer number of affected rows for all other queries
-func (q *Query) Compile() string {
+func (q *Query) Compile(args ...*Connection) string {
+    var conn *Connection    
+    if len(args) != 0 {
+        conn = args[0]
+    } else {
+        // Get the database instance
+        //db := New()
+        //conn = db.C
+        conn = q.connection
+    }
+    //fmt.Printf("Query Compile === %T = %p\n", conn, conn)
+
+    // Import the SQL locally
     sqlStr := q.sqlStr
+    fmt.Printf("Query Compile sqlStr === %v\n", sqlStr)
 
     if q.parameters != nil {
         // Quote all of the values
@@ -95,10 +108,10 @@ func (q *Query) Compile() string {
             if k[0:1] != ":" {
                 k = ":" + k
             }
-            values[k] = q.connection.Quote(v)
+            values[k] = conn.Quote(v)
         }
 
-        // 一对一的替换
+        // Replace the values in the SQL
         sqlStr = Strtr(sqlStr, values)
     }
 
@@ -106,9 +119,23 @@ func (q *Query) Compile() string {
 }
 
 // Execute the current query on the given database.
-func (q *Query) Execute() interface{} {
+func (q *Query) Execute(args ...*Connection) string {
+//func (q *Query) Execute(args ...*Connection) interface{} {
+    var conn *Connection    
+    if len(args) != 0 {
+        conn = args[0]
+    } else {
+        // Get the database instance
+        //db := New()
+        //conn = db.C
+        conn = q.connection
+    }
+    //fmt.Printf("Query Execute === %T = %p\n", conn, conn)
+
+    //fmt.Printf("Execute sqlStr111 = %v\n", q.sqlStr)
     // Compile the SQL query
-    sqlStr := q.Compile()
+    sqlStr := q.Compile(conn)
+    //fmt.Printf("Execute sqlStr222 = %v\n", sqlStr)
 
     // make sure we have a SQL type to work with
     if q.queryType == 0 {
@@ -130,7 +157,7 @@ func (q *Query) Execute() interface{} {
 
     // 处理查询缓存
     //cacheObj = cache.Forge(cacheKey)
-    //if q.connection.Caching() && q.lifeTime != 0 && q.queryType == SELECT {
+    //if conn.Caching() && q.lifeTime != 0 && q.queryType == SELECT {
         //var cacheKey string    
         //if q.cacheKey == "" {
             //h := md5.New()
@@ -144,14 +171,15 @@ func (q *Query) Execute() interface{} {
 
     // Execute the query
     q.connection.queryCount++
-    // Connection.Query(queryType, sqlStr, AsObject)
-    result := q.connection.Query(q.queryType, sqlStr, q.AsObject)
+    // Connection.Query()
+    //result := conn.Query(q.queryType, sqlStr, q.AsObject)
 
     //Cache the result if needed
     //if  cacheObj != nil && (q.cacheAll || result.count() != 0) {
         //cacheObj.setExpiration(q.lifeTime).SetContents(result.asArray()).Set()
     //}
 
-    return result
+    return "hello"
+    //return result
 }
 

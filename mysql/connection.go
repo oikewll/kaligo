@@ -15,6 +15,7 @@ import (
     "fmt"
     "time"
     "regexp"
+    //"reflect"
     "strings"
     "sync"
     //"github.com/owner888/mymysql/autorc"
@@ -44,7 +45,7 @@ type Connection struct {
 	autoCommit   bool
     initCmds     []string   // MySQL commands/queries executed after connect
     cacheStore   *sync.Map
-    MytablePrefix  string
+    tablePrefix  string
 
     schema      *Schema
     Debug        bool       // Debug logging. You may change it at any time.
@@ -58,15 +59,20 @@ func NewConnection(name string, dbDsn string, writable bool) *Connection {
     c := &Connection{
         dbDsn      : dbDsn,
         queryCount : 0,
-        MytablePrefix: "",
+        tablePrefix: "",
     }
-    c.Connect()
+    //c.Connect()
     return c
 }
 
 // DB Returns *sql.DB
 func (c *Connection) DB() *sql.DB {
     return c.db
+}
+
+// TX Returns *sql.TX
+func (c *Connection) TX() *sql.Tx {
+    return c.tx
 }
 
 // SetMaxOpenConns sets the maximum number of open connections to the database.
@@ -273,14 +279,23 @@ func (c *Connection) ListIndexes(table string, like string) []map[string]string 
 func (c *Connection) LastQuery() string {
     return c.lastQuery
 }
+// UserInfo is a test
+type UserInfo struct  {
+    ID int
+    Name string
+}
 
 // TablePrefix Return the table prefix defined in the current configuration.
 func (c *Connection) TablePrefix(table string) string {
-    fmt.Printf("TablePrefix=%T = %v 444\n", c.MytablePrefix, c.MytablePrefix)
-    fmt.Printf("TablePrefix=%T = %v 444\n", table, table)
-    return "jljljlj" + table
-    //fmt.Printf("TablePrefix=%v\n", c.tablePrefix + table)
-    //return c.tablePrefix + table
+    // 循环输出 stuct 结构
+    //t := reflect.TypeOf(c)
+    //v := reflect.ValueOf(c)
+    //for k := 0; k < t.NumField(); k++ {
+        //fmt.Printf("%s -- %v \n", t.Field(k).Name, v.Field(k).Interface())   
+    //}
+
+    //fmt.Printf("TablePrefix === %T = %p\n", c, c)
+    return c.tablePrefix + table
 }
 
 // Quote a value for an SQL query.

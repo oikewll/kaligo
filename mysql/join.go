@@ -20,7 +20,7 @@ type Join struct {
     alias     string
     onValues  [][4]string
 
-    Builder
+    Builder /* Include Query */
 }
 
 // NewJoin creates a new Select Object
@@ -68,8 +68,16 @@ func (j *Join) OnClose() *Join {
 }
 
 // Compile the SQL partial for a JOIN statement and return it.
-//func (j *Join) Compile(db *DB) string {
-func (j *Join) Compile() string {
+func (j *Join) Compile(args ...*Connection) string {
+    var conn *Connection    
+    if len(args) != 0 {
+        conn = args[0]
+    } else {
+        // Get the database instance
+        db := New()
+        conn = db.C
+    }
+    //fmt.Printf("Join Compile === %T = %p\n", conn, conn)
 
     var sqlStr string    
 
@@ -90,13 +98,13 @@ func (j *Join) Compile() string {
         //sqlStr += " " + trim(expression.value(), " ()") + ")"
     //} else {
         // Quote the table name that is being joined
-        //sqlStr += " " + j.connection.QuoteTable(j.table)
+        //sqlStr += " " + conn.QuoteTable(j.table)
     //}
-    sqlStr += " " + j.connection.QuoteTable(j.table)
+    sqlStr += " " + conn.QuoteTable(j.table)
 
     // Add the alias if needed
     if j.alias != "" {
-        sqlStr += " AS " + j.connection.QuoteTable(j.alias)
+        sqlStr += " AS " + conn.QuoteTable(j.alias)
     }
 
     var conditions []string    
@@ -132,7 +140,7 @@ func (j *Join) Compile() string {
             if c2 == "" {
                 c2Str += "NULL"
             } else {
-                c2Str += j.connection.QuoteIdentifier(c2)
+                c2Str += conn.QuoteIdentifier(c2)
             }
             conditions = append(conditions, c1 + op + " " + c2Str)
         }
