@@ -4,13 +4,13 @@ package mysql
 
 import(
     "testing"
-    //"fmt"
+    "fmt"
     _ "github.com/go-sql-driver/mysql"
     //"time"
     //"strconv"
-    //"strings"
-    //"regexp"
+    "strings"
     "reflect"
+    //"regexp"
     //"encoding/json"
     //"database/sql"
 
@@ -43,59 +43,75 @@ import(
 	//return ""
 //}
 
-type Player struct {
-    playerName string
+type connection struct {
+    S *select1
+    Q *query
 }
-
-func NewPlayer() *Player {
-    return &Player{
-        playerName: "playerName",
-    }
-}
-
-func (p *Player) setPlayerName() {
-    p.playerName = "kakakak"
-}
-
-type User struct {
-    ID int          `db:"id"`
-    Name string     `db:"name"`
-    Addr string     `db:"addr"`
-    *Player
-}
-
-type User1 struct {
-    Name string     `db:"name"`
-    *Player
-}
-
-func NewUser() *User {
-    return &User{
-        Name: "userName",
-        Player: &Player{
-            playerName: "playerName",
+func (c *connection) select1(columns ...string) *select1 {
+    s := &select1{
+        selects: columns,
+        where: &where{
+            builder: &builder{
+                query: &query{
+                    sqlStr: "",
+                    queryType: 1,
+                    connection: c,
+                },
+            },
         },
     }
+
+    fmt.Println("select1->compile() === " + strings.Join(s.selects, ", "))
+    return s
+}
+
+type query struct {
+    sqlStr string
+    queryType int
+    connection *connection
+}
+func (q *query) compile() string {
+    fmt.Println("query->compile()")
+    return "query->compile()"
+}
+func (q *query) execute() {
+    var sqlStr string    
+    switch q.queryType {
+    case 1:
+        sqlStr = q.connection.select1().compile()
+    default:
+        sqlStr = q.compile()
+    }
+    fmt.Println(sqlStr)
+}
+
+type builder struct {
+    *query
+}
+
+type where struct {
+    *builder
+}
+
+type select1 struct {
+    selects []string
+    *where
+}
+func (s *select1) from() *select1 {
+    fmt.Println("select1->from()")
+    return s
+}
+func (s *select1) compile() string {
+    //fmt.Println("select1->compile()")
+    return "select1->compile() === " + strings.Join(s.selects, ", ")
 }
 
 func TestDB(t *testing.T) {
-    //p := NewPlayer()
-    //u := &User{
-        //Name: "userName",
-        //Player: p,
-    //}
-    ////t.Logf("userName = %v\n", u.Name)
-    //t.Logf("playerName = %v\n", u.playerName)
 
-    //u1 := &User1{
-        //Name: "userName",
-        //Player: p,
-    //}
-    //t.Logf("playerName = %v\n", u1.playerName)
-
-    //u.setPlayerName()
-    //t.Logf("playerName = %v\n", u.playerName)
-    //t.Logf("playerName = %v\n", u1.playerName)
+    c := &connection{}
+    //c.select1().from().compile()
+    c.select1("id", "name").from().execute()
+    //s.from().execute().select1func()
 
     //u := &User{1, "kaka", "hk"}
     //modelType := reflect.ValueOf(u).Type()
