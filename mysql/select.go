@@ -9,7 +9,7 @@
 package mysql
 
 import (
-    //"fmt"
+    "fmt"
     "strconv"
     "strings"
 )
@@ -25,7 +25,7 @@ type Select struct {
     offset   int
     lastJoin *Join      // last join statement
 
-    Where
+    *Where
 }
 
 // Distinct the query parameters
@@ -202,8 +202,16 @@ func arrayUnique(arr []string) []string{
 }
 
 // Compile Set the value of a single column.
-func (s *Select) Compile() string {
-    // db 链接是否存在 ？
+func (s *Select) Compile(args ...*Connection) string {
+    var conn *Connection    
+    if len(args) != 0 {
+        conn = args[0]
+    } else {
+        // Get the database instance
+        db := New()
+        conn = db.C
+    }
+    //fmt.Printf("Select Compile === %T = %p\n", conn, conn)
 
     // Start a selection query
     sqlStr := "SELECT "
@@ -219,7 +227,7 @@ func (s *Select) Compile() string {
     } else {
         s.selects = arrayUnique(s.selects)
         for k, v := range s.selects {
-            s.selects[k] = s.connection.QuoteIdentifier(v)
+            s.selects[k] = conn.QuoteIdentifier(v)
         }
         sqlStr += strings.Join(s.selects, ", ")
     }
@@ -228,15 +236,14 @@ func (s *Select) Compile() string {
         // Set tables to select from
         s.froms = arrayUnique(s.froms)
         for k, v := range s.froms {
-            s.froms[k] = s.connection.QuoteTable(v)
+            s.froms[k] = conn.QuoteTable(v)
         }
         sqlStr += " FROM " + strings.Join(s.froms, ", ")
     }
 
     if len(s.joinObjs) != 0 {
         // Add tables to join
-        // Builder.CompileJoin()
-        sqlStr += " " + s.CompileJoin(s.joinObjs)
+        sqlStr += " " + s.CompileJoin(conn, s.joinObjs)
     }
 
     // select 没有 set 用法
@@ -248,14 +255,14 @@ func (s *Select) Compile() string {
         // Add selection conditions
         // Builder.CompileConditions()
         // Where.wheres 参数
-        sqlStr += " WHERE " + s.CompileConditions(s.wheres)
+        sqlStr += " WHERE " + s.CompileConditions(conn, s.wheres)
     }
 
     if len(s.groupBys) != 0 {
         // Add sorting
         s.groupBys = arrayUnique(s.groupBys)
         for k, v := range s.groupBys {
-            s.groupBys[k] = s.connection.QuoteIdentifier(v)
+            s.groupBys[k] = conn.QuoteIdentifier(v)
         }
         sqlStr += " GROUP BY " + strings.Join(s.groupBys, ", ")
     }
@@ -264,14 +271,14 @@ func (s *Select) Compile() string {
         // Add filtering conditions
         // Builder.CompileConditions()
         // Where.havings 参数
-        sqlStr += " HAVING " + s.CompileConditions(s.havings)
+        sqlStr += " HAVING " + s.CompileConditions(conn, s.havings)
     }
 
     if len(s.orderBys) != 0 {
         // Add sorting
         // Builder.CompileOrderBy()
         // Where.orderBys 参数
-        sqlStr += " " + s.CompileOrderBy(s.orderBys)
+        sqlStr += " " + s.CompileOrderBy(conn, s.orderBys)
     }
 
     if s.limit != 0 {
@@ -284,6 +291,7 @@ func (s *Select) Compile() string {
         sqlStr += " OFFSET " + strconv.Itoa(s.offset)
     }
 
+    fmt.Printf("Select Compile === %v\n", sqlStr)
     return sqlStr
 }
 

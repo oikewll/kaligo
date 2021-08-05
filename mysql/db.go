@@ -14,8 +14,9 @@ import (
     //"regexp"
     //"strings"
     //"time"
-    //"sync"
+    "sync"
     //"reflect"
+    //"github.com/stretchr/testify/assert"
     "github.com/owner888/kaligo/conf"
     "github.com/owner888/kaligo/util"
     //"github.com/owner888/mymysql/autorc"
@@ -24,7 +25,26 @@ import (
     //_ "github.com/ziutek/mymysql/thrsafe"   // 用了连接池之后连接都是重复利用的，没必要用线程安全模式
 )
 
-var instances = map[string]*DB{}
+//type singleton struct {
+//}
+ 
+//var instance *singleton
+//var once sync.Once
+ 
+//func GetInstance() *singleton {
+    //once.Do(func() {
+        //instance = &singleton{}
+    //})
+    //return instance
+//}
+
+var (
+    once sync.Once
+    instance *DB
+    instances map[string]*DB
+)
+
+//var instances = map[string]*DB{}
 
 const (
     // SELECT Query select type
@@ -61,37 +81,49 @@ type DB struct {
     //res sql.Result
 }
 
-// NewDB is the function for Create new MySQL handler.
+// New is the function for Create new MySQL handler.
 // (读+写)连接数据库+选择数据库
-func NewDB(name string) *DB {
-    if db, ok := instances[name]; ok {
-        return db
+func New(args ...string) *DB {
+    var name = "default"    
+    if len(args) != 0 {
+        name = args[0]
     }
 
-    dbuser := conf.Get("db", "user")
-    dbpass := conf.Get("db", "pass")
-    dbhost := conf.Get("db", "host")
-    dbport := conf.Get("db", "port")
-    dbname := conf.Get("db", "name")
+    // 原子操作，避免多协程导致的并发问题，在这里一次性生成主从库所有链接，以后用 Use("reameonly")
+    once.Do(func(){
+        // 这里不要用map了，因为只会进来一次，也无法生成多个db
+        if len(instances) == 0 {
+            instances = make(map[string]*DB)
+        }
+        fmt.Printf("New === %v\n", name)
 
-    dbuser = "root"
-    dbpass = "root"
-    dbhost = "127.0.0.1"
-    dbport = "3306"
-    dbname = "test"
+        //dbuser := conf.Get("db", "user")
+        //dbpass := conf.Get("db", "pass")
+        //dbhost := conf.Get("db", "host")
+        //dbport := conf.Get("db", "port")
+        //dbname := conf.Get("db", "name")
 
-    dbDsn  := fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=%s", dbuser, dbpass, dbhost+":"+dbport, dbname, "utf8mb4")
-    //fmt.Printf("%v", dbDsn)
+        dbuser := "root"
+        dbpass := "root"
+        dbhost := "127.0.0.1"
+        dbport := "3306"
+        dbname := "test"
 
-    c := NewConnection(name, dbDsn, false)
-    c.SetMaxIdleConns(util.StrToInt(conf.Get("db", "max_idle_conns")))
-    db := &DB{
-        name      :name,
-        C         : c,
-    }
-    instances[name] = db
+        dbDsn  := fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=%s", dbuser, dbpass, dbhost+":"+dbport, dbname, "utf8mb4")
+        //fmt.Printf("%v", dbDsn)
 
-    return db
+        c := NewConnection(name, dbDsn, false)
+        c.Connect()
+        c.SetMaxIdleConns(util.StrToInt(conf.Get("db", "max_idle_conns")))
+
+        instance = &DB{
+            name: name,
+            C   : c,
+        }
+        instances[name] = instance
+    })
+
+    return instance
 }
 
 // DB Returns *sql.DB
@@ -167,10 +199,10 @@ func (db *DB) Query(sqlStr string, args ...int) *Query {
     }
 
     q := &Query{
-        sqlStr:    sqlStr,
-        queryType: queryType,
+        sqlStr    : sqlStr,
+        queryType : queryType,
+        connection: db.C,
     }
-    q.SetConnection(db.C)
     return q
 }
 
@@ -188,8 +220,16 @@ func (db *DB) Select(columns ...string) *Select {
         selects : columns,
         distinct: false,
         offset  : 0,
+        Where   : &Where{
+            Builder: &Builder{
+                Query: &Query{
+                    sqlStr    : "",
+                    queryType : SELECT,
+                    connection: db.C,
+                },
+            },
+        },
     }
-    s.SetConnection(db.C)
     return s
 }
 
@@ -208,8 +248,14 @@ func (db *DB) Insert(table string, columns []string) *Insert {
     i := &Insert{
         table: table,
         columns: columns,
+        Builder: &Builder{
+            Query: &Query{
+                sqlStr    : "",
+                queryType : INSERT,
+                connection: db.C,
+            },
+        },
     }
-    i.SetConnection(db.C)
     return i
 }
 
@@ -222,8 +268,16 @@ func (db *DB) Insert(table string, columns []string) *Insert {
 func (db *DB) Update(table string) *Update {
     u := &Update{
         table: table,
+        Where   : &Where{
+            Builder: &Builder{
+                Query: &Query{
+                    sqlStr    : "",
+                    queryType : UPDATE,
+                    connection: db.C,
+                },
+            },
+        },
     }
-    u.SetConnection(db.C)
     return u
 }
 
@@ -236,8 +290,16 @@ func (db *DB) Update(table string) *Update {
 func (db *DB) Delete(table string) *Delete {
     d := &Delete{
         table: table,
+        Where   : &Where{
+            Builder: &Builder{
+                Query: &Query{
+                    sqlStr    : "",
+                    queryType : DELETE,
+                    connection: db.C,
+                },
+            },
+        },
     }
-    d.SetConnection(db.C)
     return d
 }
 

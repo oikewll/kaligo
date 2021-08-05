@@ -16,14 +16,7 @@ type Where struct {
     orderBys [][2]string
     limit   int
 
-    Builder
-}
-
-// NewWhere creates a new Select Object
-func NewWhere() *Where {
-    return &Where{
-        limit: 0,
-    }
+    *Builder
 }
 
 // Where Alias of andWhere

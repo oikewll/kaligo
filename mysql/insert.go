@@ -17,7 +17,7 @@ type Insert struct {
     //values  []map[string]string // map slice
     params  []string
 
-    Builder
+    *Builder
 }
 
 // Table Set the table to insert into.

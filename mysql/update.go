@@ -12,7 +12,7 @@ type Update struct {
     joinObjs []*Join  // 多维slice
     lastJoin *Join       // last join statement
 
-    Where
+    *Where
 }
 
 // Table Sets the table to update.
@@ -40,33 +40,41 @@ func (u *Update) Value(column string, value string) *Update {
 }
 
 // Compile Set the value of a single column.
-func (u *Update) Compile() string {
-    // db 链接是否存在 ？
+func (u *Update) Compile(args ...*Connection) string {
+    var conn *Connection    
+    if len(args) != 0 {
+        conn = args[0]
+    } else {
+        // Get the database instance
+        db := New()
+        conn = db.C
+    }
+    //fmt.Printf("Update Compile === %T = %p\n", conn, conn)
 
     // Start and update query
     sqlStr := "UPDATE " + u.connection.QuoteTable(u.table)
 
     if len(u.joinObjs) != 0 {
         // Builder.CompileJoin()
-        sqlStr += u.CompileJoin(u.joinObjs)
+        sqlStr += u.CompileJoin(conn, u.joinObjs)
     }
 
     // Add the columns to update
     // Builder.CompileSet()
-    sqlStr += u.CompileSet(u.sets)
+    sqlStr += u.CompileSet(conn, u.sets)
 
     if len(u.wheres) != 0 {
         // Add selection conditions
         // Builder.CompileConditions()
         // Where.wheres 参数
-        sqlStr += "WHERE " + u.CompileConditions(u.wheres)
+        sqlStr += "WHERE " + u.CompileConditions(conn, u.wheres)
     }
 
     if len(u.orderBys) != 0 {
         // Add sorting
         // Builder.CompileOrderBy()
         // Where.orderBys 参数
-        sqlStr += " " + u.CompileOrderBy(u.orderBys)
+        sqlStr += " " + u.CompileOrderBy(conn, u.orderBys)
     }
 
     if u.limit != 0 {
