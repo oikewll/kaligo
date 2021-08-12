@@ -16,24 +16,26 @@ import (
 
 // Builder is the struct for MySQL DATE type
 type Builder struct {
-    *Query
+    //*Query
 }
 
 // CompileJoin Compiles an array of JOIN statements into an SQL partial.
-func (b *Builder) CompileJoin(c *Connection, joins []*Join) string {
+//func (q *Query) CompileJoin(c *Connection, joins []*Join) string {
+func (q *Query) CompileJoin(joins []*Join) string {
     var statements []string    
+
     for _, join := range joins {
-        statements = append(statements, join.Compile(c))
+        statements = append(statements, join.Compile(q.C))
     }
 
-    return strings.Join(statements, ", ")
+    return strings.Join(statements, " ")
 }
 
 // CompileConditions Compiles an array of conditions into an SQL partial. Used for WHERE and HAVING
-func (b *Builder) CompileConditions(c *Connection, conditions map[string][][]string) string {
+func (q *Query) CompileConditions(conditions map[string][][]string) string {
     var lastCondition string    
-
     var sqlStr string    
+
     for _, group := range conditions {
         // Process groups of conditions
         for logic, condition := range group {
@@ -80,32 +82,32 @@ func (b *Builder) CompileConditions(c *Connection, conditions map[string][][]str
                     // trim一下兼容有空格写法：10,20 和 10, 20 都兼容
                     min := strings.TrimSpace(valueArr[0])
                     max := strings.TrimSpace(valueArr[1])
-                    if b.parameters[min] != "" {
+                    if q.parameters[min] != "" {
                         // Set the parameter as the minimum
-                        min = b.parameters[min]
+                        min = q.parameters[min]
                     }
 
-                    if b.parameters[max] != "" {
+                    if q.parameters[max] != "" {
                         // Set the parameter as the maximum
-                        max = b.parameters[max]
+                        max = q.parameters[max]
                     }
 
-                    value = c.Quote(min) + " AND " + c.Quote(max)
+                    value = q.C.Quote(min) + " AND " + q.C.Quote(max)
                 } else {
-                    if b.parameters[value] != "" {
+                    if q.parameters[value] != "" {
                         // Set the parameter as the value
-                        value = b.parameters[value]
+                        value = q.parameters[value]
                     }
                     
                     // Quote the entire value normally
-                    value = c.Quote(value)
+                    value = q.C.Quote(value)
                 }
 
                 // Append the statement to the query
-                sqlStr += c.QuoteIdentifier(column) + " " + op + " " + value
+                sqlStr += q.C.QuoteIdentifier(column) + " " + op + " " + value
             }
 
-            lastCondition = strings.Join(condition, "")
+            lastCondition = conditionStr
         }
     }
 
@@ -113,32 +115,35 @@ func (b *Builder) CompileConditions(c *Connection, conditions map[string][][]str
 }
 
 // CompileSet Compiles an array of set values into an SQL partial. Used for UPDATE
-func (b *Builder) CompileSet(c *Connection, values [][]string) string {
-    var dict map[string]string    
+func (q *Query) CompileSet(values [][]string) string {
+    var sqlStr string    
+
+    dict := make(map[string]string)
     for _, group := range values {
         // Split the set
         column := group[0]
         value  := group[1]
 
         // Quote the column name
-        column = c.QuoteIdentifier(column)
+        column = q.C.QuoteIdentifier(column)
 
         if val, ok := dict[value]; ok {
             // Use the parameter value
             value = val
         }
-        dict[column] = column + "=" + c.Quote(value)
+        dict[column] = column + "=" + q.C.Quote(value)
     }
 
     var sets []string    
     for _, v := range dict {
         sets = append(sets, v)
     }
-    return strings.Join(sets, ", ")
+    sqlStr = strings.Join(sets, ", ")
+    return sqlStr
 }
 
 // CompileOrderBy Compiles an array of ORDER BY statements into an SQL partial..
-func (b *Builder) CompileOrderBy(c *Connection, columns [][2]string) string {
+func (q *Query) CompileOrderBy(columns [][2]string) string {
     var sorts []string    
 
     for _, group := range columns {
@@ -152,13 +157,9 @@ func (b *Builder) CompileOrderBy(c *Connection, columns [][2]string) string {
             direction = " " + direction
         }
 
-        sorts = append(sorts, c.QuoteIdentifier(column) + direction)
+        sorts = append(sorts, q.C.QuoteIdentifier(column) + direction)
     }
 
     return "ORDER BY " + strings.Join(sorts, ", ")
 }
 
-// Reset the query parameters
-//func (b *Builder) Reset() *Builder {
-    //return b
-//}

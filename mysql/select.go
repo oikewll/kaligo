@@ -9,7 +9,7 @@
 package mysql
 
 import (
-    "fmt"
+    //"fmt"
     "strconv"
     "strings"
 )
@@ -19,96 +19,103 @@ type Select struct {
     selects  []string
     distinct bool
     froms    []string
-    joinObjs []*Join     // join objects
     groupBys []string
     havings  map[string][][]string
     offset   int
-    lastJoin *Join      // last join statement
+    //joinObjs []*Join     // join objects
+    //lastJoin *Join       // last join statement
 
-    *Where
-}
-
-// Distinct the query parameters
-func (s *Select) Distinct(value bool) *Select {
-    s.distinct = value
-
-    return s
+    //*Where
 }
 
 // Select Choose the columns to select from.
-func (s *Select) Select(columns []string) *Select {
-    s.selects = append(s.selects, columns...)
+//func (s *Select) Select(columns []string) *Select {
+    //s.selects = append(s.selects, columns...)
 
-    return s
+    //return s
+//}
+
+// Select Choose the columns to select from.
+func (q *Query) Select(columns []string) *Query {
+    q.S.selects = append(q.S.selects, columns...)
+
+    return q
 }
 
 // SelectArray Choose the columns to select from.
-func (s *Select) SelectArray(columns []string, reset bool) *Select {
+func (q *Query) SelectArray(columns []string, reset bool) *Query {
     // 重设查询栏目
     if reset {
-        s.selects = columns
+        q.S.selects = columns
     } else {
-        s.selects = append(s.selects, columns...)
+        q.S.selects = append(q.S.selects, columns...)
     }
 
-    return s
+    return q
+}
+
+// Distinct the query parameters
+func (q *Query) Distinct(value bool) *Query {
+    q.S.distinct = value
+
+    return q
 }
 
 // From Choose the tables to select "FROM ...".
-func (s *Select) From(tables ...string) *Select {
-    s.froms = append(s.froms, tables...)
+func (q *Query) From(tables ...string) *Query {
+    q.S.froms = append(q.S.froms, tables...)
 
-    return s
+    return q
 }
 
 // Join Adds addition tables to "JOIN ...".
 // @param string joinType type of JOIN: INNER, RIGHT, LEFT, etc
-func (s *Select) Join(table string, joinType string) *Select {
+func (q *Query) Join(table string, joinType string) *Query {
     //s.lastJoin = &Join{table: table, joinType: joinType}
-    s.lastJoin = NewJoin(table, joinType);
-    s.joinObjs = append(s.joinObjs, s.lastJoin)
+    q.lastJoin = NewJoin(table, joinType);
+    q.joinObjs = append(q.joinObjs, q.lastJoin)
 
-    return s
+    return q
 }
 
 // On Adds "ON ..." conditions for the last created JOIN statement.
-func (s *Select) On(c1 string, op string, c2 string) *Select {
-    s.lastJoin.On(c1, op, c2)
+func (q *Query) On(c1 string, op string, c2 string) *Query {
+    q.lastJoin.On(c1, op, c2)
 
-    return s
+    return q
 }
 
 // AndOn Adds "AND ON ..." conditions for the last created JOIN statement.
-func (s *Select) AndOn(c1 string, op string, c2 string) *Select {
-    s.lastJoin.AndOn(c1, op, c2)
+func (q *Query) AndOn(c1 string, op string, c2 string) *Query {
+    q.lastJoin.AndOn(c1, op, c2)
 
-    return s
+    return q
 }
 
 // OrOn Adds "OR ON ..." conditions for the last created JOIN statement.
-func (s *Select) OrOn(c1 string, op string, c2 string) *Select {
-    s.lastJoin.OrOn(c1, op, c2)
+func (q *Query) OrOn(c1 string, op string, c2 string) *Query {
+    q.lastJoin.OrOn(c1, op, c2)
 
-    return s
+    return q
 }
 
 // OnOpen Adds an opening bracket the last created JOIN statement.
-func (s *Select) OnOpen() *Select {
-    s.lastJoin.OnOpen()
+func (q *Query) OnOpen() *Query {
+    q.lastJoin.OnOpen()
 
-    return s
+    return q
 }
 
 // OnClose Adds an closing bracket the last created JOIN statement.
-func (s *Select) OnClose() *Select {
-    s.lastJoin.OnClose()
+func (q *Query) OnClose() *Query {
+    q.lastJoin.OnClose()
 
-    return s
+    return q
 }
 
 // GroupBy Creates a "GROUP BY ..." filter.
 // @param  columns  []string  column name or []string{column, column} or object
-func (s *Select) GroupBy(columns []string) *Select {
+func (q *Query) GroupBy(columns []string) *Query {
     //for idx, column := range columns {
         // 如果column是 []string，再循环一边
         //if i, ok := column.([][]string); ok {
@@ -119,73 +126,73 @@ func (s *Select) GroupBy(columns []string) *Select {
         //}
     //}
 
-    s.groupBys = append(s.groupBys, columns...)
+    q.S.groupBys = append(q.S.groupBys, columns...)
 
-    return s
+    return q
 }
 
 // Having Alias of AndHaving
-func (s *Select) Having(column string, op string, value string) *Select {
-    return s.AndHaving(column, op, value)
+func (q *Query) Having(column string, op string, value string) *Query {
+    return q.AndHaving(column, op, value)
 }
 
 // AndHaving Creates a new "AND HAVING" condition for the query.
-func (s *Select) AndHaving(column string, op string, value string) *Select {
-    s.havings["AND"] = append(s.havings["AND"], []string{column, op, value})
+func (q *Query) AndHaving(column string, op string, value string) *Query {
+    q.S.havings["AND"] = append(q.S.havings["AND"], []string{column, op, value})
 
-    return s
+    return q
 }
 
 // OrHaving Creates a new "AND HAVING" condition for the query.
-func (s *Select) OrHaving(column string, op string, value string) *Select {
-    s.havings["OR"] = append(s.havings["OR"], []string{column, op, value})
+func (q *Query) OrHaving(column string, op string, value string) *Query {
+    q.S.havings["OR"] = append(q.S.havings["OR"], []string{column, op, value})
 
-    return s
+    return q
 }
 
 // HavingOpen Alias of AndHavingOpen
-func (s *Select) HavingOpen() *Select {
-    return s.AndHavingOpen()
+func (q *Query) HavingOpen() *Query {
+    return q.AndHavingOpen()
 }
 
 // AndHavingOpen Opens a new "AND HAVING (...)" grouping.
-func (s *Select) AndHavingOpen() *Select {
-    s.havings["AND"] = append(s.havings["AND"], []string{"("})
+func (q *Query) AndHavingOpen() *Query {
+    q.S.havings["AND"] = append(q.S.havings["AND"], []string{"("})
 
-    return s
+    return q
 }
 
 // OrHavingOpen Opens a new "OR HAVING (...)" grouping.
-func (s *Select) OrHavingOpen() *Select {
-    s.havings["OR"] = append(s.havings["OR"], []string{"("})
+func (q *Query) OrHavingOpen() *Query {
+    q.S.havings["OR"] = append(q.S.havings["OR"], []string{"("})
 
-    return s
+    return q
 }
 
 // HavingClose Alias of AndHavingClose
-func (s *Select) HavingClose() *Select {
-    return s.AndHavingClose()
+func (q *Query) HavingClose() *Query {
+    return q.AndHavingClose()
 }
 
 // AndHavingClose Opens a new "AND HAVING (...)" grouping.
-func (s *Select) AndHavingClose() *Select {
-    s.havings["AND"] = append(s.havings["AND"], []string{")"})
+func (q *Query) AndHavingClose() *Query {
+    q.S.havings["AND"] = append(q.S.havings["AND"], []string{")"})
 
-    return s
+    return q
 }
 
 // OrHavingClose Opens a new "OR HAVING (...)" grouping.
-func (s *Select) OrHavingClose() *Select {
-    s.havings["OR"] = append(s.havings["OR"], []string{")"})
+func (q *Query) OrHavingClose() *Query {
+    q.S.havings["OR"] = append(q.S.havings["OR"], []string{")"})
 
-    return s
+    return q
 }
 
 // Offset Start returning results after "OFFSET ...".
-func (s *Select) Offset(number int) *Select {
-    s.offset = number
+func (q *Query) Offset(number int) *Query {
+    q.S.offset = number
 
-    return s
+    return q
 }
 
 func arrayUnique(arr []string) []string{
@@ -201,49 +208,39 @@ func arrayUnique(arr []string) []string{
 	return result
 }
 
-// Compile Set the value of a single column.
-func (s *Select) Compile(args ...*Connection) string {
-    var conn *Connection    
-    if len(args) != 0 {
-        conn = args[0]
-    } else {
-        // Get the database instance
-        db := New()
-        conn = db.C
-    }
-    //fmt.Printf("Select Compile === %T = %p\n", conn, conn)
-
+// SelectCompile Set the value of a single column.
+func (q *Query) SelectCompile() string {
     // Start a selection query
     sqlStr := "SELECT "
 
-    if s.distinct {
+    if q.S.distinct {
         // Select only unique results
         sqlStr += "DISTINCT"
     }
 
-    if len(s.selects) == 0 {
+    if len(q.S.selects) == 0 {
         // Select all columns
         sqlStr += "*"
     } else {
-        s.selects = arrayUnique(s.selects)
-        for k, v := range s.selects {
-            s.selects[k] = conn.QuoteIdentifier(v)
+        q.S.selects = arrayUnique(q.S.selects)
+        for k, v := range q.S.selects {
+            q.S.selects[k] = q.C.QuoteIdentifier(v)
         }
-        sqlStr += strings.Join(s.selects, ", ")
+        sqlStr += strings.Join(q.S.selects, ", ")
     }
 
-    if len(s.froms) != 0 {
+    if len(q.S.froms) != 0 {
         // Set tables to select from
-        s.froms = arrayUnique(s.froms)
-        for k, v := range s.froms {
-            s.froms[k] = conn.QuoteTable(v)
+        q.S.froms = arrayUnique(q.S.froms)
+        for k, v := range q.S.froms {
+            q.S.froms[k] = q.C.QuoteTable(v)
         }
-        sqlStr += " FROM " + strings.Join(s.froms, ", ")
+        sqlStr += " FROM " + strings.Join(q.S.froms, ", ")
     }
 
-    if len(s.joinObjs) != 0 {
+    if len(q.joinObjs) != 0 {
         // Add tables to join
-        sqlStr += " " + s.CompileJoin(conn, s.joinObjs)
+        sqlStr += " " + q.CompileJoin(q.joinObjs)
     }
 
     // select 没有 set 用法
@@ -251,64 +248,69 @@ func (s *Select) Compile(args ...*Connection) string {
     // Builder.CompileSet()
     //sqlStr += s.CompileSet(db, s.sets)
 
-    if len(s.wheres) != 0 {
+    if len(q.W.wheres) != 0 {
         // Add selection conditions
         // Builder.CompileConditions()
         // Where.wheres 参数
-        sqlStr += " WHERE " + s.CompileConditions(conn, s.wheres)
+        sqlStr += " WHERE " + q.CompileConditions(q.W.wheres)
     }
 
-    if len(s.groupBys) != 0 {
+    if len(q.S.groupBys) != 0 {
         // Add sorting
-        s.groupBys = arrayUnique(s.groupBys)
-        for k, v := range s.groupBys {
-            s.groupBys[k] = conn.QuoteIdentifier(v)
+        q.S.groupBys = arrayUnique(q.S.groupBys)
+        for k, v := range q.S.groupBys {
+            q.S.groupBys[k] = q.C.QuoteIdentifier(v)
         }
-        sqlStr += " GROUP BY " + strings.Join(s.groupBys, ", ")
+        sqlStr += " GROUP BY " + strings.Join(q.S.groupBys, ", ")
     }
 
-    if len(s.havings) != 0 {
+    if len(q.S.havings) != 0 {
         // Add filtering conditions
         // Builder.CompileConditions()
         // Where.havings 参数
-        sqlStr += " HAVING " + s.CompileConditions(conn, s.havings)
+        sqlStr += " HAVING " + q.CompileConditions(q.S.havings)
     }
 
-    if len(s.orderBys) != 0 {
+    if len(q.W.orderBys) != 0 {
         // Add sorting
         // Builder.CompileOrderBy()
         // Where.orderBys 参数
-        sqlStr += " " + s.CompileOrderBy(conn, s.orderBys)
+        sqlStr += " " + q.CompileOrderBy(q.W.orderBys)
     }
 
-    if s.limit != 0 {
+    if q.W.limit != 0 {
         // Add limiting
-        sqlStr += " LIMIT " + strconv.Itoa(s.limit)
+        sqlStr += " LIMIT " + strconv.Itoa(q.W.limit)
     }
 
-    if s.offset != 0 {
+    if q.S.offset != 0 {
         // Add offsets
-        sqlStr += " OFFSET " + strconv.Itoa(s.offset)
+        sqlStr += " OFFSET " + strconv.Itoa(q.S.offset)
     }
 
-    fmt.Printf("Select Compile === %v\n", sqlStr)
+    //fmt.Printf("SelectCompile === %v\n", sqlStr)
+    q.sqlStr = sqlStr
+
     return sqlStr
 }
 
-// Reset the query parameters
-func (s *Select) Reset() *Select {
-    s.selects    = nil
-    s.froms      = nil
-    s.joinObjs   = nil
-    s.wheres     = nil
-    s.groupBys   = nil
-    s.havings    = nil
-    s.orderBys   = nil
-    s.distinct   = false
-    s.limit      = 0
-    s.offset     = 0
-    s.lastJoin   = nil
-    s.parameters = nil
+// SelectReset the query parameters
+func (q *Query) SelectReset() *Query {
+    //fmt.Println("SelectReset")
+    q.S.selects  = nil
+    q.S.distinct = false
+    q.S.froms    = nil
+    q.S.groupBys = nil
+    q.S.havings  = nil
+    q.S.offset   = 0
 
-    return s
+    q.W.wheres   = nil
+    q.W.orderBys = nil
+    q.W.limit    = 0
+
+    q.joinObjs   = nil
+    q.lastJoin   = nil
+    q.parameters = nil
+
+    return q
 }

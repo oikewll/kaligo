@@ -8,139 +8,137 @@ import (
 // Update is the struct for MySQL DATE type
 type Update struct {
     table    string
-    sets     [][]string  // slice
-    joinObjs []*Join  // 多维slice
-    lastJoin *Join       // last join statement
+    sets     [][]string  // 多维slice
+    // 转移到query
+    //joinObjs []*Join     // slice
+    //lastJoin *Join       // last join statement
 
-    *Where
+    //*Where
 }
 
 // Table Sets the table to update.
-func (u *Update) Table(table string) *Update {
-    u.table = table
-    return u
-}
+// 不需要了，db.go Update(table string) 已经有了
+//func (q *Query) Table(table string) *Query {
+    //q.U.table = table
+    //return q
+//}
 
 // Set the values to update with an associative array
-func (u *Update) Set(pairs map[string]string) *Update {
-    var sets []string    
+func (q *Query) Set(pairs map[string]string) *Query {
     for column, value := range pairs {
-        sets = append(sets, column, value)
-        u.sets = append(u.sets, sets)
+        q.Value(column, value)
     }
-    return u
+    return q
 }
 
 // Value Set the value of a single column.
-func (u *Update) Value(column string, value string) *Update {
+func (q *Query) Value(column string, value string) *Query {
     var sets []string    
     sets = append(sets, column, value)
-    u.sets = append(u.sets, sets)
-    return u
+    q.U.sets = append(q.U.sets, sets)
+    return q
 }
 
-// Compile Set the value of a single column.
-func (u *Update) Compile(args ...*Connection) string {
-    var conn *Connection    
-    if len(args) != 0 {
-        conn = args[0]
-    } else {
-        // Get the database instance
-        db := New()
-        conn = db.C
-    }
-    //fmt.Printf("Update Compile === %T = %p\n", conn, conn)
+// UpdateCompile Set the value of a single column.
+func (q *Query) UpdateCompile() string {
+    var sqlStr string    
 
     // Start and update query
-    sqlStr := "UPDATE " + u.connection.QuoteTable(u.table)
+    sqlStr = "UPDATE " + q.C.QuoteTable(q.U.table)
 
-    if len(u.joinObjs) != 0 {
+    if len(q.joinObjs) != 0 {
         // Builder.CompileJoin()
-        sqlStr += u.CompileJoin(conn, u.joinObjs)
+        sqlStr += " " + q.CompileJoin(q.joinObjs)
     }
 
     // Add the columns to update
     // Builder.CompileSet()
-    sqlStr += u.CompileSet(conn, u.sets)
+    sqlStr += " SET " + q.CompileSet(q.U.sets)
 
-    if len(u.wheres) != 0 {
+    if len(q.W.wheres) != 0 {
         // Add selection conditions
         // Builder.CompileConditions()
         // Where.wheres 参数
-        sqlStr += "WHERE " + u.CompileConditions(conn, u.wheres)
+        sqlStr += " WHERE " + q.CompileConditions(q.W.wheres)
     }
 
-    if len(u.orderBys) != 0 {
+    if len(q.W.orderBys) != 0 {
         // Add sorting
         // Builder.CompileOrderBy()
         // Where.orderBys 参数
-        sqlStr += " " + u.CompileOrderBy(conn, u.orderBys)
+        sqlStr += " " + q.CompileOrderBy(q.W.orderBys)
     }
 
-    if u.limit != 0 {
+    if q.W.limit != 0 {
         // Add limiting
-        sqlStr += " LIMIT " + strconv.Itoa(u.limit)
+        sqlStr += " LIMIT " + strconv.Itoa(q.W.limit)
     }
+
+    //fmt.Printf("UpdateCompile === %v\n", sqlStr)
+    q.sqlStr = sqlStr
 
     return sqlStr
 }
 
-// Reset the query parameters
-func (u *Update) Reset() *Update {
-    u.table      = ""
-    u.joinObjs   = nil
-    u.sets       = nil
-    u.wheres     = nil
-    u.orderBys   = nil
-    u.limit      = 0
-    u.lastJoin   = nil  // 清空对象
-    u.parameters = nil
+// UpdateReset the query parameters
+func (q *Query) UpdateReset() *Query {
+    //fmt.Println("UpdateReset")
+    q.U.table    = ""
+    q.U.sets     = nil
 
-    return u
+    q.W.wheres   = nil
+    q.W.orderBys = nil
+    q.W.limit    = 0
+
+    q.joinObjs   = nil
+    q.lastJoin   = nil
+    q.parameters = nil
+
+    return q
 }
 
 // Join Adds addition tables to "JOIN ...".
 // @param joinType string join type (LEFT, RIGHT, INNER, etc)
-func (u *Update) Join(table string, joinType string) *Update {
-    u.lastJoin = &Join{
-        table: table,
-        joinType: joinType,
-    }
-    u.joinObjs = append(u.joinObjs, u.lastJoin)
-    return u
-}
+//func (q *Query) Join(table string, joinType string) *Query {
+    //q.lastJoin = &Join{
+        //table: table,
+        //joinType: joinType,
+    //}
+    //q.joinObjs = append(q.joinObjs, q.lastJoin)
+    //return q
+//}
 
 // On Adds "ON ..." condition for the last created JOIN statement.
 // @param joinType string join type (LEFT, RIGHT, INNER, etc)
-func (u *Update) On(c1 string, op string, c2 string) *Update {
-    u.lastJoin.On(c1, op, c2)
-    return u
-}
+//func (q *Query) On(c1 string, op string, c2 string) *Query {
+    //q.lastJoin.On(c1, op, c2)
+    //return q
+//}
 
 // AndOn Adds "ON ..." condition for the last created JOIN statement.
 // @param joinType string join type (LEFT, RIGHT, INNER, etc)
-func (u *Update) AndOn(c1 string, op string, c2 string) *Update {
-    u.lastJoin.AndOn(c1, op, c2)
-    return u
-}
+//func (q *Query) AndOn(c1 string, op string, c2 string) *Query {
+    //q.lastJoin.AndOn(c1, op, c2)
+    //return q
+//}
 
 // OrOn Adds "OR ON ..." condition for the last created JOIN statement.
 // @param joinType string join type (LEFT, RIGHT, INNER, etc)
-func (u *Update) OrOn(c1 string, op string, c2 string) *Update {
-    u.lastJoin.OrOn(c1, op, c2)
-    return u
-}
+//func (q *Query) OrOn(c1 string, op string, c2 string) *Query {
+    //q.lastJoin.OrOn(c1, op, c2)
+    //return q
+//}
 
 // OnOpen Adds an opening bracket the last created JOIN statement.
 // @param joinType string join type (LEFT, RIGHT, INNER, etc)
-func (u *Update) OnOpen() *Update {
-    u.lastJoin.OnOpen()
-    return u
-}
+//func (q *Query) OnOpen() *Query {
+    //q.lastJoin.OnOpen()
+    //return q
+//}
 
 // OnClose Adds an closing bracket the last created JOIN statement.
 // @param joinType string join type (LEFT, RIGHT, INNER, etc)
-func (u *Update) OnClose() *Update {
-    u.lastJoin.OnClose()
-    return u
-}
+//func (q *Query) OnClose() *Query {
+    //q.lastJoin.OnClose()
+    //return q
+//}
