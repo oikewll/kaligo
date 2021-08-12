@@ -59,26 +59,8 @@ const (
 
 // DB is the struct for MySQL connection handler
 type DB struct {
-    name string       // instance name
-    // 基本上所有操作都是用的Connection类，这个类无法访问DB类，所以这些参数不要放这里
-    //queryCount int
-    //lastQuery string
-
-    C *Connection          // Current MySQL connection
-    S *Select
-    I *Insert
-    U *Update
-    D *Delete
-    Q *Query
-    //R *Result
-
-    //rows Rows         // 自己再封装一层Row、Result
-
-    ////Conn *autorc.Conn
-    ////res mysql.Result
-    //Conn *sql.DB      // MySQL connection
-    //rows sql.Rows
-    //res sql.Result
+    name string         // instance name
+    C    *Connection    // Current MySQL connection
 }
 
 // New is the function for Create new MySQL handler.
@@ -95,7 +77,6 @@ func New(args ...string) *DB {
         if len(instances) == 0 {
             instances = make(map[string]*DB)
         }
-        fmt.Printf("New === %v\n", name)
 
         //dbuser := conf.Get("db", "user")
         //dbpass := conf.Get("db", "pass")
@@ -162,25 +143,6 @@ func (db *DB) InstanceGet(key string) (interface{}, bool) {
 	return db.C.cacheStore.Load(fmt.Sprintf("%p", db.C) + key)
 }
 
-//func (db *DB) First() *Query {
-
-//}
-
-
-//func (db *DB) Last() *Query {
-
-//}
-
-
-//func (db *DB) Find() *Query {
-
-//}
-
-
-//func (db *DB) Model() *Query {
-
-//}
-
 // Query func is use for create a new [*Query]
 // Query -> Connection.Query
 //     Create a new SELECT query
@@ -198,109 +160,127 @@ func (db *DB) Query(sqlStr string, args ...int) *Query {
         queryType = args[0]
     }
 
+    // 生成指针类型的实例，下面两个用法一样，记得要加取址符
+    //q := new(Query)
+    //q.sqlStr    = sqlStr
+    //q.queryType = queryType
     q := &Query{
         sqlStr    : sqlStr,
         queryType : queryType,
-        connection: db.C,
+        C         : db.C,
     }
     return q
 }
 
 // Select func is use for create a new [*Select]
 // Select -> Where -> Builder -> Query
-//     SELECT id, username
+//     SELECT `id`, `name``
 //     Select("id", "username")
 //     Select([]string{"id", "username"})
 //     SELECT id AS user_id
 //     select("id AS user_id")
+//     SELECT `id`, `name` FROM `user`
+//     Select("id", "name").From("user")
+//     SELECT `id`, `name` FROM `user` LEFT JOIN `player` ON `user`.`uid`=`player`.`uid` WHERE `player`.`room_id`="10"
+//     Select("id", "name").From("user").Join("player", "LEFT").On("user.uid", "=", "player.uid").Where("player.room_id", "=", "10")
 // @param columns []string  columns to select
-// @return *Select
-func (db *DB) Select(columns ...string) *Select {
-    s := &Select{
-        selects : columns,
-        distinct: false,
-        offset  : 0,
-        Where   : &Where{
-            Builder: &Builder{
-                Query: &Query{
-                    sqlStr    : "",
-                    queryType : SELECT,
-                    connection: db.C,
-                },
-            },
+// @return *Query
+func (db *DB) Select(columns ...string) *Query {
+    q := &Query{
+        S: &Select{
+            selects : columns,
+            distinct: false,
+            offset  : 0,
         },
+        W: &Where{},
+        B: &Builder{},
+        sqlStr    : "",
+        queryType : SELECT,
+        C         : db.C,
     }
-    return s
+    return q
 }
 
 // Insert func is use for create a new [*Insert]
 // Insert -> Builder -> Query
-//     INSERT INTO users (id, username)
-//     Insert("users", []string{"id", "username"})
+//     INSERT INTO `user` (`name`, `age`) VALUES ("test", "25")
+//     Insert("user", []string{"name", "age"}).Values([]string{"test", "25"})
+//     Insert("user", []string{"name", "age"}).Values([][]string{{"test", "25"}, {"demo", "30"}})
 // @param table   string   table to insert into
 // @param columns []string list of column names
-// @return *Insert
-func (db *DB) Insert(table string, columns []string) *Insert {
-    // 生成指针类型的实例，下面两个用法一样，记得要加取址符
-    //i := new(Insert)
-    //i.table   = table
-    //i.columns = columns
-    i := &Insert{
-        table: table,
-        columns: columns,
-        Builder: &Builder{
-            Query: &Query{
-                sqlStr    : "",
-                queryType : INSERT,
-                connection: db.C,
-            },
-        },
+// @return *Query
+func (db *DB) Insert(table string, args ...[]string) *Query {
+    var columns []string    
+    if len(args) != 0 {
+        columns = args[0]
     }
-    return i
+
+    q := &Query{
+        I: &Insert{
+            table  : table,
+            columns: columns,
+        },
+        //W: &Where{}, // Insert 暂时没有支持 Where 写法
+        B: &Builder{},
+        sqlStr    : "",
+        queryType : INSERT,
+        C         : db.C,
+    }
+    return q
 }
 
 // Update func is use for create a new [*Update]
 // Update -> Where -> Builder -> Query
-//     UPDATE users
-//     Update("users")
+//     UPDATE `user` SET `name`="test", `age`="25" WHERE `id`="1"
+//     sets := map[string]string{"name":"demo", "age": "25"}
+//     Update("user").Set(sets).Where("id", "=", "1")
+//     Update("user").Join("player", "LEFT").On("user.uid", "=", "player.uid").Set(sets).Where("player.room_id", "=", "10")
 // @param table   string    table to update
-// @return *Update
-func (db *DB) Update(table string) *Update {
-    u := &Update{
-        table: table,
-        Where   : &Where{
-            Builder: &Builder{
-                Query: &Query{
-                    sqlStr    : "",
-                    queryType : UPDATE,
-                    connection: db.C,
-                },
-            },
+// @return *Query
+func (db *DB) Update(table string) *Query {
+    q := &Query{
+        U: &Update{
+            table : table,
         },
+        W: &Where{},
+        B: &Builder{},
+        sqlStr    : "",
+        queryType : UPDATE,
+        C         : db.C,
     }
-    return u
+    return q
 }
 
 // Delete func is use for create a new [*Delete]
 // Delete -> Where -> Builder -> Query
-//     DELETE users
-//     Delete("users")
+//     DELETE FROM `user` WHERE `id`="1"
+//     Delete("user").Where("id", "=", "1")
+//     Delete("user").Join("player", "LEFT").On("user.uid", "=", "player.uid").Where("player.id", "=", "test")
 // @param table   string    table to delete from
-// @return *Delete
-func (db *DB) Delete(table string) *Delete {
-    d := &Delete{
-        table: table,
-        Where   : &Where{
-            Builder: &Builder{
-                Query: &Query{
-                    sqlStr    : "",
-                    queryType : DELETE,
-                    connection: db.C,
-                },
-            },
+// @return *Query
+func (db *DB) Delete(table string) *Query {
+    q := &Query{
+        D: &Delete{
+            table : table,
         },
+        W: &Where{},
+        B: &Builder{},
+        sqlStr    : "",
+        queryType : DELETE,
+        C         : db.C,
     }
-    return d
+    return q
+}
+
+// Schema Database schema operations
+// CREATE DATABASE database CHARACTER SET utf-8 DEFAULT utf-8
+// Schema.CreateDatabase(/*database*/ database, /*charset*/ 'utf-8', /*ifNotExists*/ true)
+func (db *DB) Schema(name string) *Schema {
+    s := &Schema{
+        name : name,  
+        C    : db.C,
+    }
+    return s
 }
 
 // Expr func is use for create a new [*Expression] which is not escaped. An expression
@@ -332,16 +312,6 @@ func (db *DB) ListIndexes(table string, like string) []map[string]string {
 // LastQuery Returns the last query
 func (db *DB) LastQuery() string {
     return db.C.LastQuery()
-}
-
-// Schema Database schema operations
-// CREATE DATABASE database CHARACTER SET utf-8 DEFAULT utf-8
-// Schema.CreateDatabase(/*database*/ database, /*charset*/ 'utf-8', /*ifNotExists*/ true)
-func (db *DB) Schema() *Schema {
-    s := &Schema{
-        connection: db.C,
-    }
-    return s
 }
 
 // slowQueryLog is the function for record the slow query log

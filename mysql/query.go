@@ -1,21 +1,36 @@
 package mysql
 
 import (
-    "fmt"
+    //"fmt"
     "strings"
     "regexp"
 )
 
 // Query is the struct for MySQL DATE type
 type Query struct {
-    sqlStr      string              // SQL statement
-    queryType   int                 // Query type
-    lifeTime    int                 // Cache lifetime
-    cacheKey    string              // Cache key
-    cacheAll    bool                // boolean Cache all results
-    parameters  map[string]string   // Quoted query parameters
-    asObject    interface{}         // Return results as associative arrays(map[string]string || []map[string]string) or objects(&User{ID:1, Name: "sam"})
-    connection  *Connection         // db connection, Include *sql.DB
+    C *Connection                   // db connection, Include *sql.DB
+    S *Select
+    W *Where
+    J *Join
+    B *Builder
+    I *Insert
+    U *Update
+    D *Delete
+    R *Result
+
+    sqlStr     string              // SQL statement
+    queryType  int                 // Query type
+    lifeTime   int                 // Cache lifetime
+    cacheKey   string              // Cache key
+    cacheAll   bool                // boolean Cache all results
+
+    joinObjs   []*Join             // join objects
+    lastJoin   *Join               // last join statement
+    parameters map[string]string   // Quoted query parameters
+
+    // 这个不需要了，如果是select，就返回 rows，如果是insert，就返回insertid，如果是update、delete，就返回修改条数
+    asObject   interface{}         // Return results as associative arrays(map[string]string || []map[string]string) or objects(&User{ID:1, Name: "sam"})
+
 
     // select、insert、update、delete、builder、join 都有嵌入其他类，只有这个 Query 是独立的
 }
@@ -76,7 +91,7 @@ func (q *Query) Parameters(params map[string]string) *Query {
 
 // SetConnection Set a DB Connection to use when compiling the SQL.
 func (q *Query) SetConnection(c *Connection) *Query {
-    q.connection = c
+    q.C = c
     return q
 }
 
@@ -84,21 +99,25 @@ func (q *Query) SetConnection(c *Connection) *Query {
 // @return result Result DatabaseResult for SELECT queries
 // @return result interface{} the insert id for INSERT queries
 // @return result integer number of affected rows for all other queries
-func (q *Query) Compile(args ...*Connection) string {
-    var conn *Connection    
-    if len(args) != 0 {
-        conn = args[0]
-    } else {
-        // Get the database instance
-        //db := New()
-        //conn = db.C
-        conn = q.connection
+func (q *Query) Compile() string {
+    var sqlStr string    
+
+    switch q.queryType {
+    case SELECT:
+        q.SelectCompile()
+    case INSERT:
+        q.InsertCompile()
+    case UPDATE:
+        q.UpdateCompile()
+    case DELETE:
+        q.DeleteCompile()
+    default:
+        // code...
     }
-    //fmt.Printf("Query Compile === %T = %p\n", conn, conn)
 
     // Import the SQL locally
-    sqlStr := q.sqlStr
-    fmt.Printf("Query Compile sqlStr === %v\n", sqlStr)
+    sqlStr = q.sqlStr
+    //fmt.Printf("Query Compile sqlStr === %v\n", sqlStr)
 
     if q.parameters != nil {
         // Quote all of the values
@@ -108,34 +127,25 @@ func (q *Query) Compile(args ...*Connection) string {
             if k[0:1] != ":" {
                 k = ":" + k
             }
-            values[k] = conn.Quote(v)
+            values[k] = q.C.Quote(v)
         }
 
         // Replace the values in the SQL
         sqlStr = Strtr(sqlStr, values)
     }
 
+    // 清空数据
+    q.Reset()
+
     return strings.TrimSpace(sqlStr)
 }
 
 // Execute the current query on the given database.
-func (q *Query) Execute(args ...*Connection) string {
-//func (q *Query) Execute(args ...*Connection) interface{} {
-    var conn *Connection    
-    if len(args) != 0 {
-        conn = args[0]
-    } else {
-        // Get the database instance
-        //db := New()
-        //conn = db.C
-        conn = q.connection
-    }
-    //fmt.Printf("Query Execute === %T = %p\n", conn, conn)
-
-    //fmt.Printf("Execute sqlStr111 = %v\n", q.sqlStr)
+func (q *Query) Execute() *Query {
     // Compile the SQL query
-    sqlStr := q.Compile(conn)
-    //fmt.Printf("Execute sqlStr222 = %v\n", sqlStr)
+    //sqlStr := q.Compile(conn)
+    sqlStr := q.Compile()
+    //fmt.Printf("Execute sqlStr = %v\n", sqlStr)
 
     // make sure we have a SQL type to work with
     if q.queryType == 0 {
@@ -170,8 +180,7 @@ func (q *Query) Execute(args ...*Connection) string {
     //}
 
     // Execute the query
-    q.connection.queryCount++
-    // Connection.Query()
+    q.C.queryCount++
     //result := conn.Query(q.queryType, sqlStr, q.AsObject)
 
     //Cache the result if needed
@@ -179,7 +188,72 @@ func (q *Query) Execute(args ...*Connection) string {
         //cacheObj.setExpiration(q.lifeTime).SetContents(result.asArray()).Set()
     //}
 
-    return "hello"
-    //return result
+    return q
 }
 
+// First is the First record
+// 按照主键顺序的第一条记录
+func (q *Query) First(obj interface{}) *Query {
+
+    return q
+}
+
+
+// Last is the Last record
+// 按照主键顺序的最后一条记录
+func (q *Query) Last(obj interface{}) *Query {
+
+    return q
+}
+
+// Find is the all records
+// 所有记录
+func (q *Query) Find(objs interface{}) *Query {
+
+    return q
+}
+
+// Scan is the all records
+// type Result struct {
+//     Id int64
+// }
+// var results []Result
+// Scan(&result)
+func (q *Query) Scan(objs []interface{}) *Query {
+
+    return q
+}
+
+//func (q *Query) Model() *Query {
+    //return q
+//}
+
+// Reset the query parameters
+func (q *Query) Reset() *Query {
+    switch q.queryType {
+    case SELECT:
+        q.SelectReset()
+    case INSERT:
+        q.InsertReset()
+    case UPDATE:
+        q.UpdateReset()
+    case DELETE:
+        q.DeleteReset()
+    default:
+        // code...
+    }
+
+    q.sqlStr     = ""
+    q.queryType  = 0
+    q.lifeTime   = 0                 
+    q.cacheKey   = ""              
+    q.cacheAll   = false                
+    q.asObject   = nil 
+
+    // 这里不需要清除，由调用的去清除，SELECT、INSERT、UPDATE、DELETE这些reset去清除
+    //q.joinObjs   = nil
+    //q.lastJoin   = nil
+    //q.parameters = nil   
+
+    return q
+}

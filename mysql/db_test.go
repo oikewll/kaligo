@@ -2,13 +2,18 @@
 package mysql
 // go test -v -count=1 mysql/mysql_test.go
 
+// Select -> Where -> Builder -> Query -> Connection
+// Update -> Where -> Builder -> Query -> Connection
+// Delete -> Where -> Builder -> Query -> Connection
+// Insert -> Builder -> Query -> Connection
+
 import(
     "testing"
-    "fmt"
+    //"fmt"
     _ "github.com/go-sql-driver/mysql"
     //"time"
     //"strconv"
-    "strings"
+    //"strings"
     "reflect"
     //"regexp"
     //"encoding/json"
@@ -43,75 +48,7 @@ import(
 	//return ""
 //}
 
-type connection struct {
-    S *select1
-    Q *query
-}
-func (c *connection) select1(columns ...string) *select1 {
-    s := &select1{
-        selects: columns,
-        where: &where{
-            builder: &builder{
-                query: &query{
-                    sqlStr: "",
-                    queryType: 1,
-                    connection: c,
-                },
-            },
-        },
-    }
-
-    fmt.Println("select1->compile() === " + strings.Join(s.selects, ", "))
-    return s
-}
-
-type query struct {
-    sqlStr string
-    queryType int
-    connection *connection
-}
-func (q *query) compile() string {
-    fmt.Println("query->compile()")
-    return "query->compile()"
-}
-func (q *query) execute() {
-    var sqlStr string    
-    switch q.queryType {
-    case 1:
-        sqlStr = q.connection.select1().compile()
-    default:
-        sqlStr = q.compile()
-    }
-    fmt.Println(sqlStr)
-}
-
-type builder struct {
-    *query
-}
-
-type where struct {
-    *builder
-}
-
-type select1 struct {
-    selects []string
-    *where
-}
-func (s *select1) from() *select1 {
-    fmt.Println("select1->from()")
-    return s
-}
-func (s *select1) compile() string {
-    //fmt.Println("select1->compile()")
-    return "select1->compile() === " + strings.Join(s.selects, ", ")
-}
-
 func TestDB(t *testing.T) {
-
-    c := &connection{}
-    //c.select1().from().compile()
-    c.select1("id", "name").from().execute()
-    //s.from().execute().select1func()
 
     //u := &User{1, "kaka", "hk"}
     //modelType := reflect.ValueOf(u).Type()
@@ -120,13 +57,6 @@ func TestDB(t *testing.T) {
     //t.Logf("modelType.Elem() === %T = %v", modelType.Elem(), modelType.Elem())            // 元素：mysql.User
     //t.Logf("modelType.Name() === %T = %v", modelType.Name(), modelType.Name())            // 类型：string
     //t.Logf("modelType.PkgPath() === %T = %v", modelType.PkgPath(), modelType.PkgPath())   // 类型：string
-
-    
-    //var str *[]string
-    //str = &[]string{}
-    //t.Logf("%T=%v", str, str)
-
-    //t.Logf("%T = %v", [...]int{1, 2, 3,4, 5}, [...]int{})
 
     //str := FileWithLineNum()
     //t.Logf("FileWithLineNum=%v", str)
@@ -172,10 +102,34 @@ func TestDB(t *testing.T) {
 
     //sqlStr = db.Select("id", "name").From("user").Compile()
     //t.Logf("sqlStr = %v", sqlStr)
-    sqlStr = db.Select("id", "name").From("user").Execute()
-    t.Logf("sqlStr = %v", sqlStr)
-    //sqlStr = db.Select("id", "name").From("user").Join("player", "LEFT").Compile()
+    //sqlStr = db.Select("id", "name").From("user").Execute()
     //t.Logf("sqlStr = %v", sqlStr)
+    sqlStr = db.Select("user.id", "user.name").From("user").
+    Join("player", "LEFT").On("user.uid", "=", "player.uid").
+    //Join("userinfo", "LEFT").On("user.uid", "=", "userinfo.uid").
+    Where("player.room_id", "=", "10").Compile()
+    t.Logf("sqlStr = %v", sqlStr)
+
+    //sqlStr = db.Insert("user", []string{"id", "name"}).Values([]string{"10", "test"}).Compile()
+    //sqlStr = db.Insert("user", []string{"id", "name"}).Values([][]string{{"10", "test"}, {"20", "demo"}}).Compile()
+    var query *Query    
+    // 全部字段复制
+    query  = db.Query("SELECT * FROM `user_history`", SELECT)
+    sqlStr = db.Insert("user").SubSelect(query).Compile()
+    t.Logf("sqlStr = %v", sqlStr)
+    // 只复制 id、name 两个字段
+    query  = db.Query("SELECT `id`, `name` FROM `user_history`", SELECT)
+    sqlStr = db.Insert("user", []string{"id", "name"}).SubSelect(query).Compile()
+    t.Logf("sqlStr = %v", sqlStr)
+
+    sets := map[string]string{"id": "10", "name":"demo"}
+    sqlStr = db.Update("user").Join("player", "LEFT").On("user.uid", "=", "player.uid").Set(sets).Where("player.room_id", "=", "10").Compile()
+    t.Logf("sqlStr = %v", sqlStr)
+
+    // 暂时不支持DELETE JOIN写法
+    //sqlStr = db.Delete("user").Join("player", "LEFT").On("user.uid", "=", "player.uid").Where("player.id", "=", "test").Compile()
+    sqlStr = db.Delete("user").Where("nickname", "=", "test").Compile()
+    t.Logf("sqlStr = %v", sqlStr)
 
     //// my is in unconnected state
 	////mysql.checkErr(t, c.Use(dbname), nil)

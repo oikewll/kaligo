@@ -1,21 +1,13 @@
 package mysql
 
 import (
-    //"errors"
-    //"strconv"
-    //"strings"
-    //"regexp"
     //"fmt"
-    //"crypto/md5"
-    //"io"
-    //"time"
-    //"github.com/owner888/kaligo/util"
 )
 
 // Schema is the struct for MySQL DATE type
 type Schema struct {
-    name        string              // database connection config name
-    connection  *Connection         // database connection instance, Include *sql.DB
+    name string              // database connection config name
+    C    *Connection         // database connection instance, Include *sql.DB
 }
 
 // CreateDatabase Creates a database. Will throw a Database Exception if it cannot.

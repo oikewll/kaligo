@@ -212,6 +212,25 @@ func (c *Connection) Exec(query string) (sql.Result, error) {
     return res, err
 }
 
+//func (db *DB) First() *Query {
+
+//}
+
+
+//func (db *DB) Last() *Query {
+
+//}
+
+
+//func (db *DB) Find() *Query {
+
+//}
+
+
+//func (db *DB) Model() *Query {
+
+//}
+
 // ListTables If a table name is given it will return the table name with the configured
 // prefix. If not, then just the prefix is returnd
 func (c *Connection) ListTables(like string) []string {

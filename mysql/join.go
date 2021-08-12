@@ -20,7 +20,7 @@ type Join struct {
     alias     string
     onValues  [][4]string
 
-    Builder /* Include Query */
+    //*Builder
 }
 
 // NewJoin creates a new Select Object
@@ -68,23 +68,13 @@ func (j *Join) OnClose() *Join {
 }
 
 // Compile the SQL partial for a JOIN statement and return it.
-func (j *Join) Compile(args ...*Connection) string {
-    var conn *Connection    
-    if len(args) != 0 {
-        conn = args[0]
-    } else {
-        // Get the database instance
-        db := New()
-        conn = db.C
-    }
-    //fmt.Printf("Join Compile === %T = %p\n", conn, conn)
-
+func (j *Join) Compile(conn *Connection) string {
     var sqlStr string    
 
     if j.joinType != "" {
-        sqlStr += strings.ToUpper(j.joinType) + " JOIN"
+        sqlStr = strings.ToUpper(j.joinType) + " JOIN"
     } else {
-        sqlStr += "JOIN"
+        sqlStr = "JOIN"
     }
 
     // 子查询先不实现，太难了啊
@@ -113,7 +103,7 @@ func (j *Join) Compile(args ...*Connection) string {
         c1 := condition[0]
         op := condition[1]
         c2 := condition[2]
-        ch := condition[3]  // chaining
+        ch := condition[3]  // chaining: AND、OR
 
         cString := c1 + op + c2
 
@@ -122,7 +112,7 @@ func (j *Join) Compile(args ...*Connection) string {
             conditions = append(conditions, ch)
         } else {
             // Check if we have a pending bracket open
-            if conditions[len(conditions)-1] == "(" {
+            if len(conditions) > 0 && conditions[len(conditions)-1] == "(" {
                 // Update the chain type
                 conditions[len(conditions)-1] = " " + ch + " ("
             } else {
@@ -136,13 +126,13 @@ func (j *Join) Compile(args ...*Connection) string {
             }
 
             // Quote each of the identifiers used for the condition
-            var c2Str string    
+            c1 = conn.QuoteIdentifier(c1)
             if c2 == "" {
-                c2Str += "NULL"
+                c2 = "NULL"
             } else {
-                c2Str += conn.QuoteIdentifier(c2)
+                c2 = conn.QuoteIdentifier(c2)
             }
-            conditions = append(conditions, c1 + op + " " + c2Str)
+            conditions = append(conditions, c1 + op + " " + c2)
         }
     }
     
@@ -160,7 +150,13 @@ func (j *Join) Compile(args ...*Connection) string {
     return sqlStr
 }
 
-// Reset the query parameters
-//func (j *Join) Reset() *Join {
+// JoinReset the query parameters
+// 好像没啥用？SELECT、UPDATE这两个有使用到的，最后都会把 joinObjs、lastJoin 清除了啊
+//func (j *Join) JoinReset() *Join {
+    //j.joinType = ""
+    //j.table    = ""
+    //j.alias    = ""
+    //j.onValues = nil
+
     //return j
 //}

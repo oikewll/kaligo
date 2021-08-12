@@ -13,14 +13,14 @@ class query
 
     public function compile()
     {
+        echo " === Object Name: " . (new ReflectionObject($this))->getName() . " === \n";
         echo "query->compile() === \n";
     }
 
     public function execute()
     {
-        // 这里调用的不一定是上面的compile()方法，select调用就是select的compile()方法，update、delete也是一样是他们对应的compile()方法
-        // 好好反思一下golang的调用逻辑，明天见
         $this->compile();
+        echo " === Object Name: " . (new ReflectionObject($this))->getName() . " === \n";
         echo "query->execute() === \n";
     }
 }
@@ -32,6 +32,13 @@ class builder extends query
 class where extends builder
 {
     protected $_where = array();
+
+    public function and_where($column, $op, $value)
+    {
+        $this->_where["AND"] = [$column, $op, $value];
+        echo " === Object Name: " . (new ReflectionObject($this))->getName() . " === \n";
+        return $this;
+    }
 }
 
 class select extends where
@@ -64,7 +71,7 @@ class select extends where
 
 $s = new select();
 //$s->from()->compile();
-$s->from()->execute();
+$s->from()->and_where("uid", "=", "12")->execute();
 
 
 
