@@ -43,30 +43,25 @@ func (q *Query) Values(values interface{}) *Query {
     return q
 }
 
-// Set is a warpper function for calling Columns() and Values().
-// 和 Update 的 Set 重名，算了，上面两个函数也够用了，先不支持这种写法
-//func (i *Insert) Set(pairs map[string]string) *Insert {
-    //var keys []string    
-    //var vals []string    
-    //for k, v := range pairs {
-        //keys = append(keys, k)
-        //vals = append(vals, v)
-    //}
-    //i.Columns(keys)
-    //i.Values( vals)
-    //return i
-//}
+// SetValues is a warpper function for calling Columns() and Values().
+func (q *Query) SetValues(pairs map[string]string) *Query {
+    var keys []string    
+    var vals []string    
+    for k, v := range pairs {
+        keys = append(keys, k)
+        vals = append(vals, v)
+    }
+    q.Columns(keys)
+    q.Values( vals)
+    return q
+}
 
 // SubSelect the query parameters
 func (q *Query) SubSelect(query *Query) *Query {
     if query.queryType != SELECT {
         panic("Only SELECT queries can be combined with INSERT queries")
     }
-
-    //fmt.Printf("SubSelect point = %p\n", q)
-    //fmt.Printf("SubSelect point = %p\n", query)
     q.I.subQuery = query.sqlStr
-
     return q
 }
 
@@ -75,13 +70,13 @@ func (q *Query) InsertCompile() string {
     var sqlStr string    
 
     // Start and update query
-    sqlStr = "INSERT INTO " + q.C.QuoteTable(q.I.table)
+    sqlStr = "INSERT INTO " + q.QuoteTable(q.I.table)
 
     if len(q.I.columns) != 0 {
         // Add the column names
         q.I.columns = arrayUnique(q.I.columns)
         for k, v := range q.I.columns {
-            q.I.columns[k] = q.C.QuoteIdentifier(v)
+            q.I.columns[k] = q.QuoteIdentifier(v)
         }
         sqlStr += " (" + strings.Join(q.I.columns, ", ") + ") "
     } else {
@@ -97,7 +92,7 @@ func (q *Query) InsertCompile() string {
                     group[i] = q.parameters[value]
                 }
 
-                group[i] = q.C.Quote(group[i])
+                group[i] = q.Quote(group[i])
             }
             
             groups = append(groups, "(" + strings.Join(group, ", ") + ")")
@@ -110,7 +105,6 @@ func (q *Query) InsertCompile() string {
         sqlStr += q.I.subQuery
     }
 
-    
     //fmt.Printf("InsertCompile === %v\n", sqlStr)
     q.sqlStr = sqlStr
 

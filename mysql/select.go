@@ -224,7 +224,7 @@ func (q *Query) SelectCompile() string {
     } else {
         q.S.selects = arrayUnique(q.S.selects)
         for k, v := range q.S.selects {
-            q.S.selects[k] = q.C.QuoteIdentifier(v)
+            q.S.selects[k] = q.QuoteIdentifier(v)
         }
         sqlStr += strings.Join(q.S.selects, ", ")
     }
@@ -233,7 +233,7 @@ func (q *Query) SelectCompile() string {
         // Set tables to select from
         q.S.froms = arrayUnique(q.S.froms)
         for k, v := range q.S.froms {
-            q.S.froms[k] = q.C.QuoteTable(v)
+            q.S.froms[k] = q.QuoteTable(v)
         }
         sqlStr += " FROM " + strings.Join(q.S.froms, ", ")
     }
@@ -259,7 +259,7 @@ func (q *Query) SelectCompile() string {
         // Add sorting
         q.S.groupBys = arrayUnique(q.S.groupBys)
         for k, v := range q.S.groupBys {
-            q.S.groupBys[k] = q.C.QuoteIdentifier(v)
+            q.S.groupBys[k] = q.QuoteIdentifier(v)
         }
         sqlStr += " GROUP BY " + strings.Join(q.S.groupBys, ", ")
     }

@@ -83,7 +83,13 @@ func (q *Query) OrWhereClose() *Query {
 }
 
 // OrderBy Applies sorting with "ORDER By ..."
-func (q *Query) OrderBy(column string, direction string) *Query {
+func (q *Query) OrderBy(column string, args ...string) *Query {
+    var direction string    
+    if len(args) != 0 {
+        direction = args[0]
+    } else {
+        direction = "ASC"
+    }
     q.W.orderBys = append(q.W.orderBys, [2]string{column, direction})
     return q
 }

@@ -22,7 +22,7 @@ type Delete struct {
 // DeleteCompile the SQL query and return it.
 func (q *Query) DeleteCompile() string {
     // Start a deletion query
-    sqlStr := "DELETE FROM " + q.C.QuoteTable(q.D.table)
+    sqlStr := "DELETE FROM " + q.QuoteTable(q.D.table)
 
     if len(q.W.wheres) != 0 {
         // Add deletion conditions

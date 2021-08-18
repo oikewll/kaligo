@@ -1,14 +1,23 @@
 package mysql
 
 import (
-    //"fmt"
+    "context"
+    "database/sql"
+    "fmt"
     "strings"
     "regexp"
+    "reflect"
+    //"os"
 )
 
 // Query is the struct for MySQL DATE type
 type Query struct {
-    C *Connection                   // db connection, Include *sql.DB
+    *DB
+    Context     context.Context
+    Schema      *Schema
+    stdDB       *sql.DB       // MySQL connection
+    stdTX       *sql.Tx       // MySQL connection for Transaction
+
     S *Select
     W *Where
     J *Join
@@ -18,25 +27,23 @@ type Query struct {
     D *Delete
     R *Result
 
-    sqlStr     string              // SQL statement
-    queryType  int                 // Query type
-    lifeTime   int                 // Cache lifetime
-    cacheKey   string              // Cache key
-    cacheAll   bool                // boolean Cache all results
+    TablePrefix   string
+    Model         interface{}        // Object：&User{}
+    Dest          interface{}        // Object：&User{}
+    ReflectValue  reflect.Value
+    sqlStr        string             // SQL statement
+    queryType     QueryType          // Query type
+    lifeTime      int                // Cache lifetime
+    cacheKey      string             // Cache key
+    cacheAll      bool               // boolean Cache all results
 
-    joinObjs   []*Join             // join objects
-    lastJoin   *Join               // last join statement
-    parameters map[string]string   // Quoted query parameters
-
-    // 这个不需要了，如果是select，就返回 rows，如果是insert，就返回insertid，如果是update、delete，就返回修改条数
-    asObject   interface{}         // Return results as associative arrays(map[string]string || []map[string]string) or objects(&User{ID:1, Name: "sam"})
-
-
-    // select、insert、update、delete、builder、join 都有嵌入其他类，只有这个 Query 是独立的
+    joinObjs      []*Join            // join objects
+    lastJoin      *Join              // last join statement
+    parameters    map[string]string  // Quoted query parameters
 }
 
 // QueryType get the type of the query
-func (q *Query) QueryType() int {
+func (q *Query) QueryType() QueryType {
     return q.queryType
 }
 
@@ -45,37 +52,43 @@ func (q *Query) Cached(lifeTime int, cacheKey string, cacheAll bool) *Query {
     q.lifeTime = lifeTime
     q.cacheKey = cacheKey
     q.cacheAll = cacheAll
+    return q
+}
+
+// Scan is ...
+func (q *Query) Scan(value interface{}) *Query {
+    q.Dest = value
+
+    // assign query.ReflectValue
+    if q.Dest != nil {
+        q.ReflectValue = reflect.ValueOf(q.Dest)
+        for q.ReflectValue.Kind() == reflect.Ptr {
+            if q.ReflectValue.IsNil() && q.ReflectValue.CanAddr() {
+                q.ReflectValue.Set(reflect.New(q.ReflectValue.Type().Elem()))
+            }
+
+            q.ReflectValue = q.ReflectValue.Elem()
+        }
+        if !q.ReflectValue.IsValid() {
+            q.AddError(ErrInvalidValue)
+        }
+    }
 
     return q
 }
 
 // AsAssoc Returns results as associative arrays
-func (q *Query) AsAssoc() *Query {
-    q.asObject = false
-
-    return q
-}
-
+//func (q *Query) AsAssoc() *Query { }
 // AsObject Returns results as objects.
-func (q *Query) AsObject(value interface{}) *Query {
-    q.asObject = value
-
-    return q
-}
-
-// Param Set the value of a parameter in the query.
-func (q *Query) Param(param string, value string) *Query {
-    // Add or overload a new parameter
-    q.parameters[param] = value
-
-    return q
-}
+//func (q *Query) AsObject(value interface{}) *Query { }
 
 // Bind a variable to a parameter in the query.
 func (q *Query) Bind(param string, value string) *Query {
+    if q.parameters == nil {
+        q.parameters = make(map[string]string)
+    }
     // Bind a value to a variable
     q.parameters[param] = value
-
     return q
 }
 
@@ -83,15 +96,8 @@ func (q *Query) Bind(param string, value string) *Query {
 func (q *Query) Parameters(params map[string]string) *Query {
     // Merge the new parameters in
     for param, value := range params {
-        q.parameters[param] = value
+        q.Bind(param, value)
     }
-
-    return q
-}
-
-// SetConnection Set a DB Connection to use when compiling the SQL.
-func (q *Query) SetConnection(c *Connection) *Query {
-    q.C = c
     return q
 }
 
@@ -112,43 +118,41 @@ func (q *Query) Compile() string {
     case DELETE:
         q.DeleteCompile()
     default:
-        // code...
     }
 
     // Import the SQL locally
     sqlStr = q.sqlStr
-    //fmt.Printf("Query Compile sqlStr === %v\n", sqlStr)
 
     if q.parameters != nil {
         // Quote all of the values
-        values := q.parameters
-        for k, v := range values {
-            // 前面加 :
+        values := make(map[string]string, len(q.parameters)) 
+        for k, v := range q.parameters {
+            // 如果前面没有:，前面加 :，用于替换
             if k[0:1] != ":" {
                 k = ":" + k
             }
-            values[k] = q.C.Quote(v)
+            values[k] = q.Quote(v)
         }
-
         // Replace the values in the SQL
         sqlStr = Strtr(sqlStr, values)
     }
 
-    // 清空数据
-    q.Reset()
+    // 不需要了, 一个Query()一个对象，db.query = &Query{} 以后之前那个就会被回收掉了
+    //q.Reset()
 
     return strings.TrimSpace(sqlStr)
 }
 
 // Execute the current query on the given database.
-func (q *Query) Execute() *Query {
+func (q *Query) Execute() {
+    var err error
+
     // Compile the SQL query
-    //sqlStr := q.Compile(conn)
     sqlStr := q.Compile()
-    //fmt.Printf("Execute sqlStr = %v\n", sqlStr)
+    fmt.Printf("Execute sqlStr = %v\n", sqlStr)
 
     // make sure we have a SQL type to work with
-    if q.queryType == 0 {
+    if q.queryType == 0 && len(sqlStr) >= 11 {
         // get the SQL statement type without having to duplicate the entire statement
         stmt := regexp.MustCompile(`[\s]+`).Split(strings.TrimLeft(sqlStr[0:11], "("), 2)
         switch strings.ToUpper(stmt[0]) {
@@ -162,6 +166,21 @@ func (q *Query) Execute() *Query {
             q.queryType = DELETE
         default:
             q.queryType = 0
+        }
+    }
+
+    // assign model values
+    if q.Model == nil {
+        q.Model = q.Dest
+    } else if q.Dest == nil {
+        q.Dest = q.Model
+    }
+
+    // parse model values
+    if q.Model != nil {
+        //fmt.Printf("q.Model = %v", q.Model)
+        if q.Schema, err = Parse(q.Model, q.cacheStore); err != nil {
+            q.AddError(err)
         }
     }
 
@@ -180,53 +199,46 @@ func (q *Query) Execute() *Query {
     //}
 
     // Execute the query
-    q.C.queryCount++
-    //result := conn.Query(q.queryType, sqlStr, q.AsObject)
+    q.queryCount++
+
+    rows, err := q.stdDB.Query(sqlStr)
+    if err != nil {
+        q.AddError(err)
+        return
+    }
+    defer rows.Close();
+
+    Scan(rows, q.DB)
 
     //Cache the result if needed
     //if  cacheObj != nil && (q.cacheAll || result.count() != 0) {
         //cacheObj.setExpiration(q.lifeTime).SetContents(result.asArray()).Set()
     //}
 
-    return q
+    // 记录日志
+    //db.Logger.Trace(stmt.Context, curTime, func() (string, int64) {
+        //return db.Dialector.Explain(stmt.SQL.String(), stmt.Vars...), db.RowsAffected
+    //}, db.Error)
+
 }
 
 // First is the First record
 // 按照主键顺序的第一条记录
-func (q *Query) First(obj interface{}) *Query {
-
+func (q *Query) First(value interface{}) *Query {
     return q
 }
 
-
 // Last is the Last record
 // 按照主键顺序的最后一条记录
-func (q *Query) Last(obj interface{}) *Query {
-
+func (q *Query) Last(value interface{}) *Query {
     return q
 }
 
 // Find is the all records
 // 所有记录
-func (q *Query) Find(objs interface{}) *Query {
-
+func (q *Query) Find(value interface{}) *Query {
     return q
 }
-
-// Scan is the all records
-// type Result struct {
-//     Id int64
-// }
-// var results []Result
-// Scan(&result)
-func (q *Query) Scan(objs []interface{}) *Query {
-
-    return q
-}
-
-//func (q *Query) Model() *Query {
-    //return q
-//}
 
 // Reset the query parameters
 func (q *Query) Reset() *Query {
@@ -240,15 +252,14 @@ func (q *Query) Reset() *Query {
     case DELETE:
         q.DeleteReset()
     default:
-        // code...
     }
 
-    q.sqlStr     = ""
-    q.queryType  = 0
-    q.lifeTime   = 0                 
-    q.cacheKey   = ""              
-    q.cacheAll   = false                
-    q.asObject   = nil 
+    //q.Dest      = nil 
+    q.sqlStr    = ""
+    q.queryType = 0
+    q.lifeTime  = 0                 
+    q.cacheKey  = ""              
+    q.cacheAll  = false                
 
     // 这里不需要清除，由调用的去清除，SELECT、INSERT、UPDATE、DELETE这些reset去清除
     //q.joinObjs   = nil
@@ -257,3 +268,4 @@ func (q *Query) Reset() *Query {
 
     return q
 }
+
