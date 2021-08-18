@@ -44,7 +44,7 @@ func (q *Query) UpdateCompile() string {
     var sqlStr string    
 
     // Start and update query
-    sqlStr = "UPDATE " + q.C.QuoteTable(q.U.table)
+    sqlStr = "UPDATE " + q.QuoteTable(q.U.table)
 
     if len(q.joinObjs) != 0 {
         // Builder.CompileJoin()

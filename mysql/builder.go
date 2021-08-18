@@ -25,7 +25,7 @@ func (q *Query) CompileJoin(joins []*Join) string {
     var statements []string    
 
     for _, join := range joins {
-        statements = append(statements, join.Compile(q.C))
+        statements = append(statements, join.Compile(q.DB))
     }
 
     return strings.Join(statements, " ")
@@ -92,7 +92,7 @@ func (q *Query) CompileConditions(conditions map[string][][]string) string {
                         max = q.parameters[max]
                     }
 
-                    value = q.C.Quote(min) + " AND " + q.C.Quote(max)
+                    value = q.Quote(min) + " AND " + q.Quote(max)
                 } else {
                     if q.parameters[value] != "" {
                         // Set the parameter as the value
@@ -100,11 +100,11 @@ func (q *Query) CompileConditions(conditions map[string][][]string) string {
                     }
                     
                     // Quote the entire value normally
-                    value = q.C.Quote(value)
+                    value = q.Quote(value)
                 }
 
                 // Append the statement to the query
-                sqlStr += q.C.QuoteIdentifier(column) + " " + op + " " + value
+                sqlStr += q.QuoteIdentifier(column) + " " + op + " " + value
             }
 
             lastCondition = conditionStr
@@ -125,13 +125,13 @@ func (q *Query) CompileSet(values [][]string) string {
         value  := group[1]
 
         // Quote the column name
-        column = q.C.QuoteIdentifier(column)
+        column = q.QuoteIdentifier(column)
 
         if val, ok := dict[value]; ok {
             // Use the parameter value
             value = val
         }
-        dict[column] = column + "=" + q.C.Quote(value)
+        dict[column] = column + "=" + q.Quote(value)
     }
 
     var sets []string    
@@ -151,13 +151,18 @@ func (q *Query) CompileOrderBy(columns [][2]string) string {
         column    := group[0]
         direction := group[1]
 
-        direction = strings.ToUpper(direction)
         if direction != "" {
+            direction = strings.ToUpper(direction)
+            if direction == "ASC" {
+                direction = "ASC"
+            } else {
+                direction = "DESC"
+            }
             // Make the direction uppercase
             direction = " " + direction
         }
 
-        sorts = append(sorts, q.C.QuoteIdentifier(column) + direction)
+        sorts = append(sorts, q.QuoteIdentifier(column) + direction)
     }
 
     return "ORDER BY " + strings.Join(sorts, ", ")

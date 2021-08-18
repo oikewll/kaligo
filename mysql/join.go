@@ -68,7 +68,7 @@ func (j *Join) OnClose() *Join {
 }
 
 // Compile the SQL partial for a JOIN statement and return it.
-func (j *Join) Compile(conn *Connection) string {
+func (j *Join) Compile(db *DB) string {
     var sqlStr string    
 
     if j.joinType != "" {
@@ -90,11 +90,11 @@ func (j *Join) Compile(conn *Connection) string {
         // Quote the table name that is being joined
         //sqlStr += " " + conn.QuoteTable(j.table)
     //}
-    sqlStr += " " + conn.QuoteTable(j.table)
+    sqlStr += " " + db.QuoteTable(j.table)
 
     // Add the alias if needed
     if j.alias != "" {
-        sqlStr += " AS " + conn.QuoteTable(j.alias)
+        sqlStr += " AS " + db.QuoteTable(j.alias)
     }
 
     var conditions []string    
@@ -126,11 +126,11 @@ func (j *Join) Compile(conn *Connection) string {
             }
 
             // Quote each of the identifiers used for the condition
-            c1 = conn.QuoteIdentifier(c1)
+            c1 = db.QuoteIdentifier(c1)
             if c2 == "" {
                 c2 = "NULL"
             } else {
-                c2 = conn.QuoteIdentifier(c2)
+                c2 = db.QuoteIdentifier(c2)
             }
             conditions = append(conditions, c1 + op + " " + c2)
         }

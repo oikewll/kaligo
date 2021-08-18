@@ -7,17 +7,17 @@ package mysql
 // Delete -> Where -> Builder -> Query -> Connection
 // Insert -> Builder -> Query -> Connection
 
-import(
-    "testing"
+import (
+    //"encoding/json"
     //"fmt"
+    "testing"
     _ "github.com/go-sql-driver/mysql"
-    //"time"
     //"strconv"
     //"strings"
-    "reflect"
-    //"regexp"
-    //"encoding/json"
-    //"database/sql"
+    //"reflect"
+    //"time"
+
+    //"github.com/goinggo/mapstructure"
 
     //"github.com/owner888/kaligo"
     //"github.com/owner888/kaligo/conf"
@@ -48,15 +48,30 @@ import(
 	//return ""
 //}
 
+type User struct {
+    ID   int    `db:"id"`
+    Name string `db:"name"`
+    AgeS int    `db:"age"`
+    Sex  int    `db:"sex"`
+}
+
+func (u *User) Set(name string) *User {
+    u.Name = name
+    return u
+}
+
+func (u *User) Get() string {
+    return u.Name
+}
+
 func TestDB(t *testing.T) {
 
-    //u := &User{1, "kaka", "hk"}
     //modelType := reflect.ValueOf(u).Type()
-    //t.Logf("modelType === %T = %v", modelType, modelType)                                 //  *mysql.User
+    //t.Logf("modelType === %T = %v", modelType, modelType)                                 // *mysql.User
     //t.Logf("modelType.Kind() === %T = %v", modelType.Kind(), modelType.Kind())            // 类型：reflect.Slice reflect.Array reflect.Ptr(指针) reflect.Struct
-    //t.Logf("modelType.Elem() === %T = %v", modelType.Elem(), modelType.Elem())            // 元素：mysql.User
+    //t.Logf("modelType.Elem() === %T = %v", modelType.Elem(), modelType.Elem())            // 元素：mysql.User，能找到地址，所以可以 SetString()
     //t.Logf("modelType.Name() === %T = %v", modelType.Name(), modelType.Name())            // 类型：string
-    //t.Logf("modelType.PkgPath() === %T = %v", modelType.PkgPath(), modelType.PkgPath())   // 类型：string
+    //t.Logf("modelType.PkgPath() === %T = %v", modelType.PkgPath(), modelType.PkgPath())   // 包路径：string
 
     //str := FileWithLineNum()
     //t.Logf("FileWithLineNum=%v", str)
@@ -64,12 +79,6 @@ func TestDB(t *testing.T) {
     //if err != nil {
         //panic("failed to connect database")
     //}
-
-    //memory := cache.NewMemory()
-    //memory.Set("name", "kaka", 10)
-    //name := memory.Get("name")
-    //t.Logf("name: [ %v ]", name)
-
 
     //str, _ := os.Getwd()
     //conf.AppPath = str + "/../"
@@ -79,24 +88,26 @@ func TestDB(t *testing.T) {
     //model := &User{1, "test", "addr"}
     //value := reflect.ValueOf(model).Elem()
 	//data := make(map[string]interface{})
-	//mapStructToMap(value, data)
+	//StructToMap(value, data)
     //t.Logf("%v", data)
 
-    db := New()
+    db, err := New()
+    if err != nil {
+        t.Fatal(err)
+    }
+
     //db.Debug = false
-
-    //// 测试 once.Do()，确实所有协程都只能拿到一样的对象
-    //for i := 0; i < 5; i++ {
-        //go func(i int) {
-            //name := "db" + strconv.Itoa(i)
-            //db := New(name)
-            //t.Logf("%T = %p", db, db)
-            //t.Log(name)
-        //} (i)
+    //func main() {
+        //defer db.SqlDB.Close()
+        //router := initRouter()
+        //router.Run(":8000")
     //}
-    //time.Sleep(2 * time.Second)
 
-    var sqlStr string    
+    var sqlStr string
+
+    //sqlStr = db.Query("SELECT * FROM user WHERE username = :name").Param("name", "test").Compile();
+    //t.Logf("sqlStr = %v", sqlStr)
+
     //sqlStr = db.Query("SELECT * FROM `user`").Compile()
     //t.Logf("sqlStr = %v", sqlStr)
 
@@ -104,43 +115,40 @@ func TestDB(t *testing.T) {
     //t.Logf("sqlStr = %v", sqlStr)
     //sqlStr = db.Select("id", "name").From("user").Execute()
     //t.Logf("sqlStr = %v", sqlStr)
-    sqlStr = db.Select("user.id", "user.name").From("user").
-    Join("player", "LEFT").On("user.uid", "=", "player.uid").
-    //Join("userinfo", "LEFT").On("user.uid", "=", "userinfo.uid").
-    Where("player.room_id", "=", "10").Compile()
-    t.Logf("sqlStr = %v", sqlStr)
+
+    user := User{}
+    sqlStr = "SELECT name, age FROM user WHERE id = :id"
+    //t.Logf("sqlStr = %v\n", sqlStr)
+    //db.Select("name", "age").From("user").Scan(&user).Execute()
+    db.Query(sqlStr).Bind(":id", "1").Scan(&user).Execute();
+    t.Logf("user name = %v --- age = %v\n", user.Name, user.AgeS)
+
+    //sqlStr = db.Select("user.id", "user.name").From("user").
+    //Join("player", "LEFT").On("user.uid", "=", "player.uid").
+    ////Join("userinfo", "LEFT").On("user.uid", "=", "userinfo.uid").
+    //Where("player.room_id", "=", "10").Compile()
+    //t.Logf("sqlStr = %v", sqlStr)
 
     //sqlStr = db.Insert("user", []string{"id", "name"}).Values([]string{"10", "test"}).Compile()
     //sqlStr = db.Insert("user", []string{"id", "name"}).Values([][]string{{"10", "test"}, {"20", "demo"}}).Compile()
-    var query *Query    
-    // 全部字段复制
-    query  = db.Query("SELECT * FROM `user_history`", SELECT)
-    sqlStr = db.Insert("user").SubSelect(query).Compile()
-    t.Logf("sqlStr = %v", sqlStr)
-    // 只复制 id、name 两个字段
-    query  = db.Query("SELECT `id`, `name` FROM `user_history`", SELECT)
-    sqlStr = db.Insert("user", []string{"id", "name"}).SubSelect(query).Compile()
-    t.Logf("sqlStr = %v", sqlStr)
+    //var query *Query
+    //// 全部字段复制
+    //query  = db.Query("SELECT * FROM `user_history`", SELECT)
+    //sqlStr = db.Insert("user").SubSelect(query).Compile()
+    //t.Logf("sqlStr = %v", sqlStr)
+    //// 只复制 id、name 两个字段
+    //query  = db.Query("SELECT `id`, `name` FROM `user_history`", SELECT)
+    //sqlStr = db.Insert("user", []string{"id", "name"}).SubSelect(query).Compile()
+    //t.Logf("sqlStr = %v", sqlStr)
 
-    sets := map[string]string{"id": "10", "name":"demo"}
-    sqlStr = db.Update("user").Join("player", "LEFT").On("user.uid", "=", "player.uid").Set(sets).Where("player.room_id", "=", "10").Compile()
-    t.Logf("sqlStr = %v", sqlStr)
+    //sets := map[string]string{"id": "10", "name":"demo"}
+    //sqlStr = db.Update("user").Join("player", "LEFT").On("user.uid", "=", "player.uid").Set(sets).Where("player.room_id", "=", "10").Compile()
+    //t.Logf("sqlStr = %v", sqlStr)
 
-    // 暂时不支持DELETE JOIN写法
-    //sqlStr = db.Delete("user").Join("player", "LEFT").On("user.uid", "=", "player.uid").Where("player.id", "=", "test").Compile()
-    sqlStr = db.Delete("user").Where("nickname", "=", "test").Compile()
-    t.Logf("sqlStr = %v", sqlStr)
-
-    //// my is in unconnected state
-	////mysql.checkErr(t, c.Use(dbname), nil)
-
-    ////t.Logf("%s", conn)
-
-    //defer db.Close()
-
-    //if err != nil {
-        //t.Fatal(err)
-    //}
+    //// 暂时不支持DELETE JOIN写法
+    ////sqlStr = db.Delete("user").Join("player", "LEFT").On("user.uid", "=", "player.uid").Where("player.id", "=", "test").Compile()
+    //sqlStr = db.Delete("user").Where("nickname", "=", "test").Compile()
+    //t.Logf("sqlStr = %v", sqlStr)
 
     //data := map[string]string {
         //"name": "nam'e111",
@@ -170,7 +178,6 @@ func TestDB(t *testing.T) {
     //rows, _ := db.GetAll(sql)
     //t.Logf("%v", rows)
     ////t.Logf("%#v", rows)
-    ////t.Logf("%+v", rows)
 
     //jsonStr, err := json.Marshal(rows)
     //if err != nil {
@@ -188,33 +195,3 @@ func TestDB(t *testing.T) {
 
 }
 
-// mapStructToMap 将一个结构体所有字段(包括通过组合得来的字段)到一个map中
-// value:结构体的反射值
-// data:存储字段数据的map
-func mapStructToMap(value reflect.Value, data map[string]interface{}) {
-    if value.Kind() != reflect.Struct {
-        return
-    }
-
-    for i := 0; i < value.NumField(); i++ {
-        var fieldValue = value.Field(i)
-        if fieldValue.CanInterface() {
-            var fieldType = value.Type().Field(i)
-            if fieldType.Anonymous {
-                // 匿名组合字段,进行递归解析
-                mapStructToMap(fieldValue, data)
-            } else {
-                // 非匿名字段
-                var fieldName = fieldType.Tag.Get("db")
-                if fieldName == "-" {
-                    continue
-                }
-                if fieldName == "" {
-                    fieldName = transFieldName(fieldType.Name)
-                }
-                data[fieldName] = fieldValue.Interface()
-                //t.Log(fieldName + ":" + fieldValue.Interface().(string))
-            }
-        }
-    }
-}

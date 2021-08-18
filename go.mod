@@ -6,8 +6,10 @@ require (
 	github.com/bradfitz/gomemcache v0.0.0-20190913173617-a41fca850d0b
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/go-sql-driver/mysql v1.6.0 // indirect
+	github.com/goinggo/mapstructure v0.0.0-20140717182941-194205d9b4a9 // indirect
 	github.com/gomodule/redigo v1.8.5
 	github.com/google/uuid v1.3.0 // indirect
+	github.com/jinzhu/now v1.1.2 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/stretchr/testify v1.7.0
 	github.com/surol/speedtest-cli v0.0.0-20191102145116-3e7dc3fb45c3 // indirect

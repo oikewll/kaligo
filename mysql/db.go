@@ -6,24 +6,23 @@
  *
  */
 
-package mysql
+ package mysql
 
-import (
-    "database/sql"
-    "fmt"
-    //"regexp"
-    //"strings"
-    //"time"
-    "sync"
-    //"reflect"
-    //"github.com/stretchr/testify/assert"
-    "github.com/owner888/kaligo/conf"
-    "github.com/owner888/kaligo/util"
-    //"github.com/owner888/mymysql/autorc"
-    //"github.com/owner888/mymysql/mysql"
-    ////_ "github.com/ziutek/mymysql/native"  // 普通模式
-    //_ "github.com/ziutek/mymysql/thrsafe"   // 用了连接池之后连接都是重复利用的，没必要用线程安全模式
-)
+ import (
+     "context"
+     "database/sql"
+     "fmt"
+     //"os"
+     "regexp"
+     "strings"
+     "time"
+     "sync"
+     //"reflect"
+     "github.com/owner888/kaligo/conf"
+     "github.com/owner888/kaligo/util"
+     //"github.com/stretchr/testify/assert"
+     //"github.com/owner888/mymysql/autorc"
+ )
 
 //type singleton struct {
 //}
@@ -46,101 +45,177 @@ var (
 
 //var instances = map[string]*DB{}
 
+// QueryType is ...
+type QueryType int64
+
 const (
     // SELECT Query select type
-    SELECT = 1
+    SELECT QueryType = 1
     // INSERT Query insert type
-    INSERT = 2
+    INSERT QueryType = 2
     // UPDATE Query update type
-    UPDATE = 3
+    UPDATE QueryType = 3
     // DELETE Query delete type
-    DELETE = 4
+    DELETE QueryType = 4
 )
 
 // DB is the struct for MySQL connection handler
 type DB struct {
-    name string         // instance name
-    C    *Connection    // Current MySQL connection
+    Error        error
+    RowsAffected int64
+    query        *Query
+
+    name         string         // instance name
+    dsn          string         // db dns
+
+    timeout time.Duration       // Timeout for connect SetConnMaxLifetime(timeout)
+    lastUse time.Time           // The last use time
+
+    stdDB         *sql.DB       // MySQL connection
+    stdTX         *sql.Tx       // MySQL connection for Transaction
+	autoCommit    bool          // 是否正在事务执行中
+    initCmds      []string      // MySQL commands/queries executed after connect
+
+    debug         bool          // Debug logging. You may change it at any time.
+    logSlowQuery  bool
+    logSlowTime   int
+
+    queryCount    int
+    lastQuery     string
+
+    // Logger
+    //Logger logger.Interface
+    // NowFunc the function to be used when creating a new timestamp
+    NowFunc func() time.Time
+
+    // Dialector database dialector
+	//Dialector
+
+    cacheStore *sync.Map
+    //callbacks  *callbacks
 }
 
 // New is the function for Create new MySQL handler.
 // (读+写)连接数据库+选择数据库
-func New(args ...string) *DB {
+func New(args ...string) (db *DB, err error) {
     var name = "default"    
     if len(args) != 0 {
         name = args[0]
     }
 
     // 原子操作，避免多协程导致的并发问题，在这里一次性生成主从库所有链接，以后用 Use("reameonly")
-    once.Do(func(){
-        // 这里不要用map了，因为只会进来一次，也无法生成多个db
-        if len(instances) == 0 {
-            instances = make(map[string]*DB)
-        }
+    //once.Do(func(){ })
+    db = &DB{name: name}
 
-        //dbuser := conf.Get("db", "user")
-        //dbpass := conf.Get("db", "pass")
-        //dbhost := conf.Get("db", "host")
-        //dbport := conf.Get("db", "port")
-        //dbname := conf.Get("db", "name")
+    //if db.Logger == nil {
+        //db.Logger = logger.Default
+    //}
 
-        dbuser := "root"
-        dbpass := "root"
-        dbhost := "127.0.0.1"
-        dbport := "3306"
-        dbname := "test"
+    if db.NowFunc == nil {
+		db.NowFunc = func() time.Time { return time.Now().Local() }
+	}
 
-        dbDsn  := fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=%s", dbuser, dbpass, dbhost+":"+dbport, dbname, "utf8mb4")
-        //fmt.Printf("%v", dbDsn)
+    if db.cacheStore == nil {
+		db.cacheStore = &sync.Map{}
+	}
 
-        c := NewConnection(name, dbDsn, false)
-        c.Connect()
-        c.SetMaxIdleConns(util.StrToInt(conf.Get("db", "max_idle_conns")))
+    //db.callbacks = initializeCallbacks(db)
 
-        instance = &DB{
-            name: name,
-            C   : c,
-        }
-        instances[name] = instance
-    })
+    //dbuser := conf.Get("db", "user")
+    //dbpass := conf.Get("db", "pass")
+    //dbhost := conf.Get("db", "host")
+    //dbport := conf.Get("db", "port")
+    //dbname := conf.Get("db", "name")
 
-    return instance
+    dbuser := "root"
+    dbpass := "root"
+    dbhost := "127.0.0.1"
+    dbport := "3306"
+    dbname := "test"
+
+    db.dsn = fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=%s", dbuser, dbpass, dbhost+":"+dbport, dbname, "utf8mb4")
+    db.stdDB, err = sql.Open("mysql", db.dsn)
+
+    db.query = &Query{
+        DB          : db,
+		stdDB       : db.stdDB, // 因为返回的是指针*sql.DB，所以 db.stdDB 和 db.conn.stdDB 是同一个，一个Close()，另一个也会Close()
+        TablePrefix : "",
+		Context     : context.Background(),
+		//Clauses   : map[string]clause.Clause{},
+    }
+
+    // 设置最大空闲连接数
+    db.stdDB.SetMaxIdleConns(util.StrToInt(conf.Get("db", "max_idle_conns")))
+    // sql.Open 实际上返回了一个数据库抽象，并没有真的连接上
+    if err == nil {
+        // ping 调用完毕后会马上把连接返回给连接池
+        err = db.stdDB.Ping()
+    }
+    // 执行初始化SQL
+    db.stdDB.Query("SET NAMES utf8");
+
+    //if err != nil {
+        //db.Logger.Error(context.Background(), "failed to initialize database, got error %v", err)
+    //}
+
+    //if err == nil {
+        //sqlStr := "SELECT name FROM user WHERE id = '1'"
+        //fmt.Printf("11111 = %T = %p\n", db.stdDB, db.stdDB)
+        
+        //rows, err := db.stdDB.Query(sqlStr)
+        //columns, _ := rows.Columns()
+        //values := make([]interface{}, len(columns))
+        //if rows.Next() {
+                //err = rows.Scan(values...)
+                //if err == nil || err == sql.ErrNoRows {
+                    //fmt.Printf("name = %v\n", values)
+                //}
+        //}
+        //rows.Close()
+    //}
+
+    return
 }
 
-// DB Returns *sql.DB
-func (db *DB) DB() *sql.DB {
-    return db.C.DB()
+// AddError add error to db
+func (db *DB) AddError(err error) error {
+	if db.Error == nil {
+		db.Error = err
+	} else if err != nil {
+		db.Error = fmt.Errorf("%v; %w", db.Error, err)
+	}
+	return db.Error
 }
+
+// DB returns `*sql.DB`
+func (db *DB) DB() *sql.DB { return db.stdDB }
 
 // Debug start debug mode
-func (db *DB) Debug() {
-    db.C.Debug = true
-}
-
+func (db *DB) Debug() { db.debug = true }
 
 // Set store value with key into current db instance's context
-func (db *DB) Set(key string, value interface{}) *Connection {
-	db.C.cacheStore.Store(key, value)
-	return db.C
+func (db *DB) Set(key string, value interface{}) *DB {
+	db.cacheStore.Store(key, value)
+	return db
 }
 
 // Get get value with key from current db instance's context
 func (db *DB) Get(key string) (interface{}, bool) {
-	return db.C.cacheStore.Load(key)
+	return db.cacheStore.Load(key)
 }
 
 // InstanceSet store value with key into current db instance's context
 // db.InstanceSet("kalidb:started_transaction", true)
-func (db *DB) InstanceSet(key string, value interface{}) *Connection {
+func (db *DB) InstanceSet(key string, value interface{}) *DB {
     // %p 获取指针地址, ep:[0x140001341b0]
-	db.C.cacheStore.Store(fmt.Sprintf("%p", db.C) + key, value)
-	return db.C
+	db.cacheStore.Store(fmt.Sprintf("%p", db) + key, value)
+	return db
 }
 
 // InstanceGet get value with key from current db instance's context
 // if _, ok := db.InstanceGet("kalidb:started_transaction"); ok {
 func (db *DB) InstanceGet(key string) (interface{}, bool) {
-	return db.C.cacheStore.Load(fmt.Sprintf("%p", db.C) + key)
+	return db.cacheStore.Load(fmt.Sprintf("%p", db) + key)
 }
 
 // Query func is use for create a new [*Query]
@@ -152,24 +227,24 @@ func (db *DB) InstanceGet(key string) (interface{}, bool) {
 // @param sqlStr string  SQL statement
 // @param queryType int  type:SELECT, UPDATE, etc
 // @return *Query
-func (db *DB) Query(sqlStr string, args ...int) *Query {
-    var queryType int
+func (db *DB) Query(sqlStr string, args ...QueryType) *Query {
+    var queryType QueryType
     if len(args) == 0 {
         queryType = 0
     } else {
         queryType = args[0]
     }
 
-    // 生成指针类型的实例，下面两个用法一样，记得要加取址符
+    // 生成一个新的 Query 对象，一个SQL一个 Query 对象
     //q := new(Query)
-    //q.sqlStr    = sqlStr
-    //q.queryType = queryType
-    q := &Query{
+    db.query = &Query{
         sqlStr    : sqlStr,
         queryType : queryType,
-        C         : db.C,
+        DB        : db,
+        stdDB     : db.stdDB,
     }
-    return q
+
+    return db.query
 }
 
 // Select func is use for create a new [*Select]
@@ -186,7 +261,7 @@ func (db *DB) Query(sqlStr string, args ...int) *Query {
 // @param columns []string  columns to select
 // @return *Query
 func (db *DB) Select(columns ...string) *Query {
-    q := &Query{
+    db.query = &Query{
         S: &Select{
             selects : columns,
             distinct: false,
@@ -196,9 +271,10 @@ func (db *DB) Select(columns ...string) *Query {
         B: &Builder{},
         sqlStr    : "",
         queryType : SELECT,
-        C         : db.C,
+        DB        : db,
+        stdDB     : db.stdDB,
     }
-    return q
+    return db.query
 }
 
 // Insert func is use for create a new [*Insert]
@@ -215,7 +291,7 @@ func (db *DB) Insert(table string, args ...[]string) *Query {
         columns = args[0]
     }
 
-    q := &Query{
+    db.query = &Query{
         I: &Insert{
             table  : table,
             columns: columns,
@@ -224,9 +300,10 @@ func (db *DB) Insert(table string, args ...[]string) *Query {
         B: &Builder{},
         sqlStr    : "",
         queryType : INSERT,
-        C         : db.C,
+        DB        : db,
+        stdDB     : db.stdDB,
     }
-    return q
+    return db.query
 }
 
 // Update func is use for create a new [*Update]
@@ -238,7 +315,7 @@ func (db *DB) Insert(table string, args ...[]string) *Query {
 // @param table   string    table to update
 // @return *Query
 func (db *DB) Update(table string) *Query {
-    q := &Query{
+    db.query = &Query{
         U: &Update{
             table : table,
         },
@@ -246,9 +323,10 @@ func (db *DB) Update(table string) *Query {
         B: &Builder{},
         sqlStr    : "",
         queryType : UPDATE,
-        C         : db.C,
+        DB        : db,
+        stdDB     : db.stdDB,
     }
-    return q
+    return db.query
 }
 
 // Delete func is use for create a new [*Delete]
@@ -259,7 +337,7 @@ func (db *DB) Update(table string) *Query {
 // @param table   string    table to delete from
 // @return *Query
 func (db *DB) Delete(table string) *Query {
-    q := &Query{
+    db.query = &Query{
         D: &Delete{
             table : table,
         },
@@ -267,9 +345,10 @@ func (db *DB) Delete(table string) *Query {
         B: &Builder{},
         sqlStr    : "",
         queryType : DELETE,
-        C         : db.C,
+        DB        : db,
+        stdDB     : db.stdDB,
     }
-    return q
+    return db.query
 }
 
 // Schema Database schema operations
@@ -277,8 +356,8 @@ func (db *DB) Delete(table string) *Query {
 // Schema.CreateDatabase(/*database*/ database, /*charset*/ 'utf-8', /*ifNotExists*/ true)
 func (db *DB) Schema(name string) *Schema {
     s := &Schema{
-        name : name,  
-        C    : db.C,
+        Name : name,  
+        DB   : db,
     }
     return s
 }
@@ -291,28 +370,139 @@ func (db *DB) Expr(value string) *Expression {
     }
 }
 
-// ListTables If a table name is given it will return the table name with the configured
-// prefix. If not, then just the prefix is returnd
-func (db *DB) ListTables(like string) []string {
-    return db.C.ListTables(like)
+// TablePrefix Return the table prefix defined in the current configuration.
+func (db *DB) TablePrefix(table string) string {
+    return db.query.TablePrefix + table
 }
 
-// ListColumns Lists all of the columns in a table. Optionally, a LIKE string can be
-// used to search for specific fields.
-func (db *DB) ListColumns(table string, like string) map[string] map[string]string {
-    return db.C.ListColumns(table, like)
+// Quote a value for an SQL query.
+func (db *DB) Quote(values interface{}) string {
+    switch vals := values.(type) {
+    case string:
+        return db.Escape(vals)
+    case []string:
+        for k, v := range vals {
+            vals[k] = db.Escape(v)
+        }
+        return "(" + strings.Join(vals, ", ") + ")"
+    case *Query:
+        // Create a sub-query
+        return "(" + vals.Compile() + ")"
+    default:
+        return vals.(string)
+    }
 }
 
-// ListIndexes Lists all of the idexes in a table. Optionally, a LIKE string can be
-// used to search for specific indexes by name.
-func (db *DB) ListIndexes(table string, like string) []map[string]string {
-    return db.C.ListIndexes(table, like)
+// QuoteTable Quote a database table name and adds the table prefix if needed.
+//table = strings.Replace(table, "#DB#", "lrs", 1 )
+// 表名添加引用符号(`)
+// 添加表前缀
+func (db *DB) QuoteTable(table string) string {
+    table = db.TablePrefix(table)
+    table = db.QuoteIdentifier(table)
+    return table
 }
 
-// LastQuery Returns the last query
-func (db *DB) LastQuery() string {
-    return db.C.LastQuery()
+// QuoteIdentifier Quote a database identifier, such as a column name. Adds the
+// table prefix to the identifier if a table name is present.
+// 字段名添加引用符号(`)
+func (db *DB) QuoteIdentifier(values interface{}) string {
+    switch vals := values.(type) {
+    case string:
+        if vals == "*" || strings.Index(vals, "`") != -1 {
+            // * 不需要变成 `*`，已经有 `` 包含着的直接返回
+            return vals
+        } else if strings.Index(vals, ".") != -1 {
+            // table.column 的写法，变成 `table`.`column`
+            parts := regexp.MustCompile(`\.`).Split(vals, 2)
+            return db.QuoteIdentifier(db.QuoteTable(parts[0]) ) + "." + db.QuoteIdentifier(parts[1])
+        } else {
+            return "`" + vals + "`"
+        }
+    case []string:
+        // Separate the column and alias
+        value := vals[0]
+        alias := vals[1]
+        return db.QuoteIdentifier(value) + " AS " + db.QuoteIdentifier(alias)
+    default:
+        return vals.(string)
+    }
 }
+
+// Escape is use for Escapes special characters in the txt, so it is safe to place returned string
+func (db *DB) Escape(sql string) string {
+    dest := make([]byte, 0, 2*len(sql))
+    var escape byte
+    for i := 0; i < len(sql); i++ {
+        c := sql[i]
+
+        escape = 0
+
+        switch c {
+        case 0: /* Must be escaped for 'mysql' */
+            escape = '0'
+            break
+        case '\n': /* Must be escaped for logs */
+            escape = 'n'
+            break
+        case '\r':
+            escape = 'r'
+            break
+        case '\\':
+            escape = '\\'
+            break
+        case '\'':
+            escape = '\''
+            break
+        case '"': /* Better safe than sorry */
+            escape = '"'
+            break
+        case '\032': //十进制26,八进制32,十六进制1a, /* This gives problems on Win32 */
+            escape = 'Z'
+        }
+
+        if escape != 0 {
+            dest = append(dest, '\\', escape)
+        } else {
+            dest = append(dest, c)
+        }
+    }
+
+    // SQL standard is to use single-quotes for all values
+    return "'" + string(dest) + "'"
+}
+
+// Row is the function for query one row
+// db.QueryRow() 调用完毕后会将连接传递给sql.Row类型
+// 当.Scan()方法调用之后把连接释放回到连接池
+//func (db *DB) Row(sqlStr string) *sql.Row {
+    //row := db.stdDB.QueryRow(sqlStr, 1) // 查询一条
+    //return row
+//}
+
+// Rows is the ...
+// db.Query() 调用完毕后会将连接传递给sql.Rows类型
+// 当然后者迭代完毕 或者 显性的调用.Close()方法后，连接将会被释放回到连接池
+//func (db *DB) Rows(sqlStr string) (rows *sql.Rows, err error) {
+    //rows, err = db.stdDB.Query(sqlStr)
+    //return
+//}
+
+// Exec is the function for Insert、Update、Delete
+// db.Exec() 调用完毕后会马上把连接返回给连接池
+// 但是它返回的Result对象还保留这连接的引用，当后面的代码需要处理结果集的时候连接将会被重用
+//func (db *DB) Exec(sqlStr string) (sql.Result, error) {
+    //res, err := db.stdDB.Exec(sqlStr)
+    //return res, err
+//}
+
+// Begin is the ...
+// db.Begin() 调用完毕后将连接传递给sql.Tx类型对象
+// 当.Commit()或.Rollback()方法调用后释放连接
+//func (db *DB) Begin(sqlStr string) (*sql.Tx, error) {
+    //tx, err := db.stdDB.Begin()
+    //return tx, err
+//}
 
 // slowQueryLog is the function for record the slow query log
 // 记录慢查询日志
@@ -350,7 +540,7 @@ func (db *DB) LastQuery() string {
 //func (db *DB) Query(sql string) ([]mysql.Row, mysql.Result, error) {
 //func (db *DB) Query(sql string) (*sql.Rows, error) {
     //startTime := time.Now().UnixNano()
-    //rows, err := db.Conn.Query(sql)
+    //rows, err := db.connonn.Query(sql)
     //if err != nil {
         //db.errorSQLLog(sql, err)
     //}
@@ -408,8 +598,8 @@ func (db *DB) LastQuery() string {
     //// 最后得到的map
     //results := make(map[int] map[string]string)
 
-    ////row := db.Conn.QueryRow(sql)  // 查询一条，因为不存在Columns()方法，所以统一用Query吧
-    //rows, err := db.C.Query(sql) // 查询多条
+    ////row := db.connonn.QueryRow(sql)  // 查询一条，因为不存在Columns()方法，所以统一用Query吧
+    //rows, err := db.conn.Query(sql) // 查询多条
     //if err != nil {
         //fmt.Println("查询数据库失败", err.Error())
         //return results, err
@@ -470,7 +660,7 @@ func (db *DB) LastQuery() string {
     //var sqlStr = "Insert Into `"+table+"`("+keysSQL+") Values ("+valsSQL+")"
     ////fmt.Println(sql)
     ////_, res, err := db.Query(sql)
-    //res, err := db.Conn.Exec(sqlStr)
+    //res, err := db.connonn.Exec(sqlStr)
     //if err != nil {
         //return false, err
     //}
@@ -509,7 +699,7 @@ func (db *DB) LastQuery() string {
     //var sqlStr = "Insert Into `"+table+"`("+keys+") Values "+strings.Join(valsArr, ", ")
     ////fmt.Println(sql)
 
-    //res, err := db.C.Exec(sqlStr)
+    //res, err := db.conn.Exec(sqlStr)
     //if err != nil {
         //return false, err
     //}
@@ -530,7 +720,7 @@ func (db *DB) LastQuery() string {
     //setsSQL := strings.Join(sets, ", ")
     //var sqlStr = "Update `"+table+"` Set "+setsSQL+" Where "+where
     ////fmt.Println(sql)
-    //res, err := db.Conn.Exec(sqlStr)
+    //res, err := db.connonn.Exec(sqlStr)
     //if err != nil {
         //return false, err
     //}
@@ -591,7 +781,7 @@ func (db *DB) LastQuery() string {
     //// 完整的可执行SQL语句
     //sqlStr = util.Substr(sqlStr, 0, len(sqlStr)-2) + where
 
-    //res, err := db.C.Exec(sqlStr)
+    //res, err := db.conn.Exec(sqlStr)
     //if err != nil {
         //return false, err
     //}
@@ -608,70 +798,29 @@ func (db *DB) LastQuery() string {
     //return id
 //}
 
-//// AffectedRows is the function for return affected rows
-//// 返回受影响数目
-//func (db *DB) AffectedRows() int64 {
-    //rowsAffected, _ := db.res.RowsAffected()
-    //return rowsAffected
-//}
+// Transaction ...
+type Transaction struct {
+    *DB
+}
 
-//// Close is the function for close db connection
-//func (db *DB) Close() (err error) {
-    //if db.C.netConn == nil {
-        //return nil  // closed before
-    //}
-
-    //// 连接将会被释放回到连接池，而不是真的断开了链接
-    //err = db.C.Close()
+// Begin is the function for close db connection
+//func (db *DB) Begin() error {
+    //tx, err := db.stdDB.Begin()
     //return err
 //}
 
-//// Transaction ...
-//type Transaction struct {
-	//*DB
-//}
-
-//// Begin is the function for close db connection
-////func (db *DB) Begin() error {
-    ////tx, err := db.Conn.Begin()
-    ////return err
-////}
-
-//// Commit is the function for close db connection
+// Commit is the function for close db connection
 //func (db *DB) Commit() error {
-    //err := db.Close()
+    //tx, err := db.stdDB.Commit()
     //return err
 //}
 
-//// Rollback is the function for close db connection
+// Rollback is the function for close db connection
 //func (db *DB) Rollback() error {
     //err := db.Close()
     //return err
 //}
 
-//// AddSlashes is ...
-//// 转义：引号、双引号添加反斜杠
-//func (db *DB) AddSlashes(val string) string {
-    //val = strings.Replace(val, "\"", "\\\"", -1)
-    //val = strings.Replace(val, "'", "\\'", -1)
-    //return val
-//}
+// Caching Per connection cache controller setter/getter
+//func (c *Connection) Caching() bool { return false }
 
-//// StripSlashes is ...
-//// 反转义：引号、双引号去除反斜杠
-//func (db *DB) StripSlashes(val string) string {
-    //val = strings.Replace(val, "\\\"", "\"", -1)
-    //val = strings.Replace(val, "\\'", "'", -1)
-    //return val
-//}
-
-//// GetSafeParam is ...
-//// 防止XSS跨站攻击
-//func (db *DB) GetSafeParam(val string) string {
-    //val = strings.Replace(val, "&", "&amp;", -1)
-    //val = strings.Replace(val, "<", "&lt;", -1)
-    //val = strings.Replace(val, ">", "&gt;", -1)
-    //val = strings.Replace(val, "\"", "&quot;", -1)
-    //val = strings.Replace(val, "'", "&#039;", -1)
-    //return val
-//}
