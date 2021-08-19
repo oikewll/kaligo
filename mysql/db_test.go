@@ -51,7 +51,7 @@ import (
 type User struct {
     ID   int    `db:"id"`
     Name string `db:"name"`
-    AgeS int    `db:"age"`
+    Age  int    `db:"age"`
     Sex  int    `db:"sex"`
 }
 
@@ -117,11 +117,11 @@ func TestDB(t *testing.T) {
     //t.Logf("sqlStr = %v", sqlStr)
 
     user := User{}
-    sqlStr = "SELECT name, age FROM user WHERE id = :id"
+    sqlStr = "SELECT name, age, sex FROM user WHERE id = :id"
     //t.Logf("sqlStr = %v\n", sqlStr)
     //db.Select("name", "age").From("user").Scan(&user).Execute()
     db.Query(sqlStr).Bind(":id", "1").Scan(&user).Execute();
-    t.Logf("user name = %v --- age = %v\n", user.Name, user.AgeS)
+    t.Logf("user name = %v --- age = %v --- Sex = %v\n", user.Name, user.Age, user.Sex)
 
     //sqlStr = db.Select("user.id", "user.name").From("user").
     //Join("player", "LEFT").On("user.uid", "=", "player.uid").

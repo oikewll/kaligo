@@ -14,7 +14,7 @@ import (
     //"fmt"
     "reflect"
     //"strconv"
-    "strings"
+    //"strings"
     "time"
 )
 
@@ -59,21 +59,7 @@ func scanIntoMap(mapValue map[string]interface{}, values []interface{}, columns 
 
 // Scan is...
 func Scan(rows *sql.Rows, db *DB) {
-
-    columns, _     := rows.Columns()
-
-    //for rows.Next() {
-        //var name string
-        //var age int
-        //err := rows.Scan(&name, &age)
-        //if err == nil {
-            //fmt.Printf("name = %v\nage  = %v\n", name, age)
-        //}
-    //}
-
-    //fmt.Printf("Dest 44444 = %T = %v\n", columns, columns)
-    //fmt.Printf("Dest 44444 = %T = %v\n", columnTypes, columnTypes)
-
+    columns, _ := rows.Columns()
     values := make([]interface{}, len(columns))
     db.RowsAffected = 0
 
@@ -119,12 +105,11 @@ func Scan(rows *sql.Rows, db *DB) {
         }
     default:
         Schema := db.query.Schema
-        //fmt.Printf("Schema = %v\n", Schema)
         switch db.query.ReflectValue.Kind() {
         case reflect.Slice, reflect.Array:
 
         case reflect.Struct, reflect.Ptr:
-            //fmt.Printf("11111 %v = %v\n", db.query.ReflectValue.Type(), Schema.ModelType)
+            // 这里应该不会进入，因为 Execute() 里面执行了 Parse() 才到这里来的
             if db.query.ReflectValue.Type() != Schema.ModelType {
                 Schema, _ = Parse(db.query.Dest, db.cacheStore)
             }
@@ -133,15 +118,6 @@ func Scan(rows *sql.Rows, db *DB) {
                     // 从 db.query.Schema 里面去查找，因为在 query.Execute() 方法里面已经执行了 Parse()，或者上面也会执行，所以这里肯定是有的
                     if field := Schema.LookUpField(column); field != nil {
                         values[idx] = reflect.New(reflect.PtrTo(field.IndirectFieldType)).Interface()
-                        //fmt.Printf("22222 %v = %v = %T\n", idx, column, values[idx])
-                    } else if names := strings.Split(column, "__"); len(names) > 1 {
-                        //if rel, ok := Schema.Relationships.Relations[names[0]]; ok {
-                            //if field := rel.FieldSchema.LookUpField(strings.Join(names[1:], "__")); field != nil && field.Readable {
-                                //values[idx] = reflect.New(reflect.PtrTo(field.IndirectFieldType)).Interface()
-                                //continue
-                            //}
-                        //}
-                        values[idx] = &sql.RawBytes{}
                     } else if len(columns) == 1 {
                         values[idx] = dest
                     } else {
@@ -150,26 +126,11 @@ func Scan(rows *sql.Rows, db *DB) {
                 }
 
                 db.RowsAffected++
+                // 给 values 填充数据
                 db.AddError(rows.Scan(values...))
                 for idx, column := range columns {
                     if field := Schema.LookUpField(column); field != nil {
                         field.Set(db.query.ReflectValue, values[idx])
-                    } else if names := strings.Split(column, "__"); len(names) > 1 {
-                        //if rel, ok := Schema.query.Relations[names[0]]; ok {
-                            //if field := rel.FieldSchema.LookUpField(strings.Join(names[1:], "__")); field != nil && field.Readable {
-                                //relValue := rel.Field.ReflectValueOf(db.query.ReflectValue)
-                                //value := reflect.ValueOf(values[idx]).Elem()
-
-                                //if relValue.Kind() == reflect.Ptr && relValue.IsNil() {
-                                    //if value.IsNil() {
-                                        //continue
-                                    //}
-                                    //relValue.Set(reflect.New(relValue.Type().Elem()))
-                                //}
-
-                                //field.Set(relValue, values[idx])
-                            //}
-                        //}
                     }
                 }
             }
