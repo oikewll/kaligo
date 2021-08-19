@@ -78,7 +78,6 @@ func Parse(dest interface{}, cacheStore *sync.Map) (*Schema, error) {
         ModelType:      modelType,
         FieldsByName:   map[string]*Field{},
         FieldsByDBName: map[string]*Field{},
-        //Relationships:  Relationships{Relations: map[string]*Relationship{}},
         cacheStore:     cacheStore,
         initialized:    make(chan struct{}),
     }
@@ -112,11 +111,9 @@ func Parse(dest interface{}, cacheStore *sync.Map) (*Schema, error) {
 
     // 循环字段
     for _, field := range schema.Fields {
-        //fmt.Printf("77777 【%v】 = %v\n", field.DBName, field.DataType)
         if field.DBName == "" && field.DataType != "" {
-            field.DBName = TransFieldName(field.Name)   // 驼峰 转 下划线
+            field.DBName = TransFieldName(field.Name)   // 驼峰转下划线
         }
-        //fmt.Printf("88888 【%v】 = %v\n", field.DBName, field.DataType)
 
         if field.DBName != "" {
             // nonexistence or shortest path or first appear prioritized if has permission
@@ -125,7 +122,7 @@ func Parse(dest interface{}, cacheStore *sync.Map) (*Schema, error) {
                     schema.DBNames = append(schema.DBNames, field.DBName)
                 }
                 schema.FieldsByDBName[field.DBName] = field
-                schema.FieldsByName[field.Name] = field
+                schema.FieldsByName[field.Name]     = field
 
                 if v != nil && v.PrimaryKey {
                     for idx, f := range schema.PrimaryFields {
