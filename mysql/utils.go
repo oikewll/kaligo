@@ -218,6 +218,27 @@ func CheckTruth(val interface{}) bool {
 
 	return !reflect.ValueOf(val).IsZero()
 }
+
+// ToSlice is interface{} to slice interface{}
+func ToSlice(value interface{}) []interface{} {
+    reflectValue := reflect.ValueOf(value)
+    if reflectValue.Kind() == reflect.Ptr {
+        reflectValue = reflectValue.Elem()
+    }
+
+    if reflectValue.Kind() != reflect.Slice {
+        panic("ToSlice value not slice")
+    }
+
+    len := reflectValue.Len()
+    ret := make([]interface{}, len)
+    for i := 0; i < len; i++ {
+        ret[i] = reflectValue.Index(i).Interface()
+    }
+
+    return ret
+}
+
 // ToInt64 is int to string
 func ToInt64(value interface{}) int64 {
 	switch v := value.(type) {

@@ -3,7 +3,7 @@ package mysql
 import (
     "context"
     "database/sql"
-    "fmt"
+    //"fmt"
     "strings"
     "regexp"
     "reflect"
@@ -68,6 +68,20 @@ func (q *Query) Scan(value interface{}) *Query {
             }
 
             q.ReflectValue = q.ReflectValue.Elem()
+            // assign model values，只有 Struct 才给 q.Model 赋值
+            if q.ReflectValue.Kind() == reflect.Struct {
+                // var user User
+                q.Model = q.Dest
+            } else if q.ReflectValue.Kind() == reflect.Slice {
+                // var users  []User
+                // users   := []User{}
+                // results := []map[string]interface{}{}
+                reflectValueType := q.ReflectValue.Type().Elem()
+                if reflectValueType.Kind() == reflect.Struct {
+                    // var users []User
+                    q.Model = q.Dest
+                }
+            }
         }
         if !q.ReflectValue.IsValid() {
             q.AddError(ErrInvalidValue)
@@ -106,7 +120,7 @@ func (q *Query) Parameters(params map[string]string) *Query {
 // @return result interface{} the insert id for INSERT queries
 // @return result integer number of affected rows for all other queries
 func (q *Query) Compile() string {
-    var sqlStr string    
+    var sqlStr string
 
     switch q.queryType {
     case SELECT:
@@ -125,7 +139,7 @@ func (q *Query) Compile() string {
 
     if q.parameters != nil {
         // Quote all of the values
-        values := make(map[string]string, len(q.parameters)) 
+        values := make(map[string]string, len(q.parameters))
         for k, v := range q.parameters {
             // 如果前面没有:，前面加 :，用于替换
             if k[0:1] != ":" {
@@ -149,7 +163,7 @@ func (q *Query) Execute() *Query {
 
     // Compile the SQL query
     sqlStr := q.Compile()
-    fmt.Printf("Execute sqlStr = %v\n", sqlStr)
+    //fmt.Printf("Execute sqlStr = %v\n", sqlStr)
 
     // make sure we have a SQL type to work with
     if q.queryType == 0 && len(sqlStr) >= 11 {
@@ -169,22 +183,9 @@ func (q *Query) Execute() *Query {
         }
     }
 
-    //// assign model values
-    //if q.Model == nil {
-        //q.Model = q.Dest
-    //} else if q.Dest == nil {
-        //q.Dest = q.Model
-    //}
-
-    //// parse model values
-    //if q.Model != nil {
-        //if q.Schema, err = Parse(q.Model, q.cacheStore); err != nil {
-            //q.AddError(err)
-        //}
-    //}
-
-    if q.Dest != nil {
-        if q.Schema, err = Parse(q.Dest, q.cacheStore); err != nil {
+    // parse model values
+    if q.Model != nil {
+        if q.Schema, err = Parse(q.Model, q.cacheStore); err != nil {
             q.AddError(err)
         }
     }
@@ -192,7 +193,7 @@ func (q *Query) Execute() *Query {
     // 处理查询缓存
     //cacheObj = cache.Forge(cacheKey)
     //if conn.Caching() && q.lifeTime != 0 && q.queryType == SELECT {
-        //var cacheKey string    
+        //var cacheKey string
         //if q.cacheKey == "" {
             //h := md5.New()
             //io.WriteString(h, "Connection.Query(\"" + sqlStr + "\")")
@@ -260,18 +261,17 @@ func (q *Query) Reset() *Query {
     default:
     }
 
-    //q.Dest      = nil 
+    //q.Dest      = nil
     q.sqlStr    = ""
     q.queryType = 0
-    q.lifeTime  = 0                 
-    q.cacheKey  = ""              
-    q.cacheAll  = false                
+    q.lifeTime  = 0
+    q.cacheKey  = ""
+    q.cacheAll  = false
 
     // 这里不需要清除，由调用的去清除，SELECT、INSERT、UPDATE、DELETE这些reset去清除
     //q.joinObjs   = nil
     //q.lastJoin   = nil
-    //q.parameters = nil   
+    //q.parameters = nil
 
     return q
 }
-

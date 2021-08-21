@@ -26,10 +26,10 @@
 
 //type singleton struct {
 //}
- 
+
 //var instance *singleton
 //var once sync.Once
- 
+
 //func GetInstance() *singleton {
     //once.Do(func() {
         //instance = &singleton{}
@@ -97,7 +97,7 @@ type DB struct {
 // New is the function for Create new MySQL handler.
 // (读+写)连接数据库+选择数据库
 func New(args ...string) (db *DB, err error) {
-    var name = "default"    
+    var name = "default"
     if len(args) != 0 {
         name = args[0]
     }
@@ -266,7 +266,7 @@ func (db *DB) Select(columns ...string) *Query {
 // @param columns []string list of column names
 // @return *Query
 func (db *DB) Insert(table string, args ...[]string) *Query {
-    var columns []string    
+    var columns []string
     if len(args) != 0 {
         columns = args[0]
     }
@@ -336,7 +336,7 @@ func (db *DB) Delete(table string) *Query {
 // Schema.CreateDatabase(/*database*/ database, /*charset*/ 'utf-8', /*ifNotExists*/ true)
 func (db *DB) Schema(name string) *Schema {
     s := &Schema{
-        Name : name,  
+        Name : name,
         DB   : db,
     }
     return s
@@ -797,4 +797,3 @@ type Transaction struct {
 
 // Caching Per connection cache controller setter/getter
 //func (c *Connection) Caching() bool { return false }
-
