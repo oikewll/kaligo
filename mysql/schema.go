@@ -13,21 +13,21 @@ type Schema struct {
     *DB
 
     Name                      string
-	ModelType                 reflect.Type
-	Table                     string
-	Fields                    []*Field
-	FieldsByName              map[string]*Field     // 通过 struct 字段名查询
-	FieldsByColumn            map[string]*Field     // 通过 数据库 字段名查询
+    ModelType                 reflect.Type
+    Table                     string
+    Fields                    []*Field
+    FieldsByName              map[string]*Field     // 通过 struct 字段名查询
+    FieldsByColumn            map[string]*Field     // 通过 数据库 字段名查询
     err                       error
     initialized               chan struct{}
     cacheStore                *sync.Map
 }
 
 func (s Schema) String() string {
-	if s.ModelType.Name() == "" {
-		return fmt.Sprintf("%s(%s)", s.Name, s.Table)
-	}
-	return fmt.Sprintf("%s.%s", s.ModelType.PkgPath(), s.ModelType.Name())
+    if s.ModelType.Name() == "" {
+        return fmt.Sprintf("%s(%s)", s.Name, s.Table)
+    }
+    return fmt.Sprintf("%s.%s", s.ModelType.PkgPath(), s.ModelType.Name())
 }
 
 // LookUpField is 通过表名 或者 数据库名 查询字段
@@ -48,7 +48,7 @@ func (s Schema) LookUpField(name string) *Field {
 func Parse(dest interface{}, cacheStore *sync.Map) (*Schema, error) {
     if dest == nil {
         return nil, fmt.Errorf("%w: %+v", ErrUnsupportedDataType, dest)
-	}
+    }
 
     // 类型：*reflect.rtype = mysql.User
     modelType := reflect.ValueOf(dest).Type()
@@ -64,11 +64,11 @@ func Parse(dest interface{}, cacheStore *sync.Map) (*Schema, error) {
         return nil, fmt.Errorf("%w: %s.%s", ErrUnsupportedDataType, modelType.PkgPath(), modelType.Name())
     }
 
-    fmt.Printf("11111 = cacheStore.Load = %v\n", modelType)
+    //fmt.Printf("11111 = cacheStore.Load = %v\n", modelType)
 
     // 等待其他协程数据
     if v, ok := cacheStore.Load(modelType); ok {
-        fmt.Printf("22222 = cacheStore.Load = %v\n", v)
+        //fmt.Printf("22222 = cacheStore.Load = %v\n", v)
         s := v.(*Schema)
         // Wait for the initialization of other goroutines to complete
         <-s.initialized
@@ -91,11 +91,8 @@ func Parse(dest interface{}, cacheStore *sync.Map) (*Schema, error) {
     // When the schema initialization is completed, the channel will be closed
     defer close(schema.initialized)
 
-    fmt.Printf("33333 = cacheStore.Load = %v\n", modelType)
-
     // 等待其他协程数据
     if v, loaded := cacheStore.LoadOrStore(modelType, schema); loaded {
-        fmt.Printf("44444 = cacheStore.Load = %v\n", modelType)
         s := v.(*Schema)
         // Wait for the initialization of other goroutines to complete
         <-s.initialized
@@ -137,7 +134,6 @@ func Parse(dest interface{}, cacheStore *sync.Map) (*Schema, error) {
         field.setupValuerAndSetter()
     }
 
-    fmt.Printf("55555 = cacheStore.Load = %v\n", modelType)
     return schema, schema.err
 }
 
