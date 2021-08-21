@@ -64,8 +64,11 @@ func Parse(dest interface{}, cacheStore *sync.Map) (*Schema, error) {
         return nil, fmt.Errorf("%w: %s.%s", ErrUnsupportedDataType, modelType.PkgPath(), modelType.Name())
     }
 
+    fmt.Printf("11111 = cacheStore.Load = %v\n", modelType)
+
     // 等待其他协程数据
     if v, ok := cacheStore.Load(modelType); ok {
+        fmt.Printf("22222 = cacheStore.Load = %v\n", v)
         s := v.(*Schema)
         // Wait for the initialization of other goroutines to complete
         <-s.initialized
@@ -74,9 +77,7 @@ func Parse(dest interface{}, cacheStore *sync.Map) (*Schema, error) {
 
     //modelValue := reflect.New(modelType)
     // 其实没必要去弄表名，因为schema又不是一张表
-    //tableName  := transFieldName(modelType.Name())
-    //fmt.Printf("modelType Name %T = %v\n", modelType.Name(), modelType.Name())
-    //fmt.Printf("modelType %T = %v\n", modelType, modelType)
+    //tableName  := TransFieldName(modelType.Name())
 
     // Model
     schema := &Schema{
@@ -90,8 +91,11 @@ func Parse(dest interface{}, cacheStore *sync.Map) (*Schema, error) {
     // When the schema initialization is completed, the channel will be closed
     defer close(schema.initialized)
 
+    fmt.Printf("33333 = cacheStore.Load = %v\n", modelType)
+
     // 等待其他协程数据
     if v, loaded := cacheStore.LoadOrStore(modelType, schema); loaded {
+        fmt.Printf("44444 = cacheStore.Load = %v\n", modelType)
         s := v.(*Schema)
         // Wait for the initialization of other goroutines to complete
         <-s.initialized
@@ -133,6 +137,7 @@ func Parse(dest interface{}, cacheStore *sync.Map) (*Schema, error) {
         field.setupValuerAndSetter()
     }
 
+    fmt.Printf("55555 = cacheStore.Load = %v\n", modelType)
     return schema, schema.err
 }
 

@@ -124,7 +124,7 @@ func Scan(rows *sql.Rows, q *Query) {
             q.ReflectValue.Set(reflect.MakeSlice(q.ReflectValue.Type(), 0, 20))
 
             if reflectValueType != Schema.ModelType && reflectValueType.Kind() == reflect.Struct {
-                Schema, _ = Parse(q.Dest, q.cacheStore)
+                Schema, _ = Parse(q.Model, q.cacheStore)
             }
 
             for idx, column := range columns {
@@ -176,9 +176,9 @@ func Scan(rows *sql.Rows, q *Query) {
 
         case reflect.Struct, reflect.Ptr:
             // 这里应该不会进入，因为 Execute() 里面执行了 Parse() 才到这里来的
-            if q.ReflectValue.Type() != Schema.ModelType {
+            if q.ReflectValue.Type() != Schema.ModelType && q.ReflectValue.Type().Kind() == reflect.Struct {
                 var err error
-                if q.Schema, err = Parse(q.Dest, q.cacheStore); err != nil {
+                if q.Schema, err = Parse(q.Model, q.cacheStore); err != nil {
                     q.AddError(err)
                 }
             }

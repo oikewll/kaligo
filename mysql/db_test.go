@@ -66,21 +66,56 @@ func TestDB(t *testing.T) {
     //t.Logf("sqlStr = %v", sqlStr)
 
     var user User
-    var users []User
     sqlStr = "SELECT name, age, sex FROM user WHERE id = :id"
-    //t.Logf("sqlStr = %v\n", sqlStr)
-    //db.Select("name", "age").From("user").Scan(&user).Execute()
-    db.Query(sqlStr).Bind(":id", "1").Scan(&user).Execute();
+    q := db.Query(sqlStr).Bind(":id", "1").Scan(&user).Execute();
     t.Logf("user name = %v --- age = %v --- Sex = %v\n", user.Name, user.Age, user.Sex)
+    if q.Error != nil {
+        t.Logf("q.Error = %v\n", q.Error)
+    }
 
-    db.Query("SELECT name, age, sex FROM user").Scan(&users).Execute();
+    //var users []User
+    users := []User{}
+    q = db.Query("SELECT name, age, sex FROM user").Scan(&users).Execute();
     for _, v := range users {
         t.Logf("user name = %v --- age = %v --- Sex = %v\n", v.Name, v.Age, v.Sex)
     }
+    if q.Error != nil {
+        t.Logf("q.Error = %v\n", q.Error)
+    }
 
-    var count int64    
-    db.Query("SELECT COUNT(*) FROM user").Scan(&count).Execute();
-    t.Logf("count = %v\n", count)
+    //var count int64    
+    //q = db.Query("SELECT COUNT(*) FROM user").Scan(&count).Execute();
+    //t.Logf("count = %v\n", count)
+    //if q.Error != nil {
+        //t.Logf("q.Error = %v\n", q.Error)
+    //}
+
+    //var name string    
+    //q = db.Query("SELECT name FROM user WHERE id = 1").Bind(":id", "1").Scan(&name).Execute();
+    //t.Logf("sqlStr = %v\n", q.sqlStr)
+    //t.Logf("name = %v\n", name)
+    //if q.Error != nil {
+        //t.Logf("q.Error = %v\n", q.Error)
+    //}
+
+    result := map[string]interface{}{}
+    q = db.Query("SELECT name, age FROM user WHERE id = 1").Bind(":id", "1").Scan(&result).Execute();
+    t.Logf("result = %v\n", result)
+    if q.Error != nil {
+        t.Logf("q.Error = %v\n", q.Error)
+    }
+
+    results := []map[string]interface{}{}
+    q = db.Query("SELECT name, age FROM user").Scan(&results).Execute();
+    t.Logf("results = %v\n", results)
+    t.Logf("q.RowsAffected = %v\n", q.RowsAffected)
+    if q.Error != nil {
+        t.Logf("q.Error = %v\n", q.Error)
+    }
+
+
+
+
 
     //sqlStr = db.Select("user.id", "user.name").From("user").
     //Join("player", "LEFT").On("user.uid", "=", "player.uid").
