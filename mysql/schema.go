@@ -15,22 +15,27 @@ type Schema struct {
     Name                      string
 	ModelType                 reflect.Type
 	Table                     string
-	DBNames                   []string
-	PrimaryFields             []*Field
-	PrimaryFieldDBNames       []string
 	Fields                    []*Field
 	FieldsByName              map[string]*Field     // 通过 struct 字段名查询
-	FieldsByDBName            map[string]*Field     // 通过 数据库栏位名查询
+	FieldsByColumn            map[string]*Field     // 通过 数据库 字段名查询
     err                       error
     initialized               chan struct{}
     cacheStore                *sync.Map
 }
 
+func (s Schema) String() string {
+	if s.ModelType.Name() == "" {
+		return fmt.Sprintf("%s(%s)", s.Name, s.Table)
+	}
+	return fmt.Sprintf("%s.%s", s.ModelType.PkgPath(), s.ModelType.Name())
+}
+
 // LookUpField is 通过表名 或者 数据库名 查询字段
 func (s Schema) LookUpField(name string) *Field {
-    if field, ok := s.FieldsByDBName[name]; ok {
+    if field, ok := s.FieldsByColumn[name]; ok {
         return field
     }
+
     if field, ok := s.FieldsByName[name]; ok {
         return field
     }
@@ -40,18 +45,18 @@ func (s Schema) LookUpField(name string) *Field {
 // Parse get data type from dialector
 // 1、传入 struct，比如 &User{}，生成 User对应的 []*Field
 // 2、当查询了数据 rows.Next 循环的时候，去上面的 []*Field 找对应的字段，通过 field.Set 去设置值
-//func Parse(dest interface{}, cacheStore *sync.Map, namer Namer) {
 func Parse(dest interface{}, cacheStore *sync.Map) (*Schema, error) {
     if dest == nil {
         return nil, fmt.Errorf("%w: %+v", ErrUnsupportedDataType, dest)
 	}
 
-    // 类型：mysql.User
+    // 类型：*reflect.rtype = mysql.User
     modelType := reflect.ValueOf(dest).Type()
     for modelType.Kind() == reflect.Slice || modelType.Kind() == reflect.Array || modelType.Kind() == reflect.Ptr {
         modelType = modelType.Elem()
     }
 
+    // 非 Struct，直接返回错误
     if modelType.Kind() != reflect.Struct {
         if modelType.PkgPath() == "" {
             return nil, fmt.Errorf("%w: %+v", ErrUnsupportedDataType, dest)
@@ -70,14 +75,15 @@ func Parse(dest interface{}, cacheStore *sync.Map) (*Schema, error) {
     //modelValue := reflect.New(modelType)
     // 其实没必要去弄表名，因为schema又不是一张表
     //tableName  := transFieldName(modelType.Name())
-    //fmt.Printf("modelType Name = %v\n", modelType.Name())
+    //fmt.Printf("modelType Name %T = %v\n", modelType.Name(), modelType.Name())
+    //fmt.Printf("modelType %T = %v\n", modelType, modelType)
 
     // Model
     schema := &Schema{
         Name:           modelType.Name(),
         ModelType:      modelType,
         FieldsByName:   map[string]*Field{},
-        FieldsByDBName: map[string]*Field{},
+        FieldsByColumn: map[string]*Field{},
         cacheStore:     cacheStore,
         initialized:    make(chan struct{}),
     }
@@ -102,44 +108,26 @@ func Parse(dest interface{}, cacheStore *sync.Map) (*Schema, error) {
 
     // 从 struct 映射出字段，struct 名当作 Schema，字段作为 Field
     for i := 0; i < modelType.NumField(); i++ {
+        // IsExported 是否以大写字母开头
         if fieldStruct := modelType.Field(i); ast.IsExported(fieldStruct.Name) {
-            if field := schema.ParseField(fieldStruct); field != nil {
+            if field := ParseField(fieldStruct); field != nil {
                 schema.Fields = append(schema.Fields, field)
             }
         }
     }
 
-    // 循环字段
+    // 循环字段，给 FieldsByColumn、FieldsByName 赋值
     for _, field := range schema.Fields {
-        if field.DBName == "" && field.DataType != "" {
-            field.DBName = TransFieldName(field.Name)   // 驼峰转下划线
+        if field.Column == "" && field.DataType != "" {
+            // 驼峰转下划线，数据库字段都是下划线写法
+            field.Column = TransFieldName(field.Name)
         }
 
-        if field.DBName != "" {
-            // nonexistence or shortest path or first appear prioritized if has permission
-            if v, ok := schema.FieldsByDBName[field.DBName]; !ok {
-                if _, ok := schema.FieldsByDBName[field.DBName]; !ok {
-                    schema.DBNames = append(schema.DBNames, field.DBName)
-                }
-                schema.FieldsByDBName[field.DBName] = field
+        if field.Column != "" {
+            if _, ok := schema.FieldsByColumn[field.Column]; !ok {
+                schema.FieldsByColumn[field.Column] = field
                 schema.FieldsByName[field.Name]     = field
-
-                if v != nil && v.PrimaryKey {
-                    for idx, f := range schema.PrimaryFields {
-                        if f == v {
-                            schema.PrimaryFields = append(schema.PrimaryFields[0:idx], schema.PrimaryFields[idx+1:]...)
-                        }
-                    }
-                }
-
-                if field.PrimaryKey {
-                    schema.PrimaryFields = append(schema.PrimaryFields, field)
-                }
             }
-        }
-
-        if of, ok := schema.FieldsByName[field.Name]; !ok || of.TagSettings["-"] == "-" {
-            schema.FieldsByName[field.Name] = field
         }
 
         field.setupValuerAndSetter()

@@ -3,6 +3,7 @@ package mysql
 import (
     "fmt"
     "io"
+    "time"
 	"runtime"
     "reflect"
 	"regexp"
@@ -216,6 +217,108 @@ func CheckTruth(val interface{}) bool {
 	}
 
 	return !reflect.ValueOf(val).IsZero()
+}
+// ToInt64 is int to string
+func ToInt64(value interface{}) int64 {
+	switch v := value.(type) {
+	case int:
+		return int64(v)
+	case int8:
+		return int64(v)
+	case int16:
+		return int64(v)
+	case int32:
+		return int64(v)
+	case int64:
+		return v
+	case uint:
+		return int64(v)
+	case uint8:
+		return int64(v)
+	case uint16:
+		return int64(v)
+	case uint32:
+		return int64(v)
+	case uint64:
+		return int64(v)
+	case float32:
+		return int64(v)
+	case float64:
+		return int64(v)
+	case time.Time:
+		return v.Unix()
+    case *time.Time:
+        if v != nil {
+            return v.Unix()
+        } 
+    }
+	return 0
+}
+
+// ToUint64 is int to string
+func ToUint64(value interface{}) uint64 {
+	switch v := value.(type) {
+	case int:
+		return uint64(v)
+	case int8:
+		return uint64(v)
+	case int16:
+		return uint64(v)
+	case int32:
+		return uint64(v)
+	case int64:
+		return uint64(v)
+	case uint:
+		return uint64(v)
+	case uint8:
+		return uint64(v)
+	case uint16:
+		return uint64(v)
+	case uint32:
+		return uint64(v)
+	case uint64:
+		return v
+	case float32:
+		return uint64(v)
+	case float64:
+		return uint64(v)
+	case time.Time:
+		return uint64(v.Unix())
+	}
+	return 0
+}
+
+// ToFloat is int to string
+func ToFloat(value interface{}) float64 {
+	switch v := value.(type) {
+	case int:
+		return float64(v)
+	case int8:
+		return float64(v)
+	case int16:
+		return float64(v)
+	case int32:
+		return float64(v)
+	case int64:
+		return float64(v)
+	case uint:
+		return float64(v)
+	case uint8:
+		return float64(v)
+	case uint16:
+		return float64(v)
+	case uint32:
+		return float64(v)
+	case uint64:
+		return float64(v)
+	case float32:
+		return float64(v)
+	case float64:
+		return v
+	case time.Time:
+		return float64(v.Unix())
+	}
+	return 0
 }
 
 // ToString is int to string

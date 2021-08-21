@@ -18,10 +18,11 @@ import (
     "time"
 )
 
-func prepareValues(values []interface{}, db *DB, columnTypes []*sql.ColumnType, columns []string) {
-	if db.query.Schema != nil {
+// prepareValues 准备可以被rows.Scan进去数据 的 数据类型指针 
+func prepareValues(values []interface{}, q *Query, columnTypes []*sql.ColumnType, columns []string) {
+	if q.Schema != nil {
 		for idx, name := range columns {
-			if field := db.query.Schema.LookUpField(name); field != nil {
+			if field := q.Schema.LookUpField(name); field != nil {
 				values[idx] = reflect.New(reflect.PtrTo(field.FieldType)).Interface()
 				continue
 			}
@@ -42,6 +43,7 @@ func prepareValues(values []interface{}, db *DB, columnTypes []*sql.ColumnType, 
 	}
 }
 
+// scanIntoMap 扫描进 Map
 func scanIntoMap(mapValue map[string]interface{}, values []interface{}, columns []string) {
     for idx, column := range columns {
         if reflectValue := reflect.Indirect(reflect.Indirect(reflect.ValueOf(values[idx]))); reflectValue.IsValid() {
@@ -57,21 +59,23 @@ func scanIntoMap(mapValue map[string]interface{}, values []interface{}, columns 
     }
 }
 
-// Scan is...
-func Scan(rows *sql.Rows, db *DB) {
+// Scan 扫描数据行
+// 将数据行中的数据解析到 q.Dest 中, q.Dest 可以是 基础类型、time.Time类型、结构体、数组类型的指针
+// 扫描的行数: q.RowsAffected
+func Scan(rows *sql.Rows, q *Query) {
     columns, _ := rows.Columns()
     values := make([]interface{}, len(columns))
-    db.RowsAffected = 0
+    q.RowsAffected = 0
 
-    switch dest := db.query.Dest.(type) {
+    switch dest := q.Dest.(type) {
     case map[string]interface{}, *map[string]interface{}:
         if rows.Next() {
             // 如果字段类型不为空
             columnTypes, _ := rows.ColumnTypes()
-            prepareValues(values, db, columnTypes, columns)
+            prepareValues(values, q, columnTypes, columns)
 
-            db.RowsAffected++
-            db.AddError(rows.Scan(values...))
+            q.RowsAffected++
+            q.AddError(rows.Scan(values...))
 
             mapValue, ok := dest.(map[string]interface{})
             if !ok {
@@ -84,10 +88,10 @@ func Scan(rows *sql.Rows, db *DB) {
     case *[]map[string]interface{}:
         columnTypes, _ := rows.ColumnTypes()
         for rows.Next() {
-            prepareValues(values, db, columnTypes, columns)
+            prepareValues(values, q, columnTypes, columns)
 
-            db.RowsAffected++
-            db.AddError(rows.Scan(values...))
+            q.RowsAffected++
+            q.AddError(rows.Scan(values...))
 
             mapValue := map[string]interface{}{}
             scanIntoMap(mapValue, values, columns)
@@ -100,22 +104,86 @@ func Scan(rows *sql.Rows, db *DB) {
         *sql.NullInt32, *sql.NullInt64, *sql.NullFloat64,
         *sql.NullBool, *sql.NullString, *sql.NullTime:
         for rows.Next() {
-            db.RowsAffected++
-            db.AddError(rows.Scan(dest))
+            q.RowsAffected++
+            q.AddError(rows.Scan(dest))
         }
     default:
-        Schema := db.query.Schema
-        switch db.query.ReflectValue.Kind() {
+        Schema := q.Schema
+        switch q.ReflectValue.Kind() {
         case reflect.Slice, reflect.Array:
+            var (
+                reflectValueType = q.ReflectValue.Type().Elem()
+                isPtr            = reflectValueType.Kind() == reflect.Ptr
+                fields           = make([]*Field, len(columns))
+            )
+
+            if isPtr {
+                reflectValueType = reflectValueType.Elem()
+            }
+
+            q.ReflectValue.Set(reflect.MakeSlice(q.ReflectValue.Type(), 0, 20))
+
+            if reflectValueType != Schema.ModelType && reflectValueType.Kind() == reflect.Struct {
+                Schema, _ = Parse(q.Dest, q.cacheStore)
+            }
+
+            for idx, column := range columns {
+                // query.Execute() 方法里面已经执行了 Parse()
+                if field := Schema.LookUpField(column); field != nil {
+                    fields[idx] = field
+                } else {
+                    values[idx] = &sql.RawBytes{}
+                }
+            }
+
+            // pluck values into slice of data
+            isPluck := false
+            if len(fields) == 1 {
+                if _, ok := reflect.New(reflectValueType).Interface().(sql.Scanner); ok || // is scanner
+                reflectValueType.Kind() != reflect.Struct || // is not struct
+                Schema.ModelType.ConvertibleTo(TimeReflectType) { // is time
+                    isPluck = true
+                }
+            }
+
+            for rows.Next() {
+                q.RowsAffected++
+                elem := reflect.New(reflectValueType)
+                if isPluck {
+                    q.AddError(rows.Scan(elem.Interface()))
+                } else {
+                    // 准备 values
+                    for idx, field := range fields {
+                        if field != nil {
+                            values[idx] = reflect.New(reflect.PtrTo(field.IndirectFieldType)).Interface()
+                        }
+                    }
+
+                    q.AddError(rows.Scan(values...))
+
+                    // 赋值
+                    for idx, field := range fields {
+                        field.Set(elem, values[idx])
+                    }
+                }
+
+                if isPtr {
+                    q.ReflectValue.Set(reflect.Append(q.ReflectValue, elem))
+                } else {
+                    q.ReflectValue.Set(reflect.Append(q.ReflectValue, elem.Elem()))
+                }
+            }
 
         case reflect.Struct, reflect.Ptr:
             // 这里应该不会进入，因为 Execute() 里面执行了 Parse() 才到这里来的
-            if db.query.ReflectValue.Type() != Schema.ModelType {
-                Schema, _ = Parse(db.query.Dest, db.cacheStore)
+            if q.ReflectValue.Type() != Schema.ModelType {
+                var err error
+                if q.Schema, err = Parse(q.Dest, q.cacheStore); err != nil {
+                    q.AddError(err)
+                }
             }
             if rows.Next() {
                 for idx, column := range columns {
-                    // 从 db.query.Schema 里面去查找，因为在 query.Execute() 方法里面已经执行了 Parse()，或者上面也会执行，所以这里肯定是有的
                     if field := Schema.LookUpField(column); field != nil {
                         values[idx] = reflect.New(reflect.PtrTo(field.IndirectFieldType)).Interface()
                     } else if len(columns) == 1 {
@@ -125,25 +193,25 @@ func Scan(rows *sql.Rows, db *DB) {
                     }
                 }
 
-                db.RowsAffected++
+                q.RowsAffected++
                 // 给 values 填充数据
-                db.AddError(rows.Scan(values...))
+                q.AddError(rows.Scan(values...))
                 for idx, column := range columns {
                     if field := Schema.LookUpField(column); field != nil {
-                        field.Set(db.query.ReflectValue, values[idx])
+                        field.Set(q.ReflectValue, values[idx])
                     }
                 }
             }
         default:
-            db.AddError(rows.Scan(dest))
+            q.AddError(rows.Scan(dest))
         }
     }
 
-    if err := rows.Err(); err != nil && err != db.Error {
-        db.AddError(err)
+    if err := rows.Err(); err != nil && err != q.Error {
+        q.AddError(err)
     }
 
-    if db.RowsAffected == 0 && db.Error == nil {
-        db.AddError(ErrRecordNotFound)
+    if q.RowsAffected == 0 && q.Error == nil {
+        q.AddError(ErrRecordNotFound)
     }
 }

@@ -11,6 +11,7 @@ import (
     "strings"
     "strconv"
     "time"
+    //"encoding/json"
 
     "github.com/jinzhu/now"
 )
@@ -53,7 +54,8 @@ const (
 // Field is ...
 type Field struct {
     Name                   string   // 字段名
-    DBName                 string   // 数据库栏位名
+
+    Column                 string   // 数据库栏位名
     DataType               DataType // 数据类型，这里模拟了一个enum
     Size                   int      // 栏位长度
     Precision              int      // 精度
@@ -69,7 +71,6 @@ type Field struct {
     StructField            reflect.StructField
     StructTag              reflect.StructTag
     TagSettings            map[string]string
-    Schema                 *Schema
 
     ReflectValueOf         func(reflect.Value) reflect.Value
     ValueOf                func(reflect.Value) (value interface{}, zero bool)
@@ -77,11 +78,12 @@ type Field struct {
 }
 
 // ParseField is 解析字段
-func (schema *Schema) ParseField(fieldStruct reflect.StructField) *Field {
+func ParseField(fieldStruct reflect.StructField) *Field {
     var err error
+    //str, _ := json.Marshal(fieldStruct)
+    //fmt.Printf("ParseField %v\n", string(str))
 
     field := &Field{
-        Schema:                 schema,
 		Name:                   fieldStruct.Name,
 		FieldType:              fieldStruct.Type,
 		IndirectFieldType:      fieldStruct.Type,
@@ -90,6 +92,7 @@ func (schema *Schema) ParseField(fieldStruct reflect.StructField) *Field {
         TagSettings:            ParseTagSetting(fieldStruct.Tag.Get("db"), ";"),
 	}
 
+    // Array、Slice、Struct 需要通过 Elem() 获取指针指向的值，其他类型直接拿到的就是他的值
     for field.IndirectFieldType.Kind() == reflect.Ptr {
         field.IndirectFieldType = field.IndirectFieldType.Elem()
     }
@@ -134,14 +137,11 @@ func (schema *Schema) ParseField(fieldStruct reflect.StructField) *Field {
     }
     //fmt.Printf("field.TagSettings = %v\n", field.TagSettings)
 
-
-    if dbName, ok := field.TagSettings["COLUMN"]; ok {
-        field.DBName = dbName
+    if val, ok := field.TagSettings["COLUMN"]; ok {
+        field.Column = val
     }
 
     if val, ok := field.TagSettings["PRIMARYKEY"]; ok && CheckTruth(val) {
-        field.PrimaryKey = true
-    } else if val, ok := field.TagSettings["PRIMARY_KEY"]; ok && CheckTruth(val) {
         field.PrimaryKey = true
     }
 
@@ -149,9 +149,11 @@ func (schema *Schema) ParseField(fieldStruct reflect.StructField) *Field {
 		field.AutoIncrement = true
 	}
 
-    if v, ok := field.TagSettings["DEFAULT"]; ok {
-        field.DefaultValue = v
+    if val, ok := field.TagSettings["DEFAULT"]; ok {
+        field.DefaultValue = val
     }
+    // default value is function or null or blank (primary keys)
+    field.DefaultValue = strings.TrimSpace(field.DefaultValue)
 
     if num, ok := field.TagSettings["SIZE"]; ok {
         if field.Size, err = strconv.Atoi(num); err != nil {
@@ -159,25 +161,17 @@ func (schema *Schema) ParseField(fieldStruct reflect.StructField) *Field {
         }
     }
 
-    if val, ok := field.TagSettings["NOT NULL"]; ok && CheckTruth(val) {
-        field.NotNull = true
-    } else if val, ok := field.TagSettings["NOTNULL"]; ok && CheckTruth(val) {
+    if val, ok := field.TagSettings["NOTNULL"]; ok && CheckTruth(val) {
         field.NotNull = true
     }
 
-    if val, ok := field.TagSettings["UNIQUE"]; ok && CheckTruth(val) {
+    if val, ok := field.TagSettings["UNIQUED"]; ok && CheckTruth(val) {
         field.Uniqued = true
     }
 
     if val, ok := field.TagSettings["COMMENT"]; ok {
         field.Comment = val
     }
-
-    // default value is function or null or blank (primary keys)
-    field.DefaultValue = strings.TrimSpace(field.DefaultValue)
-
-    // 类型：string、int
-    //t.Logf("fieldKind === %v\n", reflect.Indirect(fieldValue).Kind())
 
     switch reflect.Indirect(fieldValue).Kind() {
     case reflect.Bool:
@@ -230,8 +224,8 @@ func (schema *Schema) ParseField(fieldStruct reflect.StructField) *Field {
 }
 
 // create valuer, setter when parse struct
+// 解析fields值到value中
 func (field *Field) setupValuerAndSetter() {
-    //fmt.Printf("setupValuerAndSetter = %v\n", field)
     // ValueOf
     switch {
     case len(field.StructField.Index) == 1:
@@ -247,7 +241,6 @@ func (field *Field) setupValuerAndSetter() {
     default:
         field.ValueOf = func(value reflect.Value) (interface{}, bool) {
             v := reflect.Indirect(value)
-
             for _, idx := range field.StructField.Index {
                 if idx >= 0 {
                     v = v.Field(idx)
@@ -268,6 +261,7 @@ func (field *Field) setupValuerAndSetter() {
             return v.Interface(), v.IsZero()
         }
     }
+
 
     // ReflectValueOf
     switch {
@@ -305,8 +299,8 @@ func (field *Field) setupValuerAndSetter() {
         }
     }
 
-    
-    // 设置回调函数
+
+    // Setter 回调函数
 	fallbackSetter := func(value reflect.Value, v interface{}, setter func(reflect.Value, interface{}) error) (err error) {
 		if v == nil {
 			field.ReflectValueOf(value).Set(reflect.New(field.FieldType).Elem())
@@ -365,7 +359,7 @@ func (field *Field) setupValuerAndSetter() {
     // Set
     switch field.FieldType.Kind() {
     case reflect.Bool:
-        field.Set = func(value reflect.Value, v interface{}) error {
+        field.Set = func(value reflect.Value, v interface{}) (err error) {
             switch data := v.(type) {
             case bool:
                 field.ReflectValueOf(value).SetBool(data)
@@ -392,30 +386,8 @@ func (field *Field) setupValuerAndSetter() {
     case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
         field.Set = func(value reflect.Value, v interface{}) (err error) {
             switch data := v.(type) {
-            case int64:
-                field.ReflectValueOf(value).SetInt(data)
-            case int:
-                field.ReflectValueOf(value).SetInt(int64(data))
-            case int8:
-                field.ReflectValueOf(value).SetInt(int64(data))
-            case int16:
-                field.ReflectValueOf(value).SetInt(int64(data))
-            case int32:
-                field.ReflectValueOf(value).SetInt(int64(data))
-            case uint:
-                field.ReflectValueOf(value).SetInt(int64(data))
-            case uint8:
-                field.ReflectValueOf(value).SetInt(int64(data))
-            case uint16:
-                field.ReflectValueOf(value).SetInt(int64(data))
-            case uint32:
-                field.ReflectValueOf(value).SetInt(int64(data))
-            case uint64:
-                field.ReflectValueOf(value).SetInt(int64(data))
-            case float32:
-                field.ReflectValueOf(value).SetInt(int64(data))
-            case float64:
-                field.ReflectValueOf(value).SetInt(int64(data))
+            case int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64, float32, float64, time.Time, *time.Time:
+                field.ReflectValueOf(value).SetInt(ToInt64(data))
             case []byte:
                 return field.Set(value, string(data))
             case string:
@@ -423,14 +395,6 @@ func (field *Field) setupValuerAndSetter() {
                     field.ReflectValueOf(value).SetInt(i)
                 } else {
                     return err
-                }
-            case time.Time:
-                field.ReflectValueOf(value).SetInt(data.Unix())
-            case *time.Time:
-                if data != nil {
-                    field.ReflectValueOf(value).SetInt(data.Unix())
-                } else {
-                    field.ReflectValueOf(value).SetInt(0)
                 }
             default:
                 return fallbackSetter(value, v, field.Set)
@@ -440,34 +404,10 @@ func (field *Field) setupValuerAndSetter() {
     case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
         field.Set = func(value reflect.Value, v interface{}) (err error) {
             switch data := v.(type) {
-            case uint64:
-                field.ReflectValueOf(value).SetUint(data)
-            case uint:
-                field.ReflectValueOf(value).SetUint(uint64(data))
-            case uint8:
-                field.ReflectValueOf(value).SetUint(uint64(data))
-            case uint16:
-                field.ReflectValueOf(value).SetUint(uint64(data))
-            case uint32:
-                field.ReflectValueOf(value).SetUint(uint64(data))
-            case int64:
-                field.ReflectValueOf(value).SetUint(uint64(data))
-            case int:
-                field.ReflectValueOf(value).SetUint(uint64(data))
-            case int8:
-                field.ReflectValueOf(value).SetUint(uint64(data))
-            case int16:
-                field.ReflectValueOf(value).SetUint(uint64(data))
-            case int32:
-                field.ReflectValueOf(value).SetUint(uint64(data))
-            case float32:
-                field.ReflectValueOf(value).SetUint(uint64(data))
-            case float64:
-                field.ReflectValueOf(value).SetUint(uint64(data))
+            case int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64, float32, float64, time.Time:
+                field.ReflectValueOf(value).SetUint(ToUint64(data))
             case []byte:
                 return field.Set(value, string(data))
-            case time.Time:
-                field.ReflectValueOf(value).SetUint(uint64(data.Unix()))
             case string:
                 if i, err := strconv.ParseUint(data, 0, 64); err == nil {
                     field.ReflectValueOf(value).SetUint(i)
@@ -482,30 +422,8 @@ func (field *Field) setupValuerAndSetter() {
     case reflect.Float32, reflect.Float64:
         field.Set = func(value reflect.Value, v interface{}) (err error) {
             switch data := v.(type) {
-            case float64:
-                field.ReflectValueOf(value).SetFloat(data)
-            case float32:
-                field.ReflectValueOf(value).SetFloat(float64(data))
-            case int64:
-                field.ReflectValueOf(value).SetFloat(float64(data))
-            case int:
-                field.ReflectValueOf(value).SetFloat(float64(data))
-            case int8:
-                field.ReflectValueOf(value).SetFloat(float64(data))
-            case int16:
-                field.ReflectValueOf(value).SetFloat(float64(data))
-            case int32:
-                field.ReflectValueOf(value).SetFloat(float64(data))
-            case uint:
-                field.ReflectValueOf(value).SetFloat(float64(data))
-            case uint8:
-                field.ReflectValueOf(value).SetFloat(float64(data))
-            case uint16:
-                field.ReflectValueOf(value).SetFloat(float64(data))
-            case uint32:
-                field.ReflectValueOf(value).SetFloat(float64(data))
-            case uint64:
-                field.ReflectValueOf(value).SetFloat(float64(data))
+            case int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64, float32, float64:
+                field.ReflectValueOf(value).SetFloat(ToFloat(data))
             case []byte:
                 return field.Set(value, string(data))
             case string:
@@ -522,13 +440,7 @@ func (field *Field) setupValuerAndSetter() {
     case reflect.String:
         field.Set = func(value reflect.Value, v interface{}) (err error) {
             switch data := v.(type) {
-            case string:
-                //frv := field.ReflectValueOf(value)
-                //fmt.Printf("11111 %T = %p = %v = %v\n", frv, &frv, frv, data)
-                field.ReflectValueOf(value).SetString(data)
-            case []byte:
-                field.ReflectValueOf(value).SetString(string(data))
-            case int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64:
+            case int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64, string:
                 field.ReflectValueOf(value).SetString(ToString(data))
             case float64, float32:
                 field.ReflectValueOf(value).SetString(fmt.Sprintf("%."+strconv.Itoa(field.Precision)+"f", data))
@@ -662,10 +574,10 @@ func (field *Field) setupValuerAndSetter() {
 	//Name     string
 	//OrgName  string
 	//DispLen  uint32
-	////  Charset  uint16
-	//Flags uint16
-	//Type  byte
-	//Scale byte
+	//Charset  uint16
+	//Flags    uint16
+	//Type     byte
+	//Scale    byte
 //}
 
 
