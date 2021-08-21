@@ -68,8 +68,8 @@ type DB struct {
     name         string         // instance name
     dsn          string         // db dns
 
-    timeout time.Duration       // Timeout for connect SetConnMaxLifetime(timeout)
-    lastUse time.Time           // The last use time
+    timeout      time.Duration  // Timeout for connect SetConnMaxLifetime(timeout)
+    lastUse      time.Time      // The last use time
 
     stdDB         *sql.DB       // MySQL connection
     stdTX         *sql.Tx       // MySQL connection for Transaction
@@ -91,8 +91,7 @@ type DB struct {
     // Dialector database dialector
 	//Dialector
 
-    cacheStore *sync.Map
-    //callbacks  *callbacks
+    cacheStore   *sync.Map
 }
 
 // New is the function for Create new MySQL handler.
@@ -119,8 +118,6 @@ func New(args ...string) (db *DB, err error) {
 		db.cacheStore = &sync.Map{}
 	}
 
-    //db.callbacks = initializeCallbacks(db)
-
     //dbuser := conf.Get("db", "user")
     //dbpass := conf.Get("db", "pass")
     //dbhost := conf.Get("db", "host")
@@ -141,7 +138,6 @@ func New(args ...string) (db *DB, err error) {
 		stdDB       : db.stdDB, // 因为返回的是指针*sql.DB，所以 db.stdDB 和 db.conn.stdDB 是同一个，一个Close()，另一个也会Close()
         TablePrefix : "",
 		Context     : context.Background(),
-		//Clauses   : map[string]clause.Clause{},
     }
 
     // 设置最大空闲连接数
@@ -156,22 +152,6 @@ func New(args ...string) (db *DB, err error) {
 
     //if err != nil {
         //db.Logger.Error(context.Background(), "failed to initialize database, got error %v", err)
-    //}
-
-    //if err == nil {
-        //sqlStr := "SELECT name FROM user WHERE id = '1'"
-        //fmt.Printf("11111 = %T = %p\n", db.stdDB, db.stdDB)
-        
-        //rows, err := db.stdDB.Query(sqlStr)
-        //columns, _ := rows.Columns()
-        //values := make([]interface{}, len(columns))
-        //if rows.Next() {
-                //err = rows.Scan(values...)
-                //if err == nil || err == sql.ErrNoRows {
-                    //fmt.Printf("name = %v\n", values)
-                //}
-        //}
-        //rows.Close()
     //}
 
     return
@@ -475,26 +455,26 @@ func (db *DB) Escape(sql string) string {
 // Row is the function for query one row
 // db.QueryRow() 调用完毕后会将连接传递给sql.Row类型
 // 当.Scan()方法调用之后把连接释放回到连接池
-//func (db *DB) Row(sqlStr string) *sql.Row {
-    //row := db.stdDB.QueryRow(sqlStr, 1) // 查询一条
-    //return row
-//}
+func (db *DB) Row(sqlStr string) *sql.Row {
+    row := db.stdDB.QueryRow(sqlStr, 1) // 查询一条
+    return row
+}
 
 // Rows is the ...
 // db.Query() 调用完毕后会将连接传递给sql.Rows类型
 // 当然后者迭代完毕 或者 显性的调用.Close()方法后，连接将会被释放回到连接池
-//func (db *DB) Rows(sqlStr string) (rows *sql.Rows, err error) {
-    //rows, err = db.stdDB.Query(sqlStr)
-    //return
-//}
+func (db *DB) Rows(sqlStr string) (rows *sql.Rows, err error) {
+    rows, err = db.stdDB.Query(sqlStr)
+    return
+}
 
 // Exec is the function for Insert、Update、Delete
 // db.Exec() 调用完毕后会马上把连接返回给连接池
 // 但是它返回的Result对象还保留这连接的引用，当后面的代码需要处理结果集的时候连接将会被重用
-//func (db *DB) Exec(sqlStr string) (sql.Result, error) {
-    //res, err := db.stdDB.Exec(sqlStr)
-    //return res, err
-//}
+func (db *DB) Exec(sqlStr string) (sql.Result, error) {
+    res, err := db.stdDB.Exec(sqlStr)
+    return res, err
+}
 
 // Begin is the ...
 // db.Begin() 调用完毕后将连接传递给sql.Tx类型对象
@@ -527,12 +507,6 @@ func (db *DB) Escape(sql string) string {
     //if ok, err := util.WriteLog("error_sql.log", msg); !ok {
         //log.Print(err)
     //}
-//}
-
-// Register registers initialization commands.
-// This is workaround, see http://codereview.appspot.com/5706047
-//func (db *DB) Register(query string) {
-	//db.initCmds = append(db.initCmds, query)
 //}
 
 // Query is the function for query

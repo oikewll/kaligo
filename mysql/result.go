@@ -16,7 +16,6 @@ import (
     //"regexp"
     //"strings"
     //"sort"
-    //"container/list"
     //"sync"
     //"reflect"
 )
@@ -27,17 +26,12 @@ type Result struct {
     result              sql.Result      // row result resource
     totalRows           int             // total number of rows
     currentRow          int             // current row number
-    asObject            interface{}     // return rows as an object or associative array
-    sanitizationEnabled bool            // If this is a records data will be anitized on get
     rows                *sql.Rows       // For select
+    row                 *Row
 
     fields              []*Field        // Fields table
     affectedRows        int             // For update and delete
     insertID            int             // Primary key value ( useful for AUTO_INCREMENT primary keys)
-    //rows []mysql.Row
-	//res  mysql.Result
-    //rows sql.Rows
-    //row *Row
 }
 
 // NewResult 实例化数据库连接

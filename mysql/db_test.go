@@ -26,70 +26,19 @@ import (
     //"github.com/owner888/kaligo/cache"
 )
 
-//var gormSourceDir string
-
-//// FileWithLineNum return the file name and line number of the current file
-//func FileWithLineNum() string {
-    //_, file, _, _ := runtime.Caller(0)
-    //t.Logf("%v", file)
-    //// compatible solution to get gorm source directory with various operating systems
-    ////gormSourceDir = regexp.MustCompile(`utils.utils\.go`).ReplaceAllString(file, "")
-    //gormSourceDir = regexp.MustCompile(``).ReplaceAllString(file, "")
-    //t.Logf("%v", gormSourceDir)
-
-	//// the second caller usually from gorm internal, so set i start from 2
-	//for i := 2; i < 15; i++ {
-		//_, file, line, ok := runtime.Caller(i)
-		//if ok && (!strings.HasPrefix(file, gormSourceDir) || strings.HasSuffix(file, "_test.go")) {
-			//return file + ":" + strconv.FormatInt(int64(line), 10)
-		//}
-	//}
-
-	//return ""
-//}
-
 type User struct {
     ID   int    `db:"id"`
     Name string `db:"name"`
-    Age  int    `db:"age"`
+    Age  uint   `db:"age"`
     Sex  int    `db:"sex"`
 }
 
-func (u *User) Set(name string) *User {
-    u.Name = name
-    return u
-}
-
-func (u *User) Get() string {
-    return u.Name
-}
-
 func TestDB(t *testing.T) {
-
-    //modelType := reflect.ValueOf(u).Type()
-    //t.Logf("modelType === %T = %v", modelType, modelType)                                 // *mysql.User
-    //t.Logf("modelType.Kind() === %T = %v", modelType.Kind(), modelType.Kind())            // 类型：reflect.Slice reflect.Array reflect.Ptr(指针) reflect.Struct
-    //t.Logf("modelType.Elem() === %T = %v", modelType.Elem(), modelType.Elem())            // 元素：mysql.User，能找到地址，所以可以 SetString()
-    //t.Logf("modelType.Name() === %T = %v", modelType.Name(), modelType.Name())            // 类型：string
-    //t.Logf("modelType.PkgPath() === %T = %v", modelType.PkgPath(), modelType.PkgPath())   // 包路径：string
-
-    //str := FileWithLineNum()
-    //t.Logf("FileWithLineNum=%v", str)
-    //db, err := gorm.Open(sqlite.Open("test.db"), &gorm.Config{})
-    //if err != nil {
-        //panic("failed to connect database")
-    //}
 
     //str, _ := os.Getwd()
     //conf.AppPath = str + "/../"
     //log.Printf("TestDB AppPath: [ %v ]", conf.AppPath)
     //define('APPPATH', __DIR__.'/../app');
-
-    //model := &User{1, "test", "addr"}
-    //value := reflect.ValueOf(model).Elem()
-	//data := make(map[string]interface{})
-	//StructToMap(value, data)
-    //t.Logf("%v", data)
 
     db, err := New()
     if err != nil {
@@ -116,12 +65,22 @@ func TestDB(t *testing.T) {
     //sqlStr = db.Select("id", "name").From("user").Execute()
     //t.Logf("sqlStr = %v", sqlStr)
 
-    user := User{}
+    var user User
+    var users []User
     sqlStr = "SELECT name, age, sex FROM user WHERE id = :id"
     //t.Logf("sqlStr = %v\n", sqlStr)
     //db.Select("name", "age").From("user").Scan(&user).Execute()
     db.Query(sqlStr).Bind(":id", "1").Scan(&user).Execute();
     t.Logf("user name = %v --- age = %v --- Sex = %v\n", user.Name, user.Age, user.Sex)
+
+    db.Query("SELECT name, age, sex FROM user").Scan(&users).Execute();
+    for _, v := range users {
+        t.Logf("user name = %v --- age = %v --- Sex = %v\n", v.Name, v.Age, v.Sex)
+    }
+
+    var count int64    
+    db.Query("SELECT COUNT(*) FROM user").Scan(&count).Execute();
+    t.Logf("count = %v\n", count)
 
     //sqlStr = db.Select("user.id", "user.name").From("user").
     //Join("player", "LEFT").On("user.uid", "=", "player.uid").

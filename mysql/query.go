@@ -144,7 +144,7 @@ func (q *Query) Compile() string {
 }
 
 // Execute the current query on the given database.
-func (q *Query) Execute() {
+func (q *Query) Execute() *Query {
     var err error
 
     // Compile the SQL query
@@ -169,17 +169,22 @@ func (q *Query) Execute() {
         }
     }
 
-    // assign model values
-    if q.Model == nil {
-        q.Model = q.Dest
-    } else if q.Dest == nil {
-        q.Dest = q.Model
-    }
+    //// assign model values
+    //if q.Model == nil {
+        //q.Model = q.Dest
+    //} else if q.Dest == nil {
+        //q.Dest = q.Model
+    //}
 
-    // parse model values
-    if q.Model != nil {
-        //fmt.Printf("q.Model = %v", q.Model)
-        if q.Schema, err = Parse(q.Model, q.cacheStore); err != nil {
+    //// parse model values
+    //if q.Model != nil {
+        //if q.Schema, err = Parse(q.Model, q.cacheStore); err != nil {
+            //q.AddError(err)
+        //}
+    //}
+
+    if q.Dest != nil {
+        if q.Schema, err = Parse(q.Dest, q.cacheStore); err != nil {
             q.AddError(err)
         }
     }
@@ -204,11 +209,11 @@ func (q *Query) Execute() {
     rows, err := q.stdDB.Query(sqlStr)
     if err != nil {
         q.AddError(err)
-        return
+        return q
     }
     defer rows.Close();
 
-    Scan(rows, q.DB)
+    Scan(rows, q)
 
     //Cache the result if needed
     //if  cacheObj != nil && (q.cacheAll || result.count() != 0) {
@@ -220,6 +225,7 @@ func (q *Query) Execute() {
         //return db.Dialector.Explain(stmt.SQL.String(), stmt.Vars...), db.RowsAffected
     //}, db.Error)
 
+    return q
 }
 
 // First is the First record
