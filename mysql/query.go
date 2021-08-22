@@ -28,8 +28,8 @@ type Query struct {
     R *Result
 
     TablePrefix   string
+    Dest          interface{}        //
     Model         interface{}        // Object：&User{}
-    Dest          interface{}        // Object：&User{}
     ReflectValue  reflect.Value
     sqlStr        string             // SQL statement
     queryType     QueryType          // Query type
@@ -76,8 +76,7 @@ func (q *Query) Scan(value interface{}) *Query {
                 // var users  []User
                 // users   := []User{}
                 // results := []map[string]interface{}{}
-                reflectValueType := q.ReflectValue.Type().Elem()
-                if reflectValueType.Kind() == reflect.Struct {
+                if q.ReflectValue.Type().Elem().Kind() == reflect.Struct {
                     // var users []User
                     q.Model = q.Dest
                 }
