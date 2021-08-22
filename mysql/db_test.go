@@ -10,7 +10,6 @@ package mysql
 
 import (
 	"encoding/json"
-	//"fmt"
 	"testing"
 
 	_ "github.com/go-sql-driver/mysql"
