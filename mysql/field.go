@@ -80,8 +80,7 @@ type Field struct {
 // ParseField is 解析字段
 func ParseField(fieldStruct reflect.StructField) *Field {
     var err error
-    //str, _ := json.Marshal(fieldStruct)
-    //fmt.Printf("ParseField %v\n", string(str))
+    //fmt.Printf("ParseField %v\n", FormatJSON(fieldStruct))
 
     field := &Field{
 		Name:                   fieldStruct.Name,
@@ -92,7 +91,7 @@ func ParseField(fieldStruct reflect.StructField) *Field {
         TagSettings:            ParseTagSetting(fieldStruct.Tag.Get("db"), ";"),
 	}
 
-    // Array、Slice、Struct 需要通过 Elem() 获取指针指向的值，其他类型直接拿到的就是他的值
+    // Array、Slice、Struct 需要通过 Elem() 获取指针指向的值(子元素的值)，其他类型直接拿到的就是他的值
     for field.IndirectFieldType.Kind() == reflect.Ptr {
         field.IndirectFieldType = field.IndirectFieldType.Elem()
     }

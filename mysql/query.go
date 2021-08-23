@@ -27,12 +27,12 @@ type Query struct {
     D *Delete
     R *Result
 
+    sqlStr        string             // SQL statement
+    queryType     QueryType          // Query type
     TablePrefix   string
     Dest          interface{}        //
     Model         interface{}        // Object：&User{}
     ReflectValue  reflect.Value
-    sqlStr        string             // SQL statement
-    queryType     QueryType          // Query type
     lifeTime      int                // Cache lifetime
     cacheKey      string             // Cache key
     cacheAll      bool               // boolean Cache all results
@@ -55,46 +55,6 @@ func (q *Query) Cached(lifeTime int, cacheKey string, cacheAll bool) *Query {
     return q
 }
 
-// Scan is ...
-func (q *Query) Scan(value interface{}) *Query {
-    q.Dest = value
-
-    // assign query.ReflectValue
-    if q.Dest != nil {
-        q.ReflectValue = reflect.ValueOf(q.Dest)
-        for q.ReflectValue.Kind() == reflect.Ptr {
-            if q.ReflectValue.IsNil() && q.ReflectValue.CanAddr() {
-                q.ReflectValue.Set(reflect.New(q.ReflectValue.Type().Elem()))
-            }
-
-            q.ReflectValue = q.ReflectValue.Elem()
-            // assign model values，只有 Struct 才给 q.Model 赋值
-            if q.ReflectValue.Kind() == reflect.Struct {
-                // var user User
-                q.Model = q.Dest
-            } else if q.ReflectValue.Kind() == reflect.Slice {
-                // var users  []User
-                // users   := []User{}
-                // results := []map[string]interface{}{}
-                if q.ReflectValue.Type().Elem().Kind() == reflect.Struct {
-                    // var users []User
-                    q.Model = q.Dest
-                }
-            }
-        }
-        if !q.ReflectValue.IsValid() {
-            q.AddError(ErrInvalidValue)
-        }
-    }
-
-    return q
-}
-
-// AsAssoc Returns results as associative arrays
-//func (q *Query) AsAssoc() *Query { }
-// AsObject Returns results as objects.
-//func (q *Query) AsObject(value interface{}) *Query { }
-
 // Bind a variable to a parameter in the query.
 func (q *Query) Bind(param string, value string) *Query {
     if q.parameters == nil {
@@ -115,9 +75,6 @@ func (q *Query) Parameters(params map[string]string) *Query {
 }
 
 // Compile the SQL query and return it. Raplaces and parameters with their
-// @return result Result DatabaseResult for SELECT queries
-// @return result interface{} the insert id for INSERT queries
-// @return result integer number of affected rows for all other queries
 func (q *Query) Compile() string {
     var sqlStr string
 
@@ -154,6 +111,52 @@ func (q *Query) Compile() string {
     //q.Reset()
 
     return strings.TrimSpace(sqlStr)
+}
+
+// Scan is ...
+func (q *Query) Scan(value interface{}) *Query {
+    if value == nil {
+        return q
+    }
+
+    q.Dest = value
+    // assign query.ReflectValue
+    q.ReflectValue = reflect.ValueOf(q.Dest)
+    //fmt.Printf("11111 ---> %T = %v\n", q.ReflectValue, q.ReflectValue)
+    //fmt.Printf("22222 ---> %T = %v\n", q.ReflectValue.Kind(), q.ReflectValue.Kind())
+    //fmt.Printf("33333 ---> %T = %v\n", q.ReflectValue.Elem(), q.ReflectValue.Elem())
+    //fmt.Printf("44444 ---> %T = %v\n", q.ReflectValue.Elem().Kind(), q.ReflectValue.Elem().Kind())
+    //fmt.Printf("55555 ---> %T = %v\n", q.ReflectValue.Type().Elem().Kind(), q.ReflectValue.Type().Elem().Kind())
+    for q.ReflectValue.Kind() == reflect.Ptr {
+        if q.ReflectValue.IsNil() && q.ReflectValue.CanAddr() {
+            q.ReflectValue.Set(reflect.New(q.ReflectValue.Type().Elem()))
+        }
+
+        q.ReflectValue = q.ReflectValue.Elem()
+        // assign model values，只有 Struct 才给 q.Model 赋值
+        if q.ReflectValue.Kind() == reflect.Struct {
+            // var user User
+            q.Model = q.Dest
+        } else if q.ReflectValue.Kind() == reflect.Slice {
+            // var ages    []int64
+            // var users   []User
+            // var results []map[string]interface{}
+            // Slice 子元素的类型
+            if q.ReflectValue.Type().Elem().Kind() == reflect.Struct {
+                // var users []User
+                q.Model = q.Dest
+            } else if q.ReflectValue.Type().Elem().Kind() != reflect.Map {
+                // var ages []int64 会到这里来
+                // 这里先初始化，因为不会去到 Parse() 了，scan.go 里面会报错
+                q.Schema = &Schema{}
+            }
+        }
+    }
+    if !q.ReflectValue.IsValid() {
+        q.AddError(ErrInvalidValue)
+    }
+
+    return q
 }
 
 // Execute the current query on the given database.
