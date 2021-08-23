@@ -1,6 +1,7 @@
 package mysql
 
 import (
+    "encoding/json"
     "fmt"
     "io"
     "time"
@@ -57,6 +58,12 @@ func catchError(err *error) {
 			panic(pv)
 		}
 	}
+}
+
+// FormatJSON is ...
+func FormatJSON(jsonObj interface{}) string {
+    jsonStr, _ := json.MarshalIndent(jsonObj, "", "    ")
+    return string(jsonStr)
 }
 
 var reg = regexp.MustCompile(`\B[A-Z]`)

@@ -9,7 +9,7 @@ package mysql
 // Insert -> Builder -> Query -> Connection
 
 import (
-	"encoding/json"
+	//"encoding/json"
 	"testing"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -52,76 +52,66 @@ func TestDB(t *testing.T) {
 
     var sqlStr string
 
-    //sqlStr = db.Query("SELECT * FROM user WHERE username = :name").Param("name", "test").Compile();
-    //t.Logf("sqlStr = %v", sqlStr)
-
-    //sqlStr = db.Query("SELECT * FROM `user`").Compile()
-    //t.Logf("sqlStr = %v", sqlStr)
-
-    //sqlStr = db.Select("id", "name").From("user").Compile()
-    //t.Logf("sqlStr = %v", sqlStr)
-    //sqlStr = db.Select("id", "name").From("user").Execute()
-    //t.Logf("sqlStr = %v", sqlStr)
+    var ages []int64
+    db.Query("SELECT age FROM user").Scan(&ages).Execute()
+    for _, v := range ages {
+        t.Logf("ages %T = %v\n", v, v)
+    }
+    t.Logf("jsonStr = %v\n", FormatJSON(ages))
 
     var user User
-    sqlStr = "SELECT name, age, sex FROM user WHERE id = :id"
+    sqlStr = "SELECT id, name, age, sex FROM user WHERE id = :id"
     q := db.Query(sqlStr).Bind(":id", "1").Scan(&user).Execute()
-    t.Logf("user name = %v --- age = %v --- Sex = %v\n", user.Name, user.Age, user.Sex)
     if q.Error != nil {
         t.Logf("q.Error = %v\n", q.Error)
     }
-    jsonStr, _ := json.Marshal(user)
-    t.Logf("jsonStr = %v\n", string(jsonStr))
+    t.Logf("jsonStr = %v\n", FormatJSON(user))
 
-    //var users []User
-    users := []User{}
-    q = db.Query("SELECT name, age, sex FROM user").Scan(&users).Execute()
-    for _, v := range users {
-        t.Logf("user name = %v --- age = %v --- Sex = %v\n", v.Name, v.Age, v.Sex)
-    }
-    if q.Error != nil {
-        t.Logf("q.Error = %v\n", q.Error)
-    }
+    ////var users []User
+    //users := []User{}
+    //q = db.Query("SELECT id, name, age, sex FROM user").Scan(&users).Execute()
+    //if q.Error != nil {
+        //t.Logf("q.Error = %v\n", q.Error)
+    //}
+    //t.Logf("jsonStr = %v\n", FormatJSON(users))
 
     //var count int64
     //q = db.Query("SELECT COUNT(*) FROM user").Scan(&count).Execute();
-    //t.Logf("count = %v\n", count)
     //if q.Error != nil {
-    //t.Logf("q.Error = %v\n", q.Error)
+        //t.Logf("q.Error = %v\n", q.Error)
     //}
+    //t.Logf("jsonStr = %v\n", FormatJSON(count))
 
     //var name string
     //q = db.Query("SELECT name FROM user WHERE id = 1").Bind(":id", "1").Scan(&name).Execute();
-    //t.Logf("sqlStr = %v\n", q.sqlStr)
-    //t.Logf("name = %v\n", name)
     //if q.Error != nil {
-    //t.Logf("q.Error = %v\n", q.Error)
+        //t.Logf("q.Error = %v\n", q.Error)
     //}
+    //t.Logf("jsonStr = %v\n", FormatJSON(name))
 
-    result := map[string]interface{}{}
-    q = db.Query("SELECT name, age FROM user WHERE id = 1").Bind(":id", "1").Scan(&result).Execute()
-    t.Logf("result = %v\n", result)
-    if q.Error != nil {
-        t.Logf("q.Error = %v\n", q.Error)
-    }
-    jsonStr, _ = json.Marshal(result)
-    t.Logf("jsonStr = %v\n", string(jsonStr))
+    //result := map[string]interface{}{}
+    //q = db.Query("SELECT name, age FROM user WHERE id = 1").Bind(":id", "1").Scan(&result).Execute()
+    //if q.Error != nil {
+        //t.Logf("q.Error = %v\n", q.Error)
+    //}
+    //t.Logf("jsonStr = %v\n", FormatJSON(result))
 
-    results := []map[string]interface{}{}
-    q = db.Query("SELECT name, age FROM user").Scan(&results).Execute()
-    t.Logf("results = %v\n", results)
-    t.Logf("q.RowsAffected = %v\n", q.RowsAffected)
-    if q.Error != nil {
-        t.Logf("q.Error = %v\n", q.Error)
-    }
-    jsonStr, _ = json.Marshal(results)
-    t.Logf("jsonStr = %v\n", string(jsonStr))
+    //results := []map[string]interface{}{}
+    //q = db.Query("SELECT name, age FROM user").Scan(&results).Execute()
+    //if q.Error != nil {
+        //t.Logf("q.Error = %v\n", q.Error)
+    //}
+    //t.Logf("jsonStr = %v\n", FormatJSON(results))
 
-    //sqlStr = db.Select("user.id", "user.name").From("user").
-    //Join("player", "LEFT").On("user.uid", "=", "player.uid").
-    ////Join("userinfo", "LEFT").On("user.uid", "=", "userinfo.uid").
-    //Where("player.room_id", "=", "10").Compile()
-    //t.Logf("sqlStr = %v", sqlStr)
+    //users := []User{}
+    users := []map[string]interface{}{}
+    db.Select("user.id", "user.name").From("user").
+    Join("player", "LEFT").On("user.uid", "=", "player.uid").
+    //Join("userinfo", "LEFT").On("user.uid", "=", "userinfo.uid").
+    Where("player.room_id", "=", "10").
+    Scan(&users).Execute()
+    t.Logf("jsonStr = %v\n", FormatJSON(users))
+    //Compile()
 
     //sqlStr = db.Insert("user", []string{"id", "name"}).Values([]string{"10", "test"}).Compile()
     //sqlStr = db.Insert("user", []string{"id", "name"}).Values([][]string{{"10", "test"}, {"20", "demo"}}).Compile()

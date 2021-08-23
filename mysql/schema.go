@@ -44,7 +44,8 @@ func (s Schema) LookUpField(name string) *Field {
 
 // Parse get data type from dialector
 // 1、传入 struct，比如 &User{}，生成 User对应的 []*Field
-// 2、当查询了数据 rows.Next 循环的时候，去上面的 []*Field 找对应的字段，通过 field.Set 去设置值
+// 2、当查询了数据 rows.Next 循环的时候，去上面的[]*Field 找对应的字段，通过 field.Set 去设置值
+// 3、map[string]interface{}、[]map[string]interface{}{}、[]int64 都不会到这里来
 func Parse(dest interface{}, cacheStore *sync.Map) (*Schema, error) {
     if dest == nil {
         return nil, fmt.Errorf("%w: %+v", ErrUnsupportedDataType, dest)
@@ -128,6 +129,7 @@ func Parse(dest interface{}, cacheStore *sync.Map) (*Schema, error) {
             if _, ok := schema.FieldsByColumn[field.Column]; !ok {
                 schema.FieldsByColumn[field.Column] = field
                 schema.FieldsByName[field.Name]     = field
+                //fmt.Printf("66666 ---> %v\n", field)
             }
         }
 

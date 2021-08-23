@@ -123,15 +123,16 @@ func Scan(rows *sql.Rows, q *Query) {
 
             q.ReflectValue.Set(reflect.MakeSlice(q.ReflectValue.Type(), 0, 20))
 
-            if reflectValueType != Schema.ModelType && reflectValueType.Kind() == reflect.Struct {
-                Schema, _ = Parse(q.Model, q.cacheStore)
-            }
+            //if q.Model != nil && reflectValueType != Schema.ModelType && reflectValueType.Kind() == reflect.Struct {
+                //Schema, _ = Parse(q.Model, q.cacheStore)
+            //}
 
             for idx, column := range columns {
                 // query.Execute() 方法里面已经执行了 Parse()
                 if field := Schema.LookUpField(column); field != nil {
                     fields[idx] = field
                 } else {
+                    // var ages []int64 会跑这里来
                     values[idx] = &sql.RawBytes{}
                 }
             }
@@ -176,12 +177,12 @@ func Scan(rows *sql.Rows, q *Query) {
 
         case reflect.Struct, reflect.Ptr:
             // 这里应该不会进入，因为 Execute() 里面执行了 Parse() 才到这里来的
-            if q.ReflectValue.Type() != Schema.ModelType && q.ReflectValue.Type().Kind() == reflect.Struct {
-                var err error
-                if q.Schema, err = Parse(q.Model, q.cacheStore); err != nil {
-                    q.AddError(err)
-                }
-            }
+            //if q.ReflectValue.Type() != Schema.ModelType && q.ReflectValue.Type().Kind() == reflect.Struct {
+                //var err error
+                //if q.Schema, err = Parse(q.Model, q.cacheStore); err != nil {
+                    //q.AddError(err)
+                //}
+            //}
             if rows.Next() {
                 for idx, column := range columns {
                     if field := Schema.LookUpField(column); field != nil {
