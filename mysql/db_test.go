@@ -36,6 +36,8 @@ type User struct {
 
 func TestDB(t *testing.T) {
 
+    var sqlStr string
+
     //str, _ := os.Getwd()
     //conf.AppPath = str + "/../"
     //log.Printf("TestDB AppPath: [ %v ]", conf.AppPath)
@@ -53,7 +55,8 @@ func TestDB(t *testing.T) {
         t.Fatal(err)
     }
 
-    var sqlStr string
+    db.Begin()
+    defer db.Rollback()
 
     //sqlStr = "create table user (id integer not null primary key, name text, age integer, sex integer);"
     //sqlStr = "delete from user;"
@@ -63,6 +66,8 @@ func TestDB(t *testing.T) {
         t.Logf("%q: %s\n", err, sqlStr)
         return
     }
+
+    db.Commit()
     //db.Debug = false
     //func main() {
     //defer db.SqlDB.Close()

@@ -61,25 +61,26 @@ const (
 
 // DB is the struct for MySQL connection handler
 type DB struct {
-    Error        error
-    RowsAffected int64
-    query        *Query
+    Error         error
+    RowsAffected  int64          // for select、update、insert
+    LastInsertId  int64          // only for insert
+    InTransaction bool
+    query         *Query
 
-    name         string         // instance name
-    DriverName   string         // driver name: mysql、sqlite3
-    DSN          string         // db dns
-    // Dialector database dialector
-    //Dialector
+    name          string         // instance name
+    DriverName    string         // driver name: mysql、sqlite3
+    DSN           string         // data source name: dbuser:dbpass@tcp(host:port)/dbname?charset=utf8mb4
+    //Dialector                  // Dialector database dialector
 
-    timeout      time.Duration  // Timeout for connect SetConnMaxLifetime(timeout)
-    lastUse      time.Time      // The last use time
+    timeout       time.Duration  // Timeout for connect SetConnMaxLifetime(timeout)
+    lastUse       time.Time      // The last use time
 
-    stdDB         *sql.DB       // MySQL connection
-    stdTX         *sql.Tx       // MySQL connection for Transaction
-	autoCommit    bool          // 是否正在事务执行中
-    initCmds      []string      // MySQL commands/queries executed after connect
+    stdDB         *sql.DB        // MySQL connection
+    stdTx         *sql.Tx        // MySQL connection for Transaction
+	autoCommit    bool           // 是否正在事务执行中
+    initCmds      []string       // MySQL commands/queries executed after connect
 
-    debug         bool          // Debug logging. You may change it at any time.
+    debug         bool           // Debug logging. You may change it at any time.
     logSlowQuery  bool
     logSlowTime   int
 
@@ -103,6 +104,7 @@ func Open(driver string, dsn string) (db *DB, err error) {
     db = &DB{
         DSN: dsn,
         DriverName: driver,
+        InTransaction: false,
     }
 
     //if db.Logger == nil {
@@ -168,6 +170,8 @@ func (db *DB) AddError(err error) error {
 
 // DB returns `*sql.DB`
 func (db *DB) DB() *sql.DB { return db.stdDB }
+// Tx returns `*sql.Tx`
+func (db *DB) Tx() *sql.Tx { return db.stdTx }
 
 // Debug start debug mode
 func (db *DB) Debug() { db.debug = true }
@@ -361,6 +365,83 @@ func (db *DB) TablePrefix(table string) string {
     return db.query.TablePrefix + table
 }
 
+// Row is the function for query one row
+// db.QueryRow() 调用完毕后会将连接传递给sql.Row类型
+// 当.Scan()方法调用之后把连接释放回到连接池
+func (db *DB) Row(sqlStr string) (row *sql.Row) {
+    if db.InTransaction {
+        row = db.stdTx.QueryRow(sqlStr, 1) // 查询一条
+    } else {
+        row = db.stdDB.QueryRow(sqlStr, 1)
+    }
+    return row
+}
+
+// Rows is the ...
+// db.Query() 调用完毕后会将连接传递给sql.Rows类型
+// 当然后者迭代完毕 或者 显性的调用.Close()方法后，连接将会被释放回到连接池
+func (db *DB) Rows(sqlStr string) (rows *sql.Rows, err error) {
+    if db.InTransaction {
+        rows, err = db.stdTx.Query(sqlStr)
+    } else {
+        rows, err = db.stdDB.Query(sqlStr)
+    }
+    return
+}
+
+// Exec is the function for Insert、Update、Delete
+// db.Exec() 调用完毕后会马上把连接返回给连接池
+// 但是它返回的Result对象还保留这连接的引用，当后面的代码需要处理结果集的时候连接将会被重用
+func (db *DB) Exec(sqlStr string) (res sql.Result, err error) {
+    if db.InTransaction {
+        res, err = db.stdTx.Exec(sqlStr)
+    } else {
+        res, err = db.stdDB.Exec(sqlStr)
+    }
+    return res, err
+}
+
+// Begin is the function for close db connection
+// db.Begin() 调用完毕后将连接传递给sql.Tx类型对象
+// 当.Commit()或.Rollback()方法调用后释放连接
+func (db *DB) Begin() *DB {
+    tx, err := db.stdDB.Begin()
+    if err != nil {
+        db.AddError(err)
+    }
+    db.stdTx = tx
+    db.InTransaction = true
+    return db
+}
+
+// Commit is the function for close db connection
+func (db *DB) Commit() *DB {
+    if db.InTransaction == false {
+        db.AddError(ErrInvalidTransaction)
+        return db
+    }
+    db.InTransaction = false
+    err := db.stdTx.Commit()
+    if err != nil {
+        db.AddError(err)
+    }
+    return db
+}
+
+// Rollback is the function for close db connection
+func (db *DB) Rollback() *DB {
+    if db.InTransaction == false {
+        db.AddError(ErrInvalidTransaction)
+        return db
+    }
+    db.InTransaction = false
+    err := db.stdTx.Rollback()
+    if err != sql.ErrTxDone && err != nil {
+        db.AddError(err)
+    }
+    return db
+}
+
 // Quote a value for an SQL query.
 func (db *DB) Quote(values interface{}) string {
     switch vals := values.(type) {
@@ -458,37 +539,8 @@ func (db *DB) Escape(sql string) string {
     return "'" + string(dest) + "'"
 }
 
-// Row is the function for query one row
-// db.QueryRow() 调用完毕后会将连接传递给sql.Row类型
-// 当.Scan()方法调用之后把连接释放回到连接池
-func (db *DB) Row(sqlStr string) *sql.Row {
-    row := db.stdDB.QueryRow(sqlStr, 1) // 查询一条
-    return row
-}
-
-// Rows is the ...
-// db.Query() 调用完毕后会将连接传递给sql.Rows类型
-// 当然后者迭代完毕 或者 显性的调用.Close()方法后，连接将会被释放回到连接池
-func (db *DB) Rows(sqlStr string) (rows *sql.Rows, err error) {
-    rows, err = db.stdDB.Query(sqlStr)
-    return
-}
-
-// Exec is the function for Insert、Update、Delete
-// db.Exec() 调用完毕后会马上把连接返回给连接池
-// 但是它返回的Result对象还保留这连接的引用，当后面的代码需要处理结果集的时候连接将会被重用
-func (db *DB) Exec(sqlStr string) (sql.Result, error) {
-    res, err := db.stdDB.Exec(sqlStr)
-    return res, err
-}
-
-// Begin is the ...
-// db.Begin() 调用完毕后将连接传递给sql.Tx类型对象
-// 当.Commit()或.Rollback()方法调用后释放连接
-//func (db *DB) Begin(sqlStr string) (*sql.Tx, error) {
-    //tx, err := db.stdDB.Begin()
-    //return tx, err
-//}
+// Caching Per connection cache controller setter/getter
+//func (c *Connection) Caching() bool { return false }
 
 // slowQueryLog is the function for record the slow query log
 // 记录慢查询日志
@@ -778,28 +830,3 @@ func (db *DB) Exec(sqlStr string) (sql.Result, error) {
     //return id
 //}
 
-// Transaction ...
-type Transaction struct {
-    *DB
-}
-
-// Begin is the function for close db connection
-//func (db *DB) Begin() error {
-    //tx, err := db.stdDB.Begin()
-    //return err
-//}
-
-// Commit is the function for close db connection
-//func (db *DB) Commit() error {
-    //tx, err := db.stdDB.Commit()
-    //return err
-//}
-
-// Rollback is the function for close db connection
-//func (db *DB) Rollback() error {
-    //err := db.Close()
-    //return err
-//}
-
-// Caching Per connection cache controller setter/getter
-//func (c *Connection) Caching() bool { return false }
