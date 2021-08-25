@@ -66,7 +66,10 @@ type DB struct {
     query        *Query
 
     name         string         // instance name
-    dsn          string         // db dns
+    DriverName   string         // driver name: mysql、sqlite3
+    DSN          string         // db dns
+    // Dialector database dialector
+    //Dialector
 
     timeout      time.Duration  // Timeout for connect SetConnMaxLifetime(timeout)
     lastUse      time.Time      // The last use time
@@ -88,23 +91,19 @@ type DB struct {
     // NowFunc the function to be used when creating a new timestamp
     NowFunc func() time.Time
 
-    // Dialector database dialector
-	//Dialector
-
     cacheStore   *sync.Map
 }
 
-// New is the function for Create new MySQL handler.
+// Open is the function for Create new MySQL handler.
 // (读+写)连接数据库+选择数据库
-func New(args ...string) (db *DB, err error) {
-    var name = "default"
-    if len(args) != 0 {
-        name = args[0]
-    }
+func Open(driver string, dsn string) (db *DB, err error) {
 
     // 原子操作，避免多协程导致的并发问题，在这里一次性生成主从库所有链接，以后用 Use("reameonly")
     //once.Do(func(){ })
-    db = &DB{name: name}
+    db = &DB{
+        DSN: dsn,
+        DriverName: driver,
+    }
 
     //if db.Logger == nil {
         //db.Logger = logger.Default
@@ -124,14 +123,14 @@ func New(args ...string) (db *DB, err error) {
     //dbport := conf.Get("db", "port")
     //dbname := conf.Get("db", "name")
 
-    dbuser := "root"
-    dbpass := "root"
-    dbhost := "127.0.0.1"
-    dbport := "3306"
-    dbname := "test"
+    //dbuser := "root"
+    //dbpass := "root"
+    //dbhost := "127.0.0.1"
+    //dbport := "3306"
+    //dbname := "test"
 
-    db.dsn = fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=%s", dbuser, dbpass, dbhost+":"+dbport, dbname, "utf8mb4")
-    db.stdDB, err = sql.Open("mysql", db.dsn)
+    //db.dsn = fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=%s", dbuser, dbpass, dbhost+":"+dbport, dbname, "utf8mb4")
+    db.stdDB, err = sql.Open(driver, dsn)
 
     db.query = &Query{
         DB          : db,
@@ -334,12 +333,19 @@ func (db *DB) Delete(table string) *Query {
 // Schema Database schema operations
 // CREATE DATABASE database CHARACTER SET utf-8 DEFAULT utf-8
 // Schema.CreateDatabase(/*database*/ database, /*charset*/ 'utf-8', /*ifNotExists*/ true)
-func (db *DB) Schema(name string) *Schema {
-    s := &Schema{
-        Name : name,
-        DB   : db,
+func (db *DB) Schema(name string) *Query {
+    db.query = &Query{
+        Schema: &Schema{
+            Name : name,
+        },
+        W: &Where{},
+        B: &Builder{},
+        sqlStr    : "",
+        queryType : DELETE,
+        DB        : db,
+        stdDB     : db.stdDB,
     }
-    return s
+    return db.query
 }
 
 // Expr func is use for create a new [*Expression] which is not escaped. An expression

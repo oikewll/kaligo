@@ -10,9 +10,11 @@ package mysql
 
 import (
 	//"encoding/json"
+    //"fmt"
 	"testing"
 
-	_ "github.com/go-sql-driver/mysql"
+    //_ "github.com/go-sql-driver/mysql"
+    _ "github.com/mattn/go-sqlite3" 
 	//"strconv"
 	//"strings"
 	//"reflect"
@@ -39,9 +41,27 @@ func TestDB(t *testing.T) {
     //log.Printf("TestDB AppPath: [ %v ]", conf.AppPath)
     //define('APPPATH', __DIR__.'/../app');
 
-    db, err := New()
+    //dbuser := "root"
+    //dbpass := "root"
+    //dbhost := "127.0.0.1"
+    //dbport := "3306"
+    //dbname := "test"
+    //dsn := fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=%s", dbuser, dbpass, dbhost+":"+dbport, dbname, "utf8mb4")
+    //db, err := Open("mysql", dsn)
+    db, err := Open("sqlite3", "./test.db")
     if err != nil {
         t.Fatal(err)
+    }
+
+    var sqlStr string
+
+    //sqlStr = "create table user (id integer not null primary key, name text, age integer, sex integer);"
+    //sqlStr = "delete from user;"
+    //sqlStr = "insert into user(id, name, age, sex) values(2, 'test222', '30', '1')"
+    _, err = db.Exec(sqlStr)
+    if err != nil {
+        t.Logf("%q: %s\n", err, sqlStr)
+        return
     }
     //db.Debug = false
     //func main() {
@@ -49,8 +69,6 @@ func TestDB(t *testing.T) {
     //router := initRouter()
     //router.Run(":8000")
     //}
-
-    var sqlStr string
 
     var ages []int64
     db.Query("SELECT age FROM user").Scan(&ages).Execute()

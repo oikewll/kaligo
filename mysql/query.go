@@ -30,7 +30,7 @@ type Query struct {
     sqlStr        string             // SQL statement
     queryType     QueryType          // Query type
     TablePrefix   string
-    Dest          interface{}        //
+    Dest          interface{}        // var user User、var users []User、var result map[string]interface{}、var results []map[string]interface{}、var ages []int64
     Model         interface{}        // Object：&User{}
     ReflectValue  reflect.Value
     lifeTime      int                // Cache lifetime
