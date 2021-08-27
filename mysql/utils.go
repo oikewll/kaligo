@@ -66,11 +66,24 @@ func FormatJSON(jsonObj interface{}) string {
     return string(jsonStr)
 }
 
-var reg = regexp.MustCompile(`\B[A-Z]`)
 
-// TransFieldName 转换字段名称，驼峰写法转下划线写法
+var (
+    reg               = regexp.MustCompile(`\B[A-Z]`)
+	commonInitialisms = []string{"API", "ASCII", "CPU", "CSS", "DNS", "EOF", "GUID", "HTML", "HTTP", "HTTPS", "ID", "IP", "JSON", "LHS", "QPS", "RAM", "RHS", "RPC", "SLA", "SMTP", "SSH", "TLS", "TTL", "UID", "UI", "UUID", "URI", "URL", "UTF8", "VM", "XML", "XSRF", "XSS"}
+)
+
+// toSchemaName 转换字段名称，下划线写法转驼峰写法
+func toSchemaName(name string) string {
+	result := strings.Replace(strings.Title(strings.Replace(name, "_", " ", -1)), " ", "", -1)
+	for _, initialism := range commonInitialisms {
+		result = regexp.MustCompile(strings.Title(strings.ToLower(initialism))+"([A-Z]|$|_)").ReplaceAllString(result, initialism+"$1")
+	}
+	return result
+}
+
+// toDBName 转换字段名称，驼峰写法转下划线写法
 // ID 会变成 id，不会变成 i_d，就很 nice，你觉得呢 ？
-func TransFieldName(name string) string {
+func toDBName(name string) string {
     if name == "" {
         return ""
     }
@@ -413,7 +426,7 @@ func StructToMap(value reflect.Value, data map[string]interface{}) {
                     continue
                 }
                 if fieldName == "" {
-                    fieldName = TransFieldName(fieldType.Name)
+                    fieldName = toDBName(fieldType.Name)
                 }
                 data[fieldName] = fieldValue.Interface()
                 //t.Log(fieldName + ":" + fieldValue.Interface().(string))

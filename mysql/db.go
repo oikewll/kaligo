@@ -201,6 +201,22 @@ func (db *DB) InstanceGet(key string) (interface{}, bool) {
 	return db.cacheStore.Load(fmt.Sprintf("%p", db) + key)
 }
 
+// Model specify the model you would like to run db operations
+//    // update all users's name to `hello`
+//    db.Model(&User{}).Update("name", "hello")
+//    // if user's primary key is non-blank, will use it as condition, then will only update the user's name to `hello`
+//    db.Model(&user).Update("name", "hello")
+//func (db *DB) Model(value interface{}) *Query {
+    //db.query = &Query{
+        //Model     : value,
+        //sqlStr    : "",
+        //queryType : 0,
+        //DB        : db,
+        //stdDB     : db.stdDB,
+    //}
+    //return db.query
+//}
+
 // Query func is use for create a new [*Query]
 // Query -> Connection.Query
 //     Create a new SELECT query
@@ -401,6 +417,31 @@ func (db *DB) Exec(sqlStr string) (res sql.Result, err error) {
     return res, err
 }
 
+// Transaction start a transaction as a block, return error will rollback, otherwise to commit.
+func (db *DB) Transaction(fc func(tx *DB) error) (err error) {
+    panicked := true
+
+    tx := db.Begin()
+
+    defer func() {
+        // Make sure to rollback when panic, Block error or Commit error
+        if panicked || err != nil {
+            tx.Rollback()
+        }
+    }()
+
+    if err = tx.Error; err == nil {
+        err = fc(tx)
+    }
+
+    if err == nil {
+        err = tx.Commit().Error
+    }
+
+    panicked = false
+    return
+}
+
 // Begin is the function for close db connection
 // db.Begin() 调用完毕后将连接传递给sql.Tx类型对象
 // 当.Commit()或.Rollback()方法调用后释放连接
@@ -408,36 +449,37 @@ func (db *DB) Begin() *DB {
     tx, err := db.stdDB.Begin()
     if err != nil {
         db.AddError(err)
+    } else {
+        db.stdTx = tx
+        db.InTransaction = true
     }
-    db.stdTx = tx
-    db.InTransaction = true
     return db
 }
 
 // Commit is the function for close db connection
 func (db *DB) Commit() *DB {
-    if db.InTransaction == false {
+    if db.InTransaction == false || db.stdTx == nil {
         db.AddError(ErrInvalidTransaction)
-        return db
-    }
-    db.InTransaction = false
-    err := db.stdTx.Commit()
-    if err != nil {
-        db.AddError(err)
+    } else {
+        db.InTransaction = false
+        err := db.stdTx.Commit()
+        if err != nil {
+            db.AddError(err)
+        }
     }
     return db
 }
 
 // Rollback is the function for close db connection
 func (db *DB) Rollback() *DB {
-    if db.InTransaction == false {
+    if db.InTransaction == false || db.stdTx == nil {
         db.AddError(ErrInvalidTransaction)
-        return db
-    }
-    db.InTransaction = false
-    err := db.stdTx.Rollback()
-    if err != sql.ErrTxDone && err != nil {
-        db.AddError(err)
+    } else {
+        db.InTransaction = false
+        err := db.stdTx.Rollback()
+        if err != sql.ErrTxDone && err != nil {
+            db.AddError(err)
+        }
     }
     return db
 }

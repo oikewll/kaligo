@@ -122,7 +122,7 @@ func Parse(dest interface{}, cacheStore *sync.Map) (*Schema, error) {
     for _, field := range schema.Fields {
         if field.Column == "" && field.DataType != "" {
             // 驼峰转下划线，数据库字段都是下划线写法
-            field.Column = TransFieldName(field.Name)
+            field.Column = toDBName(field.Name)
         }
 
         if field.Column != "" {
