@@ -35,10 +35,8 @@ type User struct {
     Sex  int    `db:"sex"`
 }
 
-
 func TestDB(t *testing.T) {
 
-    t.Logf("%v\n", toSchemaName("user_info"))
     var sqlStr string
 
     //str, _ := os.Getwd()
