@@ -3,10 +3,10 @@ package mysql
 import (
     "context"
     "database/sql"
-    //"fmt"
+    "fmt"
     "strings"
-    "regexp"
     "reflect"
+    "regexp"
     //"os"
 )
 
@@ -120,7 +120,7 @@ func (q *Query) Execute() *Query {
 
     // Compile the SQL query
     sqlStr := q.Compile()
-    //fmt.Printf("Execute sqlStr = %v\n", sqlStr)
+    fmt.Printf("Execute sqlStr = %v\n", sqlStr)
 
     // make sure we have a SQL type to work with
     if q.queryType == 0 && len(sqlStr) >= 11 {
@@ -139,6 +139,8 @@ func (q *Query) Execute() *Query {
             q.queryType = 0
         }
     }
+
+    //fmt.Printf("Execute sqlStr = %v; queryType = %v\n", sqlStr, q.queryType)
 
     // parse model values
     if q.Model != nil {

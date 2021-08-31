@@ -51,6 +51,19 @@ const (
 	Bytes  DataType = "bytes"
 )
 
+// Column is ...
+type Column struct {
+    Field       string
+    Type        string
+    Collation   string
+    Null        string
+    Key         string
+    Default     string
+    Extra       string
+    Privileges  string
+    Comment     string
+}
+
 // Field is ...
 type Field struct {
     Name                   string   // 字段名
@@ -59,7 +72,7 @@ type Field struct {
     DataType               DataType // 数据类型，这里模拟了一个enum
     Size                   int      // 栏位长度
     Precision              int      // 精度
-    Uniqued                bool     // 是否唯一
+    Unique                 bool     // 是否唯一
     NotNull                bool     // 是否允许为空
     DefaultValue           string   // 默认值
     PrimaryKey             bool     // 是否主键
@@ -140,34 +153,41 @@ func ParseField(fieldStruct reflect.StructField) *Field {
         field.Column = val
     }
 
+    // 是否主键索引
     if val, ok := field.TagSettings["PRIMARYKEY"]; ok && CheckTruth(val) {
         field.PrimaryKey = true
     }
 
+    // 是否自增字段
 	if val, ok := field.TagSettings["AUTOINCREMENT"]; ok && CheckTruth(val) {
 		field.AutoIncrement = true
 	}
 
+    // 默认值
     if val, ok := field.TagSettings["DEFAULT"]; ok {
         field.DefaultValue = val
     }
     // default value is function or null or blank (primary keys)
     field.DefaultValue = strings.TrimSpace(field.DefaultValue)
 
+    // 类型大小
     if num, ok := field.TagSettings["SIZE"]; ok {
         if field.Size, err = strconv.Atoi(num); err != nil {
             field.Size = -1
         }
     }
 
+    // 是否可以为NULL
     if val, ok := field.TagSettings["NOTNULL"]; ok && CheckTruth(val) {
         field.NotNull = true
     }
 
-    if val, ok := field.TagSettings["UNIQUED"]; ok && CheckTruth(val) {
-        field.Uniqued = true
+    // 是否唯一索引
+    if val, ok := field.TagSettings["UNIQUE"]; ok && CheckTruth(val) {
+        field.Unique = true
     }
 
+    // 备注
     if val, ok := field.TagSettings["COMMENT"]; ok {
         field.Comment = val
     }

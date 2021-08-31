@@ -66,6 +66,7 @@ type DB struct {
     LastInsertId  int64          // only for insert
     InTransaction bool
     query         *Query
+    schema        *Schema
 
     name          string         // instance name
     DriverName    string         // driver name: mysql、sqlite3
@@ -150,6 +151,11 @@ func Open(driver string, dsn string) (db *DB, err error) {
     }
     // 执行初始化SQL
     db.stdDB.Query("SET NAMES utf8");
+
+    db.schema = &Schema{
+        Name  : db.name,
+        Query : db.query,
+    }
 
     //if err != nil {
         //db.Logger.Error(context.Background(), "failed to initialize database, got error %v", err)
@@ -353,19 +359,21 @@ func (db *DB) Delete(table string) *Query {
 // Schema Database schema operations
 // CREATE DATABASE database CHARACTER SET utf-8 DEFAULT utf-8
 // Schema.CreateDatabase(/*database*/ database, /*charset*/ 'utf-8', /*ifNotExists*/ true)
-func (db *DB) Schema(name string) *Query {
-    db.query = &Query{
-        Schema: &Schema{
-            Name : name,
-        },
-        W: &Where{},
-        B: &Builder{},
-        sqlStr    : "",
-        queryType : DELETE,
-        DB        : db,
-        stdDB     : db.stdDB,
-    }
-    return db.query
+func (db *DB) Schema() *Schema {
+    return db.schema
+
+    //db.query = &Query{
+        //Schema: &Schema{
+            //Name : name,
+        //},
+        //W: &Where{},
+        //B: &Builder{},
+        //sqlStr    : "",
+        //queryType : DELETE,
+        //DB        : db,
+        //stdDB     : db.stdDB,
+    //}
+    //return db.query
 }
 
 // Expr func is use for create a new [*Expression] which is not escaped. An expression
