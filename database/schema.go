@@ -1,6 +1,7 @@
 package database
 
 import (
+    //"database/sql"
     "errors"
     "fmt"
     "reflect"
@@ -22,6 +23,26 @@ type Schema struct {
     err                       error
     initialized               chan struct{}
     cacheStore                *sync.Map
+}
+
+// Indexes 数据表索引，字段名记得要大写开头，才是public，否则访问不到
+type Indexes struct {
+    Table       string  `field:"Table"` 
+    Name        string  `field:"Key_name"`
+    Column      string  `field:"Column_name"`
+    Order       int64   `field:"Seq_in_index"`
+    Type        string  `field:"Index_type"`
+    Primary     bool    `field:"Key_name == 'PRIMARY'"`
+    Unique      bool    `field:"Non_unique == 0"`
+    Null        bool    `field:"Null == 'YES'"`
+    Ascend      bool    `field:"Collation == 'A'"`
+
+    //Collation       string   `field:"Collation"`
+    //Cardinality     int64    `field:"Cardinality"`
+    //SubPart         string   `field:"Sub_part"`
+    //Packed          string   `field:"Packed"`
+    //Comment         string   `field:"Comment"`
+    //IndexComment    string   `field:"Index_comment"`
 }
 
 func (s Schema) String() string {
@@ -140,71 +161,44 @@ func Parse(dest interface{}, cacheStore *sync.Map) (*Schema, error) {
     return schema, schema.err
 }
 
-// ListTables If a table name is given it will return the table name with the configured
+// ListDatabases If a database name is given it will return the database name with the configured
 // prefix. If not, then just the prefix is returnd
-func (s *Schema) ListTables(args ...string) []string {
-    var like, sqlStr string
+func (s *Schema) ListDatabases(args ...string) []string {
+    like := ""
     if len(args) > 0 {
         like = args[0]
     }
+    return s.Dialector.ListDatabases(like, s.DB)
+}
 
-    if  like != "" {
-        sqlStr += "SHOW TABLES LIKE " + s.Quote("%" + like + "%")
-    } else {
-        sqlStr += "SHOW TABLES"
+// ListTables If a table name is given it will return the table name with the configured
+// prefix. If not, then just the prefix is returnd
+func (s *Schema) ListTables(args ...string) []string {
+    like := ""
+    if len(args) > 0 {
+        like = args[0]
     }
-
-    var tables []string
-    s.Query.Query(sqlStr).Scan(&tables).Execute()
-    return tables
+    return s.Dialector.ListTables(like, s.DB)
 }
 
 // ListColumns Lists all of the columns in a table. Optionally, a LIKE string can be
 // used to search for specific fields.
 func (s *Schema) ListColumns(table string, args ...string) []Column {
-    table = s.QuoteTable(table)
-    var like, sqlStr string
+    like := ""
     if len(args) > 0 {
         like = args[0]
     }
-
-    if  like != "" {
-        sqlStr += "SHOW FULL COLUMNS FROM " + table + " LIKE " + s.Quote("%" + like + "%")
-    } else {
-        sqlStr += "SHOW FULL COLUMNS FROM " + table
-    }
-
-    columns := []Column{}
-    s.Query.Query(sqlStr).Scan(&columns).Execute()
-    return columns
+    return s.Dialector.ListColumns(table, like, s.DB)
 }
 
 // ListIndexes Lists all of the idexes in a table. Optionally, a LIKE string can be
 // used to search for specific indexes by name.
-func (s *Schema) ListIndexes(table string, like string) []map[string]string {
-    table = s.QuoteTable(table)
-
-    var sqlStr string
-    if  like != "" {
-        sqlStr += "SHOW INDEX FROM " + table + " WHERE " + s.QuoteIdentifier("Key_name") + " LIKE " + s.Quote(like)
-    } else {
-        sqlStr += "SHOW INDEX FROM " + table
+func (s *Schema) ListIndexes(table string, args ...string) []Indexes {
+    like := ""
+    if len(args) > 0 {
+        like = args[0]
     }
-
-    var indexes []map[string]string
-    mapName := map[string]string {
-        "name"      : "Key_name",
-        "column"    : "Column_name",
-        "order"     : "Seq_in_index",
-        "type"      : "Index_type",
-        "primary"   : "true",
-        "unique"    : "Non_unique",
-        "null"      : "YES",
-        "ascending" : "Collation",
-    }
-    indexes = append(indexes, mapName)
-
-    return indexes
+    return s.Dialector.ListIndexes(table, like, s.DB)
 }
 
 // CreateDatabase Creates a database. Will throw a Database Exception if it cannot.
@@ -250,7 +244,7 @@ func (s *Schema) DropDatabase(database string) (err error) {
 // DropTable Drops a table. Will throw a Database Exception if it cannot.
 func (s *Schema) DropTable(table string) (err error) {
     sqlStr := "DROP TABLE IF EXISTS "
-    sqlStr += s.QuoteIdentifier(s.Query.DB.TablePrefix(table))
+    sqlStr += s.QuoteTable(table)
     
     _, err = s.Query.Exec(sqlStr)
     if err != nil {
@@ -262,9 +256,9 @@ func (s *Schema) DropTable(table string) (err error) {
 // RenameTable Renames a table. Will throw a Database Exception if it cannot.
 func (s *Schema) RenameTable(table string, newTable string) (err error) {
     sqlStr := "RENAME TABLE "
-    sqlStr += s.QuoteIdentifier(s.Query.DB.TablePrefix(table))
+    sqlStr += s.QuoteTable(table)
     sqlStr += " TO "
-    sqlStr += s.QuoteIdentifier(s.Query.DB.TablePrefix(newTable))
+    sqlStr += s.QuoteTable(newTable)
 
     _, err = s.Query.Exec(sqlStr)
     if err != nil {
@@ -312,7 +306,7 @@ func (s *Schema) CreateTable(table string, fields map[string] map[string]interfa
         sqlStr += "IF NOT EXISTS "
     }
 
-    sqlStr += s.QuoteIdentifier(s.Query.DB.TablePrefix(table)) + " ("
+    sqlStr += s.QuoteTable(table) + " ("
     sqlStr += s.processFields(fields, "")
 
     if len(primaryKeys) > 0 {
@@ -343,7 +337,7 @@ func (s *Schema) CreateTable(table string, fields map[string] map[string]interfa
 // TruncateTable Truncates a table.
 func (s *Schema) TruncateTable(table string) (err error) {
     sqlStr := "TRUNCATE TABLE "
-    sqlStr += s.QuoteIdentifier(s.Query.DB.TablePrefix(table))
+    sqlStr += s.QuoteTable(table)
 
     _, err = s.Query.Exec(sqlStr)
     if err != nil {
@@ -373,7 +367,7 @@ func (s *Schema) RepairTable(table string) bool {
 }
 
 func (s *Schema) tableMaintenance(operation string, table string) bool {
-    sqlStr := operation + " " + s.QuoteIdentifier(s.Query.DB.TablePrefix(table))
+    sqlStr := operation + " " + s.QuoteTable(table)
     rows, err := s.Query.Rows(sqlStr)
     if err != nil {
         s.Query.DB.AddError(err)
@@ -425,7 +419,7 @@ func (s *Schema) tableMaintenance(operation string, table string) bool {
 // TableExists Generic check if a given table exists.
 func (s *Schema) TableExists(table string) bool {
     sqlStr := "SELECT * FROM "
-    sqlStr += s.QuoteIdentifier(s.Query.DB.TablePrefix(table))
+    sqlStr += s.QuoteTable(table)
     sqlStr += " LIMIT 1"
 
     _, err := s.Query.Rows(sqlStr)
@@ -453,7 +447,7 @@ func (s *Schema) FieldExists(table string, value interface{}) bool {
     sqlStr := "SELECT "
     sqlStr += strings.Join(columns, ", ")
     sqlStr += " FROM "
-    sqlStr += s.QuoteIdentifier(s.Query.DB.TablePrefix(table))
+    sqlStr += s.QuoteTable(table)
     sqlStr += " LIMIT 1"
 
     _, err := s.Query.Rows(sqlStr)
@@ -501,7 +495,7 @@ func (s *Schema) CreateIndex(table string, indexColumns interface{}, indexName s
 
     if index == "PRIMARY" {
         sqlStr = "ALTER TABLE "
-        sqlStr += s.QuoteIdentifier(s.Query.DB.TablePrefix(table))
+        sqlStr += s.QuoteTable(table)
         sqlStr += " ADD PRIMARY KEY "
 
         switch indexColumns.(type) {
@@ -535,7 +529,7 @@ func (s *Schema) CreateIndex(table string, indexColumns interface{}, indexName s
         sqlStr += "INDEX "
         sqlStr += s.QuoteIdentifier(indexName)
         sqlStr += " ON "
-        sqlStr += s.QuoteIdentifier(s.Query.DB.TablePrefix(table))
+        sqlStr += s.QuoteTable(table)
 
         switch indexColumns.(type) {
         case []string:
@@ -569,25 +563,12 @@ func (s *Schema) CreateIndex(table string, indexColumns interface{}, indexName s
 
 // DropIndex Drop an index from a table.
 func (s *Schema) DropIndex(table string, indexName string) (err error) {
-    var sqlStr string    
-    if strings.ToUpper(indexName) == "PRIMARY" {
-        sqlStr = "ALTER TABLE " + s.QuoteIdentifier(s.Query.DB.TablePrefix(table))
-        sqlStr += " DROP PRIMARY KEY"
-    } else {
-        sqlStr = "DROP INDEX " + s.QuoteIdentifier(indexName)
-        sqlStr += " ON "+ s.QuoteIdentifier(s.Query.DB.TablePrefix(table))
-    }
-
-    _, err = s.Query.Exec(sqlStr)
-    if err != nil {
-        s.Query.DB.AddError(err)
-    }
-    return err
+    return s.Dialector.DropIndex(table, indexName, s.DB)
 }
 
 // AddForeignKey Adds a single foreign key to a table
 func (s *Schema) AddForeignKey(table string, foreignKey []map[string]interface{}) (err error) {
-    sqlStr := "ALTER TABLE " + s.QuoteIdentifier(s.Query.DB.TablePrefix(table)) + " ADD " + strings.TrimLeft(s.processForeignKeys(foreignKey), ",")
+    sqlStr := "ALTER TABLE " + s.QuoteTable(table) + " ADD " + strings.TrimLeft(s.processForeignKeys(foreignKey), ",")
 
     res, err := s.Query.Exec(sqlStr)
     if err != nil {
@@ -603,7 +584,7 @@ func (s *Schema) AddForeignKey(table string, foreignKey []map[string]interface{}
 
 // DropForeignKey Drops a foreign key from a table
 func (s *Schema) DropForeignKey(table string, fkName string) (err error) {
-    sqlStr := "ALTER TABLE " + s.QuoteIdentifier(s.Query.DB.TablePrefix(table)) + " DROP FOREIGN KEY " + s.QuoteIdentifier(fkName)
+    sqlStr := "ALTER TABLE " + s.QuoteTable(table) + " DROP FOREIGN KEY " + s.QuoteIdentifier(fkName)
 
     _, err = s.Query.Exec(sqlStr)
     if err != nil {
@@ -645,11 +626,11 @@ func (s *Schema) processForeignKeys(foreignKeys []map[string]interface{}) string
 
         var sqlStr string    
         if table, ok := definition["constraint"]; ok {
-            sqlStr += " CONSTRAINT " + s.QuoteIdentifier(s.Query.DB.TablePrefix(table.(string))) 
+            sqlStr += " CONSTRAINT " + s.QuoteTable(table.(string)) 
         }
 
         sqlStr += " FOREIGN KEY (" + s.QuoteIdentifier(definition["key"].(string)) + ")"
-        sqlStr += " REFERENCES " + s.QuoteIdentifier(s.Query.DB.TablePrefix(referenceTable)) + " ("
+        sqlStr += " REFERENCES " + s.QuoteTable(referenceTable) + " ("
         referenceColumnArr := strings.Split(referenceColumn, ",")
         for k, v := range referenceColumnArr {
             referenceColumnArr[k] = s.QuoteIdentifier(v)
@@ -694,7 +675,7 @@ func (s *Schema) ModifyFields(table string, fields map[string] map[string]interf
 
 // 返回的 rowsAffected 为 0，但是实际上是修改成功了，不知道为什么
 func (s *Schema) alterFields(alterType string, table string, fields interface{}) (err error) {
-    sqlStr := "ALTER TABLE " + s.QuoteIdentifier(s.Query.DB.TablePrefix(table)) + " "
+    sqlStr := "ALTER TABLE " + s.QuoteTable(table) + " "
 
     if alterType == "DROP" {
         var dropFields, sqlDropFields []string

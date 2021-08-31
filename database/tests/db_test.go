@@ -1,4 +1,4 @@
-package database
+package tests
 
 // Select -> Where -> Builder -> Query -> Connection
 // Update -> Where -> Builder -> Query -> Connection
@@ -10,9 +10,12 @@ import (
     "fmt"
 	"testing"
 
-     //"database/sql"
-    _ "github.com/go-sql-driver/mysql"
+    //"database/sql"
+    //_ "github.com/go-sql-driver/mysql"
     //_ "github.com/mattn/go-sqlite3" 
+    "github.com/owner888/kaligo/database"
+    sqlite "github.com/owner888/kaligo/database/driver/sqlite"
+    //mysql "github.com/owner888/kaligo/database/driver/mysql"
 	//"strconv"
     //"strings"
     //"regexp"
@@ -48,17 +51,30 @@ func TestDB(t *testing.T) {
     dbport := "3306"
     dbname := "test"
     dsn := fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=%s", dbuser, dbpass, dbhost+":"+dbport, dbname, "utf8mb4")
-    db, err := Open("mysql", dsn)
-    //db, err := Open("sqlite3", "./test.db")
+    t.Logf("%v", dsn)
+    //db, err := database.Open(mysql.Open(dsn))
+    db, err := database.Open(sqlite.Open("./test.db"))
     if err != nil {
         t.Fatal(err)
     }
 
-    tables := db.Schema().ListTables("user")
-    t.Logf("jsonStr = %v\n", FormatJSON(tables))
+    ////sqlStr = "drop table user;"
+    //sqlStr = "create table demo (id integer not null primary key, name text, age integer, sex integer);"
+    //sqlStr = "delete from user;"
+    //sqlStr = "insert into user(name, age, sex) values('test222', '30', '1')"
+    //_, err = db.Exec(sqlStr)
+
+    databases := db.Schema().ListDatabases("demo")
+    t.Logf("jsonStr = %v\n", database.FormatJSON(databases))
+
+    //tables := db.Schema().ListTables("user")
+    //t.Logf("jsonStr = %v\n", database.FormatJSON(tables))
 
     //columns := db.Schema().ListColumns("user")
-    //t.Logf("jsonStr = %v\n", FormatJSON(columns))
+    //t.Logf("jsonStr = %v\n", database.FormatJSON(columns))
+
+    //indexes := db.Schema().ListIndexes("user")
+    //t.Logf("jsonStr = %v\n", database.FormatJSON(indexes))
 
     //db.Schema().CreateDatabase("demo2")
     //db.Schema().DropDatabase("demo2")
@@ -79,10 +95,10 @@ func TestDB(t *testing.T) {
             //"default": "mr.",
         //},
     //}
-    //db.Schema().CreateTable("users2", fields, []string{"id"})
-    //db.Schema().RenameTable("users2", "users3")
-    //db.Schema().TruncateTable("users2")
-    //db.Schema().TableExists("users3")
+    //db.Schema().CreateTable("users", fields, []string{"id"})
+    //db.Schema().RenameTable("users", "users2")
+    //db.Schema().TruncateTable("users")
+    //db.Schema().TableExists("users")
 
     //fieldExists := db.Schema().FieldExists("users3", "name")
     //fieldExists := db.Schema().FieldExists("users3", []string{"name"})
@@ -127,9 +143,9 @@ func TestDB(t *testing.T) {
     //createIndex := db.Schema().CreateIndex("users3", "name", "name", "UNIQUE")
     //createIndex := db.Schema().CreateIndex("users3", []string{"name", "name2"}, "name333", "UNIQUE")
     //t.Logf("checkTable = %v", createIndex)
-    if err = db.Schema().DropIndex("users3", "name"); err != nil {
-        t.Logf("dropIndex Err = %v", err)
-    }
+    //if err = db.Schema().DropIndex("users3", "name"); err != nil {
+        //t.Logf("dropIndex Err = %v", err)
+    //}
 
     //foreignKey := []map[string]interface{}{
         //{
@@ -166,15 +182,6 @@ func TestDB(t *testing.T) {
     //db.Begin()
     ////defer db.Rollback()
 
-    ////sqlStr = "drop table user;"
-    ////sqlStr = "create table user (id integer not null primary key, name text, age integer, sex integer);"
-    ////sqlStr = "delete from user;"
-    //sqlStr = "insert into user(name, age, sex) values('test222', '30', '1')"
-    //_, err = db.Exec(sqlStr)
-    //if err != nil {
-        //t.Logf("%q: %s\n", err, sqlStr)
-        //return
-    //}
 
     ////db.Rollback()
     //db.Commit()
