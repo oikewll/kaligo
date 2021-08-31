@@ -1,7 +1,4 @@
-// 要运行这个test，记得先cd mysql，然后再 go test -v -count=1 或者 直接用 alias 好的 gotest
-package mysql
-
-// go test -v -count=1 mysql/mysql_test.go
+package database
 
 // Select -> Where -> Builder -> Query -> Connection
 // Update -> Where -> Builder -> Query -> Connection

@@ -1,21 +1,10 @@
-package mysql
-
-import (
-    //"errors"
-    //"fmt"
-    //"strconv"
-    //"strings"
-    //"time"
-)
+package database
 
 // Where is the struct for MySQL DATE type
 type Where struct {
-    //wheres [][3]string
     wheres   map[string][][]string
     orderBys [][2]string
     limit    int
-
-    //*Builder
 }
 
 // Where Alias of andWhere
@@ -32,8 +21,6 @@ func (q *Query) Where(column string, op string, value string) *Query {
 // @param  value  string 查询值
 // @return w     *Where Where对象
 func (q *Query) AndWhere(column string, op string, value string) *Query {
-    //w.wheres["AND"] = []string{column, op, value}
-    // 需要加锁吗？不用吧，因为一个查询是一个对象啊
     if q.W.wheres == nil {
         q.W.wheres = make(map[string][][]string)
     }
@@ -54,7 +41,6 @@ func (q *Query) WhereOpen() *Query {
 
 // AndWhereOpen Opens a new "AND WHERE (...)" grouping.
 func (q *Query) AndWhereOpen() *Query {
-    //w.wheres["AND"] = []string{"("}
     q.W.wheres["AND"] = append(q.W.wheres["AND"], []string{"("})
     return q
 }
@@ -99,8 +85,3 @@ func (q *Query) Limit(value int) *Query {
     q.W.limit = value
     return q
 }
-
-// Reset the query parameters
-//func (w *Where) Reset() *Where {
-    //return w
-//}

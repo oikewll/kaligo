@@ -1,4 +1,4 @@
-package mysql
+package database
 
 import (
     //"fmt"
@@ -8,19 +8,10 @@ import (
 // Insert is the struct for MySQL DATE type
 type Insert struct {
     table    string
-    columns  []string    // slice
-    values   [][]string  // 多维slice
-    subQuery string    // 子查询
-
-    //*Builder
+    columns  []string
+    values   [][]string
+    subQuery string     // 子查询
 }
-
-// Table Set the table to insert into.
-// 不需要了，db.go Insert(table string) 已经有了
-//func (i *Insert) Table(table string) *Insert {
-    //i.table = table
-    //return i
-//}
 
 // Columns Set the columns that will be inserted.
 func (q *Query) Columns(columns []string) *Query {

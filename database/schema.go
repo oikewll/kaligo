@@ -1,12 +1,11 @@
-package mysql
+package database
 
 import (
     "errors"
     "fmt"
-    //"log"
-    "sync"
     "reflect"
     "strings"
+    "sync"
     "go/ast"
 )
 

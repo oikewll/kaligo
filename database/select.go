@@ -1,15 +1,6 @@
-/**
- * Realize a database operation class
- *
- * @copyright   (C) 2014  seatle
- * @lastmodify  2021-07-06
- *
- */
-
-package mysql
+package database
 
 import (
-    //"fmt"
     "strconv"
     "strings"
 )
@@ -22,18 +13,7 @@ type Select struct {
     groupBys []string
     havings  map[string][][]string
     offset   int
-    //joinObjs []*Join     // join objects
-    //lastJoin *Join       // last join statement
-
-    //*Where
 }
-
-// Select Choose the columns to select from.
-//func (s *Select) Select(columns []string) *Select {
-    //s.selects = append(s.selects, columns...)
-
-    //return s
-//}
 
 // Select Choose the columns to select from.
 func (q *Query) Select(columns []string) *Query {

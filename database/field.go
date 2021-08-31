@@ -1,17 +1,13 @@
-package mysql
+package database
 
 import (
     "database/sql"
 	"database/sql/driver"
-	//"bytes"
     "fmt"
-	//"math"
-	//"os"
     "reflect"
     "strings"
     "strconv"
     "time"
-    //"encoding/json"
 
     "github.com/jinzhu/now"
 )
