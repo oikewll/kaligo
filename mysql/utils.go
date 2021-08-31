@@ -66,7 +66,6 @@ func FormatJSON(jsonObj interface{}) string {
     return string(jsonStr)
 }
 
-
 var commonInitialisms = []string{"API", "ASCII", "CPU", "CSS", "DNS", "EOF", "GUID", "HTML", "HTTP", "HTTPS", "ID", "IP", "JSON", "LHS", "QPS", "RAM", "RHS", "RPC", "SLA", "SMTP", "SSH", "TLS", "TTL", "UID", "UI", "UUID", "URI", "URL", "UTF8", "VM", "XML", "XSRF", "XSS"}
 
 // toSchemaName 转换字段名称，下划线写法转驼峰写法
@@ -79,7 +78,6 @@ func toSchemaName(name string) string {
 }
 
 // toDBName 转换字段名称，驼峰写法转下划线写法
-// ID 会变成 id，不会变成 i_d，就很 nice，你觉得呢 ？
 func toDBName(name string) string {
     if name == "" {
         return ""
@@ -93,7 +91,7 @@ func toDBName(name string) string {
     )
 
     for i, v := range value[:len(value)-1] {
-        nextCase = value[i+1] <= 'Z' && value[i+1] >= 'A'
+        nextCase   = value[i+1] <= 'Z' && value[i+1] >= 'A'
         nextNumber = value[i+1] >= '0' && value[i+1] <= '9'
 
         if curCase {
@@ -110,7 +108,7 @@ func toDBName(name string) string {
         }
 
         lastCase = curCase
-        curCase = nextCase
+        curCase  = nextCase
     }
 
     if curCase {
@@ -401,6 +399,12 @@ func InSlice(a string, list *[]string) bool {
 	return false
 }
 
+// IsNumeric like php isNumeric()
+func IsNumeric(s string) bool {
+    _, err := strconv.ParseFloat(s, 64)
+    return err == nil
+}
+
 // StructToMap 将一个结构体所有字段(包括通过组合得来的字段)到一个map中
 // value:结构体的反射值
 // data:存储字段数据的map
@@ -430,6 +434,18 @@ func StructToMap(value reflect.Value, data map[string]interface{}) {
             }
         }
     }
+}
+
+// MapChangeKeyCase is change key case
+func MapChangeKeyCase(values map[string]interface{}, caseUpper bool) map[string]interface{}{
+    for k, v := range values {
+        if caseUpper {
+            values[strings.ToUpper(k)] = v
+        } else {
+            values[strings.ToLower(k)] = v
+        }
+    }
+    return values
 }
 
 //// AddSlashes is ...

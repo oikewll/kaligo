@@ -10,11 +10,12 @@ package mysql
 
 import (
 	//"encoding/json"
-    //"fmt"
+    "fmt"
 	"testing"
 
-    //_ "github.com/go-sql-driver/mysql"
-    _ "github.com/mattn/go-sqlite3" 
+     //"database/sql"
+    _ "github.com/go-sql-driver/mysql"
+    //_ "github.com/mattn/go-sqlite3" 
 	//"strconv"
     //"strings"
     //"regexp"
@@ -37,40 +38,133 @@ type User struct {
 
 func TestDB(t *testing.T) {
 
-    var sqlStr string
+    //var sqlStr string
 
     //str, _ := os.Getwd()
     //conf.AppPath = str + "/../"
     //log.Printf("TestDB AppPath: [ %v ]", conf.AppPath)
     //define('APPPATH', __DIR__.'/../app');
 
-    //dbuser := "root"
-    //dbpass := "root"
-    //dbhost := "127.0.0.1"
-    //dbport := "3306"
-    //dbname := "test"
-    //dsn := fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=%s", dbuser, dbpass, dbhost+":"+dbport, dbname, "utf8mb4")
-    //db, err := Open("mysql", dsn)
-    db, err := Open("sqlite3", "./test.db")
+    dbuser := "root"
+    dbpass := "root"
+    dbhost := "127.0.0.1"
+    dbport := "3306"
+    dbname := "test"
+    dsn := fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=%s", dbuser, dbpass, dbhost+":"+dbport, dbname, "utf8mb4")
+    db, err := Open("mysql", dsn)
+    //db, err := Open("sqlite3", "./test.db")
     if err != nil {
         t.Fatal(err)
     }
 
-    db.Transaction(func(tx *DB) error {
-        // 在事务中执行一些 db 操作（从这里开始，您应该使用 'tx' 而不是 'db'）
-        sqlStr = "insert into user(name, age, sex) values('test222', '30', '1')"
-        //_, err = db.Exec(sqlStr)
-        db.Query(sqlStr).Execute()
-        if err != nil {
-            t.Logf("%q: %s\n", err, sqlStr)
-            // 返回任何错误都会回滚事务
-            return err
-        }
+    tables := db.Schema().ListTables("user")
+    t.Logf("jsonStr = %v\n", FormatJSON(tables))
 
-        t.Logf("RowsAffected = %d: %d\n", tx.RowsAffected, tx.LastInsertId)
-        // 返回 nil 提交事务
-        return nil
-    })
+    //columns := db.Schema().ListColumns("user")
+    //t.Logf("jsonStr = %v\n", FormatJSON(columns))
+
+    //db.Schema().CreateDatabase("demo2")
+    //db.Schema().DropDatabase("demo2")
+    
+    //fields := map[string] map[string]interface{}{
+        //"id": {
+            //"type": "int",
+            //"constraint": 11,
+            //"auto_increment": true,
+        //},
+        //"name": {
+            //"type": "varchar",
+            //"constraint": 50,
+        //},
+        //"title": {
+            //"type": "varchar",
+            //"constraint": 50,
+            //"default": "mr.",
+        //},
+    //}
+    //db.Schema().CreateTable("users2", fields, []string{"id"})
+    //db.Schema().RenameTable("users2", "users3")
+    //db.Schema().TruncateTable("users2")
+    //db.Schema().TableExists("users3")
+
+    //fieldExists := db.Schema().FieldExists("users3", "name")
+    //fieldExists := db.Schema().FieldExists("users3", []string{"name"})
+    //t.Logf("FieldExists = %v", fieldExists)
+
+    //dropFields := db.Schema().DropFields("users3", "title")
+    //dropFields := db.Schema().DropFields("users3", []string{"title"})
+    //t.Logf("dropFields = %v", dropFields)
+
+    //fields := map[string] map[string]interface{}{
+        //"name": {
+            //"type": "varchar",
+            //"constraint": 50,
+        //},
+        //"title": {
+            //"type": "varchar",
+            //"constraint": 50,
+            //"default": "mr.",
+        //},
+    //}
+    //modifyFields := db.Schema().ModifyFields("users3", fields)
+    //t.Logf("modifyFields = %v", modifyFields)
+
+    //fields := map[string] map[string]interface{}{
+        //"name5": {
+            //"type": "varchar",
+            //"constraint": 50,
+        //},
+        //"title5": {
+            //"type": "varchar",
+            //"constraint": 50,
+            //"default": "mr.",
+        //},
+    //}
+    //addFields := db.Schema().AddFields("users3", fields)
+    //t.Logf("addFields = %v", addFields)
+
+    //checkTable := db.Schema().OptimizeTable("users3")
+    //checkTable := db.Schema().CheckTable("users3")
+    //t.Logf("checkTable = %v", checkTable)
+
+    //createIndex := db.Schema().CreateIndex("users3", "name", "name", "UNIQUE")
+    //createIndex := db.Schema().CreateIndex("users3", []string{"name", "name2"}, "name333", "UNIQUE")
+    //t.Logf("checkTable = %v", createIndex)
+    if err = db.Schema().DropIndex("users3", "name"); err != nil {
+        t.Logf("dropIndex Err = %v", err)
+    }
+
+    //foreignKey := []map[string]interface{}{
+        //{
+            //"constraint": "fk_uid",
+            //"key": "uid",
+            //"reference": map[string]string {
+                //"table" : "user",   // 要关联的表
+                //"column": "uid",    // 要关联的表的字段
+            //},
+            //"on_update": "CASCADE",
+            //"on_delete": "RESTRICT",
+        //},
+    //}
+    //addForeignKey := db.Schema().AddForeignKey("player", foreignKey)
+    //t.Logf("addForeignKey = %v", addForeignKey)
+    //db.Schema().DropForeignKey("player", "fk_uid")
+
+    //db.Transaction(func(tx *DB) error {
+        //// 在事务中执行一些 db 操作（从这里开始，您应该使用 'tx' 而不是 'db'）
+        //sqlStr = "insert into user(name, age, sex) values('test222', '30', '1')"
+        ////_, err = db.Exec(sqlStr)
+        //db.Query(sqlStr).Execute()
+        //if err != nil {
+            //t.Logf("%q: %s\n", err, sqlStr)
+            //// 返回任何错误都会回滚事务
+            //return err
+        //}
+
+        //t.Logf("RowsAffected = %d: %d\n", tx.RowsAffected, tx.LastInsertId)
+        //// 返回 nil 提交事务
+        //return nil
+    //})
 
     //db.Begin()
     ////defer db.Rollback()
@@ -113,12 +207,12 @@ func TestDB(t *testing.T) {
     //t.Logf("jsonStr = %v\n", FormatJSON(user))
 
     ////var users []User
-    users := []User{}
-    q := db.Query("SELECT id, name, age, sex FROM user").Scan(&users).Execute()
-    if q.Error != nil {
-        t.Logf("q.Error = %v\n", q.Error)
-    }
-    t.Logf("jsonStr = %v\n", FormatJSON(users))
+    //users := []User{}
+    //q := db.Query("SELECT id, name, age, sex FROM user").Scan(&users).Execute()
+    //if q.Error != nil {
+        //t.Logf("q.Error = %v\n", q.Error)
+    //}
+    //t.Logf("jsonStr = %v\n", FormatJSON(users))
 
     //var count int64
     //q = db.Query("SELECT COUNT(*) FROM user").Scan(&count).Execute();

@@ -128,8 +128,10 @@ func Scan(rows *sql.Rows, q *Query) {
             //}
 
             for idx, column := range columns {
+                //fmt.Printf("idx = [%v] ---> column = [%v]\n", idx, column)
                 // query.Execute() 方法里面已经执行了 Parse()
                 if field := Schema.LookUpField(column); field != nil {
+                    //fmt.Printf("column = [%v] ---> field = [%v]\n", column, field)
                     fields[idx] = field
                 } else {
                     // var ages []int64 会跑这里来
