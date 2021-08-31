@@ -1,14 +1,4 @@
-/**
- * @Description: Connection
- * @Version: 1.0.0
- * @Author: Seatle
- * @Date: 2014-07-06 21:39
- * @LastEditors: Seatle
- * @LastEditTime: 2021-07-06 21:39
- * @Other: 实现一个Mysql 的 Profilling: https://www.cnblogs.com/sxdcgaq8080/p/11844079.html
- */
-
-package mysql
+package database
 
 import (
     //"context"

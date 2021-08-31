@@ -1,4 +1,4 @@
-package mysql
+package database
 
 import (
     "context"
@@ -7,7 +7,6 @@ import (
     "strings"
     "reflect"
     "regexp"
-    //"os"
 )
 
 // Query is the struct for MySQL DATE type
@@ -25,7 +24,7 @@ type Query struct {
     I *Insert
     U *Update
     D *Delete
-    R *Result
+    //R *Result
 
     sqlStr        string             // SQL statement
     queryType     QueryType          // Query type

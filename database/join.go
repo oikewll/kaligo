@@ -1,12 +1,4 @@
-/**
- * Realize a database operation class
- *
- * @copyright   (C) 2014  seatle
- * @lastmodify  2021-07-06
- *
- */
-
-package mysql
+package database
 
 import (
     //"fmt"
@@ -19,8 +11,6 @@ type Join struct {
     table     string
     alias     string
     onValues  [][4]string
-
-    //*Builder
 }
 
 // NewJoin creates a new Select Object

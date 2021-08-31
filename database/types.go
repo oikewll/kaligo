@@ -1,4 +1,4 @@
-package mysql
+package database
 
 import (
     "errors"
@@ -207,15 +207,6 @@ func ParseDuration(str string) (dur time.Duration, err error) {
     err = errors.New("invalid MySQL TIME string: " + orig)
     return
 
-}
-
-// Blob is ...
-type Blob []byte
-
-// Raw is ...
-type Raw struct {
-    Typ uint16
-    Val *[]byte
 }
 
 // Timestamp is ...
