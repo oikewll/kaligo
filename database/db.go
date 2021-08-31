@@ -4,16 +4,14 @@ import (
      "context"
      "database/sql"
      "fmt"
-     //"os"
      "regexp"
-     "strings"
-     "time"
-     "sync"
      //"reflect"
+     "strings"
+     "sync"
+     "time"
      "github.com/owner888/kaligo/conf"
      "github.com/owner888/kaligo/util"
      //"github.com/stretchr/testify/assert"
-     //"github.com/owner888/mymysql/autorc"
  )
 
 //type singleton struct {
@@ -54,26 +52,26 @@ const (
 // DB is the struct for MySQL connection handler
 type DB struct {
     Error         error
-    RowsAffected  int64          // for select、update、insert
-    LastInsertId  int64          // only for insert
+    RowsAffected  int64         // for select、update、insert
+    LastInsertId  int64         // only for insert
     InTransaction bool
     query         *Query
     schema        *Schema
 
-    name          string         // instance name
-    DriverName    string         // driver name: mysql、sqlite3
-    DSN           string         // data source name: dbuser:dbpass@tcp(host:port)/dbname?charset=utf8mb4
-    //Dialector                  // Dialector database dialector
+    name          string        // instance name
+    DriverName    string        // driver name: mysql、sqlite3
+    DSN           string        // data source name: dbuser:dbpass@tcp(host:port)/dbname?charset=utf8mb4
+    Dialector                   // Dialector database dialector
 
-    timeout       time.Duration  // Timeout for connect SetConnMaxLifetime(timeout)
-    lastUse       time.Time      // The last use time
+    timeout       time.Duration // Timeout for connect SetConnMaxLifetime(timeout)
+    lastUse       time.Time     // The last use time
 
-    stdDB         *sql.DB        // MySQL connection
-    stdTx         *sql.Tx        // MySQL connection for Transaction
-	autoCommit    bool           // 是否正在事务执行中
-    initCmds      []string       // MySQL commands/queries executed after connect
+    StdDB         *sql.DB       // Connection
+    StdTx         *sql.Tx       // Connection for Transaction
+	autoCommit    bool          // 是否正在事务执行中
+    initCmds      []string      // SQL commands/queries executed after connect
 
-    debug         bool           // Debug logging. You may change it at any time.
+    debug         bool          // Debug logging. You may change it at any time.
     logSlowQuery  bool
     logSlowTime   int
 
@@ -88,24 +86,22 @@ type DB struct {
     cacheStore   *sync.Map
 }
 
-// Open is the function for Create new MySQL handler.
+// Open initialize db session based on dialector
 // (读+写)连接数据库+选择数据库
-func Open(driver string, dsn string) (db *DB, err error) {
+func Open(dialector Dialector) (db *DB, err error) {
 
-    // 原子操作，避免多协程导致的并发问题，在这里一次性生成主从库所有链接，以后用 Use("reameonly")
-    //once.Do(func(){ })
-    db = &DB{
-        DSN: dsn,
-        DriverName: driver,
-        InTransaction: false,
-    }
+    db = &DB{InTransaction: false}
 
     //if db.Logger == nil {
         //db.Logger = logger.Default
     //}
 
     if db.NowFunc == nil {
-		db.NowFunc = func() time.Time { return time.Now().Local() }
+        db.NowFunc = func() time.Time { return time.Now().Local() }
+    }
+
+    if dialector != nil {
+		db.Dialector = dialector
 	}
 
     if db.cacheStore == nil {
@@ -123,26 +119,28 @@ func Open(driver string, dsn string) (db *DB, err error) {
     //dbhost := "127.0.0.1"
     //dbport := "3306"
     //dbname := "test"
-
     //db.dsn = fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=%s", dbuser, dbpass, dbhost+":"+dbport, dbname, "utf8mb4")
-    db.stdDB, err = sql.Open(driver, dsn)
+    //db.StdDB, err = sql.Open(driver, dsn)
+    if db.Dialector != nil {
+        err = db.Dialector.Initialize(db)
+    }
 
     db.query = &Query{
         DB          : db,
-		stdDB       : db.stdDB, // 因为返回的是指针*sql.DB，所以 db.stdDB 和 db.conn.stdDB 是同一个，一个Close()，另一个也会Close()
+		StdDB       : db.StdDB, // 因为返回的是指针*sql.DB，所以 db.StdDB 和 db.conn.StdDB 是同一个，一个Close()，另一个也会Close()
         TablePrefix : "",
 		Context     : context.Background(),
     }
 
     // 设置最大空闲连接数
-    db.stdDB.SetMaxIdleConns(util.StrToInt(conf.Get("db", "max_idle_conns")))
+    db.StdDB.SetMaxIdleConns(util.StrToInt(conf.Get("db", "max_idle_conns")))
     // sql.Open 实际上返回了一个数据库抽象，并没有真的连接上
     if err == nil {
         // ping 调用完毕后会马上把连接返回给连接池
-        err = db.stdDB.Ping()
+        err = db.StdDB.Ping()
     }
     // 执行初始化SQL
-    db.stdDB.Query("SET NAMES utf8");
+    db.StdDB.Query("SET NAMES utf8");
 
     db.schema = &Schema{
         Name  : db.name,
@@ -167,9 +165,9 @@ func (db *DB) AddError(err error) error {
 }
 
 // DB returns `*sql.DB`
-func (db *DB) DB() *sql.DB { return db.stdDB }
+func (db *DB) DB() *sql.DB { return db.StdDB }
 // Tx returns `*sql.Tx`
-func (db *DB) Tx() *sql.Tx { return db.stdTx }
+func (db *DB) Tx() *sql.Tx { return db.StdTx }
 
 // Debug start debug mode
 func (db *DB) Debug() { db.debug = true }
@@ -210,7 +208,7 @@ func (db *DB) InstanceGet(key string) (interface{}, bool) {
         //sqlStr    : "",
         //queryType : 0,
         //DB        : db,
-        //stdDB     : db.stdDB,
+        //StdDB     : db.StdDB,
     //}
     //return db.query
 //}
@@ -238,7 +236,7 @@ func (db *DB) Query(sqlStr string, args ...QueryType) *Query {
         sqlStr    : sqlStr,
         queryType : queryType,
         DB        : db,
-        stdDB     : db.stdDB,
+        StdDB     : db.StdDB,
     }
 
     return db.query
@@ -269,7 +267,7 @@ func (db *DB) Select(columns ...string) *Query {
         sqlStr    : "",
         queryType : SELECT,
         DB        : db,
-        stdDB     : db.stdDB,
+        StdDB     : db.StdDB,
     }
     return db.query
 }
@@ -298,7 +296,7 @@ func (db *DB) Insert(table string, args ...[]string) *Query {
         sqlStr    : "",
         queryType : INSERT,
         DB        : db,
-        stdDB     : db.stdDB,
+        StdDB     : db.StdDB,
     }
     return db.query
 }
@@ -321,7 +319,7 @@ func (db *DB) Update(table string) *Query {
         sqlStr    : "",
         queryType : UPDATE,
         DB        : db,
-        stdDB     : db.stdDB,
+        StdDB     : db.StdDB,
     }
     return db.query
 }
@@ -343,7 +341,7 @@ func (db *DB) Delete(table string) *Query {
         sqlStr    : "",
         queryType : DELETE,
         DB        : db,
-        stdDB     : db.stdDB,
+        StdDB     : db.StdDB,
     }
     return db.query
 }
@@ -363,7 +361,7 @@ func (db *DB) Schema() *Schema {
         //sqlStr    : "",
         //queryType : DELETE,
         //DB        : db,
-        //stdDB     : db.stdDB,
+        //StdDB     : db.StdDB,
     //}
     //return db.query
 }
@@ -386,9 +384,9 @@ func (db *DB) TablePrefix(table string) string {
 // 当.Scan()方法调用之后把连接释放回到连接池
 func (db *DB) Row(sqlStr string) (row *sql.Row) {
     if db.InTransaction {
-        row = db.stdTx.QueryRow(sqlStr, 1) // 查询一条
+        row = db.StdTx.QueryRow(sqlStr, 1) // 查询一条
     } else {
-        row = db.stdDB.QueryRow(sqlStr, 1)
+        row = db.StdDB.QueryRow(sqlStr, 1)
     }
     return row
 }
@@ -398,9 +396,9 @@ func (db *DB) Row(sqlStr string) (row *sql.Row) {
 // 当然后者迭代完毕 或者 显性的调用.Close()方法后，连接将会被释放回到连接池
 func (db *DB) Rows(sqlStr string) (rows *sql.Rows, err error) {
     if db.InTransaction {
-        rows, err = db.stdTx.Query(sqlStr)
+        rows, err = db.StdTx.Query(sqlStr)
     } else {
-        rows, err = db.stdDB.Query(sqlStr)
+        rows, err = db.StdDB.Query(sqlStr)
     }
     return
 }
@@ -410,9 +408,9 @@ func (db *DB) Rows(sqlStr string) (rows *sql.Rows, err error) {
 // 但是它返回的Result对象还保留这连接的引用，当后面的代码需要处理结果集的时候连接将会被重用
 func (db *DB) Exec(sqlStr string) (res sql.Result, err error) {
     if db.InTransaction {
-        res, err = db.stdTx.Exec(sqlStr)
+        res, err = db.StdTx.Exec(sqlStr)
     } else {
-        res, err = db.stdDB.Exec(sqlStr)
+        res, err = db.StdDB.Exec(sqlStr)
     }
     return res, err
 }
@@ -446,11 +444,11 @@ func (db *DB) Transaction(fc func(tx *DB) error) (err error) {
 // db.Begin() 调用完毕后将连接传递给sql.Tx类型对象
 // 当.Commit()或.Rollback()方法调用后释放连接
 func (db *DB) Begin() *DB {
-    tx, err := db.stdDB.Begin()
+    tx, err := db.StdDB.Begin()
     if err != nil {
         db.AddError(err)
     } else {
-        db.stdTx = tx
+        db.StdTx = tx
         db.InTransaction = true
     }
     return db
@@ -458,11 +456,11 @@ func (db *DB) Begin() *DB {
 
 // Commit is the function for close db connection
 func (db *DB) Commit() *DB {
-    if db.InTransaction == false || db.stdTx == nil {
+    if db.InTransaction == false || db.StdTx == nil {
         db.AddError(ErrInvalidTransaction)
     } else {
         db.InTransaction = false
-        err := db.stdTx.Commit()
+        err := db.StdTx.Commit()
         if err != nil {
             db.AddError(err)
         }
@@ -472,11 +470,11 @@ func (db *DB) Commit() *DB {
 
 // Rollback is the function for close db connection
 func (db *DB) Rollback() *DB {
-    if db.InTransaction == false || db.stdTx == nil {
+    if db.InTransaction == false || db.StdTx == nil {
         db.AddError(ErrInvalidTransaction)
     } else {
         db.InTransaction = false
-        err := db.stdTx.Rollback()
+        err := db.StdTx.Rollback()
         if err != sql.ErrTxDone && err != nil {
             db.AddError(err)
         }

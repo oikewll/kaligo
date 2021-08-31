@@ -14,8 +14,8 @@ type Query struct {
     *DB
     Context     context.Context
     Schema      *Schema
-    stdDB       *sql.DB       // MySQL connection
-    stdTX       *sql.Tx       // MySQL connection for Transaction
+    StdDB       *sql.DB       // MySQL connection
+    StdTx       *sql.Tx       // MySQL connection for Transaction
 
     S *Select
     W *Where
