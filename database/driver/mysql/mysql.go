@@ -272,6 +272,48 @@ func (dialector Dialector) TruncateTable(table string, db *database.DB) (err err
     return err
 }
 
+// TableExists Generic check if a given table exists.
+func (dialector Dialector) TableExists(table string, db *database.DB) bool {
+    sqlStr := "SELECT * FROM "
+    sqlStr += db.QuoteTable(table)
+    sqlStr += " LIMIT 1"
+
+    _, err := db.Rows(sqlStr)
+    if err != nil {
+        db.AddError(err)
+        return false
+    }
+    return true
+}
+
+// FieldExists Checks if given field(s) in a given table exists.
+func (dialector Dialector) FieldExists(table string, value interface{}, db *database.DB) bool {
+    var columns []string    
+    switch value.(type) {
+    case string:
+        columns = append(columns, value.(string))
+    default:
+        columns = value.([]string)
+    }
+
+    for k, v := range columns {
+        columns[k] = db.QuoteIdentifier(v)
+    }
+
+    sqlStr := "SELECT "
+    sqlStr += strings.Join(columns, ", ")
+    sqlStr += " FROM "
+    sqlStr += db.QuoteTable(table)
+    sqlStr += " LIMIT 1"
+
+    _, err := db.Rows(sqlStr)
+    if err != nil {
+        db.AddError(err)
+        return false
+    }
+    return true
+}
+
 // CreateIndex Creates an index on that table.
 func (dialector Dialector) CreateIndex(table string, indexColumns interface{}, indexName, index string, db *database.DB) (err error) {
     var sqlStr string    

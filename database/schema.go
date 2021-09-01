@@ -301,40 +301,27 @@ func (s *Schema) RepairTable(table string) bool {
 }
 
 func (s *Schema) tableMaintenance(operation string, table string) bool {
+    // SQLite does't support table maintenance
+    if s.Dialector.Name() == "sqlite" {
+        return false
+    }
+
     sqlStr := operation + " " + s.QuoteTable(table)
     rows, err := s.Rows(sqlStr)
     if err != nil {
         s.AddError(err)
     }
 
-    // 字段名记得要大写开头，才是public，否则访问不到
-    type Operation struct {
-        Table   string `field:"Table"` 
-        Op      string `field:"Op"`
-        MsgType string `field:"Msg_type"`
-        MsgText string `field:"Msg_text"`
-    }
+    var null interface{}
+    var msgType, msgText string
 
-    ops := []Operation{}
     for rows.Next() {
-        op := Operation{}
-        o := reflect.ValueOf(&op).Elem()
-        numCols := o.NumField()
-        columns := make([]interface{}, numCols)
-        for i := 0; i < numCols; i++ {
-            field := o.Field(i)
-            columns[i] = field.Addr().Interface()
-        }
-        err := rows.Scan(columns...)
+        err := rows.Scan(null, null, msgType, msgText)
         if err != nil {
             s.AddError(err)
-        } else {
-            ops = append(ops, op)
         }
     }
 
-    msgType := ops[0].MsgType
-    msgText := ops[0].MsgText
     if msgType == "status" && InSlice(strings.ToLower(msgText), &[]string{"ok", "table is already up to date"}) {
         return true
     }
@@ -352,44 +339,12 @@ func (s *Schema) tableMaintenance(operation string, table string) bool {
 
 // TableExists Generic check if a given table exists.
 func (s *Schema) TableExists(table string) bool {
-    sqlStr := "SELECT * FROM "
-    sqlStr += s.QuoteTable(table)
-    sqlStr += " LIMIT 1"
-
-    _, err := s.Rows(sqlStr)
-    if err != nil {
-        s.AddError(err)
-        return false
-    }
-    return true
+    return s.Dialector.TableExists(table, s.DB)
 }
 
 // FieldExists Checks if given field(s) in a given table exists.
 func (s *Schema) FieldExists(table string, value interface{}) bool {
-    var columns []string    
-    switch value.(type) {
-    case string:
-        columns = append(columns, value.(string))
-    default:
-        columns = value.([]string)
-    }
-
-    for k, v := range columns {
-        columns[k] = s.QuoteIdentifier(v)
-    }
-
-    sqlStr := "SELECT "
-    sqlStr += strings.Join(columns, ", ")
-    sqlStr += " FROM "
-    sqlStr += s.QuoteTable(table)
-    sqlStr += " LIMIT 1"
-
-    _, err := s.Rows(sqlStr)
-    if err != nil {
-        s.AddError(err)
-        return false
-    }
-    return true
+    return s.Dialector.FieldExists(table, value, s.DB)
 }
 
 // CreateIndex Creates an index on that table.
