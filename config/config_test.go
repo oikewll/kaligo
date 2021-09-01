@@ -1,4 +1,4 @@
-package conf
+package config
 
 import (
     "fmt"
@@ -6,7 +6,7 @@ import (
 )
 
 func Test(t *testing.T) {
-    InitConfig("../conf/conf.ini")
+    InitConfig("../config/conf.ini")
     user := Get("db", "user")
     fmt.Printf("Test user: %v\n", user)
     Delete("db", "user")
@@ -18,6 +18,6 @@ func Test(t *testing.T) {
     user = Get("db", "user")
     fmt.Println(user) //widuu
 
-    //data := conf.ReadList()
+    //data := ReadList()
     //fmt.Println(data)
 }

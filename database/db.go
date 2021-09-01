@@ -10,7 +10,7 @@ import (
      "strings"
      "sync"
      "time"
-     "github.com/owner888/kaligo/conf"
+     "github.com/owner888/kaligo/config"
      "github.com/owner888/kaligo/util"
      //"github.com/stretchr/testify/assert"
  )
@@ -134,7 +134,7 @@ func Open(dialector Dialector) (db *DB, err error) {
     }
 
     // 设置最大空闲连接数
-    db.StdDB.SetMaxIdleConns(util.StrToInt(conf.Get("db", "max_idle_conns")))
+    db.StdDB.SetMaxIdleConns(util.StrToInt(config.Get("db", "max_idle_conns")))
     // sql.Open 实际上返回了一个数据库抽象，并没有真的连接上
     if err == nil {
         // ping 调用完毕后会马上把连接返回给连接池
@@ -476,6 +476,36 @@ func (db *DB) Rollback() *DB {
     } else {
         db.InTransaction = false
         err := db.StdTx.Rollback()
+        if err != sql.ErrTxDone && err != nil {
+            db.AddError(err)
+        }
+    }
+    return db
+}
+
+// RollbackTo is the function for close db connection
+func (db *DB) RollbackTo(name string) *DB {
+    if db.InTransaction == false || db.StdTx == nil {
+        db.AddError(ErrInvalidTransaction)
+    } else {
+        // 还没结束
+        //db.InTransaction = false
+        _, err := db.StdTx.Exec("ROLLBACK TO SAVEPOINT " + name)
+        if err != sql.ErrTxDone && err != nil {
+            db.AddError(err)
+        }
+    }
+    return db
+}
+
+// SavePoint is the function for close db connection
+func (db *DB) SavePoint(name string) *DB {
+    if db.InTransaction == false || db.StdTx == nil {
+        db.AddError(ErrInvalidTransaction)
+    } else {
+        // 还没结束
+        //db.InTransaction = false
+        _, err := db.StdTx.Exec("SAVEPOINT " + name)
         if err != sql.ErrTxDone && err != nil {
             db.AddError(err)
         }
