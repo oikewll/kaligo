@@ -15,6 +15,8 @@ type Dialector interface {
     RenameTable(oldTable, newTable string, db *DB) (err error)
     DropTable(table string, db *DB) (err error)
     TruncateTable(table string, db *DB) (err error) 
+    TableExists(table string, db *DB) bool
+    FieldExists(table string, value interface{}, db *DB) bool
     CreateIndex(table string, indexColumns interface{}, indexName, index string, db *DB) (err error)
     RenameIndex(table, oldName, newName string, db *DB) (err error)
     DropIndex(table, indexName string, db *DB) (err error)

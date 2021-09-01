@@ -98,12 +98,13 @@ func TestDB(t *testing.T) {
     //err = db.Schema().CreateTable("users9", fields, []string{"id"})
     //err = db.Schema().RenameTable("users4", "users5")
     //err = db.Schema().TruncateTable("users")
-    //err = db.Schema().TableExists("users")
     //if err != nil {
         //t.Logf("Operation Table Err = %v", err)
     //}
+    //ok := db.Schema().TableExists("users8")
+    //t.Logf("TableExists ok = %v", ok)
 
-    //ok := db.Schema().FieldExists("users4", "name")
+    //ok := db.Schema().FieldExists("users8", "name")
     //ok := db.Schema().FieldExists("users3", []string{"name"})
     //t.Logf("FieldExists ok = %v", ok)
 
@@ -139,8 +140,8 @@ func TestDB(t *testing.T) {
     //}
 
     //ok := db.Schema().OptimizeTable("users3")
-    //ok := db.Schema().CheckTable("users3")
-    //t.Logf("Operation Table ok = %v", ok)
+    ok := db.Schema().CheckTable("users3")
+    t.Logf("Operation Table ok = %v", ok)
 
     //err = db.Schema().CreateIndex("user", "name", "name_idx6", "UNIQUE")
     //err = db.Schema().CreateIndex("user", []string{"age", "sex"}, "name_idx5", "UNIQUE")
