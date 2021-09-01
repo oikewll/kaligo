@@ -6,7 +6,7 @@
  *
  */
 
-package conf
+package config
 
 import (
 	"bufio"

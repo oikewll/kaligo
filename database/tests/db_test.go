@@ -14,8 +14,8 @@ import (
     //_ "github.com/go-sql-driver/mysql"
     //_ "github.com/mattn/go-sqlite3" 
     "github.com/owner888/kaligo/database"
-    sqlite "github.com/owner888/kaligo/database/driver/sqlite"
-    //mysql "github.com/owner888/kaligo/database/driver/mysql"
+    //sqlite "github.com/owner888/kaligo/database/driver/sqlite"
+    mysql "github.com/owner888/kaligo/database/driver/mysql"
 	//"strconv"
     //"strings"
     //"regexp"
@@ -52,8 +52,8 @@ func TestDB(t *testing.T) {
     dbname := "test"
     dsn := fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=%s", dbuser, dbpass, dbhost+":"+dbport, dbname, "utf8mb4")
     t.Logf("%v", dsn)
-    //db, err := database.Open(mysql.Open(dsn))
-    db, err := database.Open(sqlite.Open("./test.db"))
+    db, err := database.Open(mysql.Open(dsn))
+    //db, err := database.Open(sqlite.Open("./test.db"))
     if err != nil {
         t.Fatal(err)
     }
@@ -76,26 +76,26 @@ func TestDB(t *testing.T) {
     //db.Schema().CreateDatabase("demo2")
     //db.Schema().DropDatabase("demo2")
     
-    fields := []map[string]interface{}{
-        {
-            "name": "id",
-            "type": "int",
-            "constraint": 11,
-            "auto_increment": true,
-        },
-        {
-            "name": "name",
-            "type": "varchar",
-            "constraint": 50,
-        },
-        {
-            "name": "title",
-            "type": "varchar",
-            "constraint": 50,
-            "default": "mr.",
-        },
-    }
-    err = db.Schema().CreateTable("user", fields, []string{"id"})
+    //fields := []map[string]interface{}{
+        //{
+            //"name": "id",
+            //"type": "int",
+            //"constraint": 11,
+            //"auto_increment": true,
+        //},
+        //{
+            //"name": "name",
+            //"type": "varchar",
+            //"constraint": 50,
+        //},
+        //{
+            //"name": "title",
+            //"type": "varchar",
+            //"constraint": 50,
+            //"default": "mr.",
+        //},
+    //}
+    //err = db.Schema().CreateTable("user", fields, []string{"id"})
     //err = db.Schema().RenameTable("user", "user222")
     //err = db.Schema().TruncateTable("user")
     //if err != nil {
@@ -192,6 +192,14 @@ func TestDB(t *testing.T) {
     ////db.Rollback()
     //db.Commit()
 
+    db.Begin()
+    db.Insert("user", []string{"name", "age"}).Values([]string{"test111", "20"}).Execute()
+
+    db.SavePoint("sp1")
+    db.Insert("user", []string{"name", "age"}).Values([]string{"test222", "23"}).Execute()
+    db.RollbackTo("sp1")    // Rollback the user name is test222
+
+    db.Commit()  // Commit the user name is test111 
 
 
     //db.Debug = false

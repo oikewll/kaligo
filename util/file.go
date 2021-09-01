@@ -3,7 +3,7 @@ package util
 import (
 	"bufio"
 	"errors"
-	"github.com/owner888/kaligo/conf"
+	"github.com/owner888/kaligo/config"
 	"io"
 	"io/ioutil"
 	"log"
@@ -45,7 +45,7 @@ func FileExists(name string) bool {
  */
 func WriteLog(filename string, format string) (bool, error) {
 
-    logfile := conf.PathData+"/log/"+filename+".log"
+    logfile := config.PathData+"/log/"+filename+".log"
     f, err := os.OpenFile(logfile, os.O_RDWR | os.O_APPEND |  os.O_CREATE, 0777)
     if err != nil {
         return false, err
