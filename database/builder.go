@@ -1,14 +1,12 @@
 package database
 
 import (
-    //"fmt"
     "strings"
     "strconv"
 )
 
 // Builder is the struct for MySQL DATE type
 type Builder struct {
-    //*Query
 }
 
 // CompileJoin Compiles an array of JOIN statements into an SQL partial.

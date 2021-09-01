@@ -3,6 +3,7 @@ package database
 import (
      "context"
      "database/sql"
+     "errors"
      "fmt"
      "regexp"
      //"reflect"
@@ -382,11 +383,11 @@ func (db *DB) TablePrefix(table string) string {
 // Row is the function for query one row
 // db.QueryRow() 调用完毕后会将连接传递给sql.Row类型
 // 当.Scan()方法调用之后把连接释放回到连接池
-func (db *DB) Row(sqlStr string) (row *sql.Row) {
+func (db *DB) Row(sqlStr string, args ...interface{}) (row *sql.Row) {
     if db.InTransaction {
-        row = db.StdTx.QueryRow(sqlStr, 1) // 查询一条
+        row = db.StdTx.QueryRow(sqlStr, args...)
     } else {
-        row = db.StdDB.QueryRow(sqlStr, 1)
+        row = db.StdDB.QueryRow(sqlStr, args...)
     }
     return row
 }
@@ -394,11 +395,11 @@ func (db *DB) Row(sqlStr string) (row *sql.Row) {
 // Rows is the ...
 // db.Query() 调用完毕后会将连接传递给sql.Rows类型
 // 当然后者迭代完毕 或者 显性的调用.Close()方法后，连接将会被释放回到连接池
-func (db *DB) Rows(sqlStr string) (rows *sql.Rows, err error) {
+func (db *DB) Rows(sqlStr string, args ...interface{}) (rows *sql.Rows, err error) {
     if db.InTransaction {
-        rows, err = db.StdTx.Query(sqlStr)
+        rows, err = db.StdTx.Query(sqlStr, args...)
     } else {
-        rows, err = db.StdDB.Query(sqlStr)
+        rows, err = db.StdDB.Query(sqlStr, args...)
     }
     return
 }
@@ -406,11 +407,11 @@ func (db *DB) Rows(sqlStr string) (rows *sql.Rows, err error) {
 // Exec is the function for Insert、Update、Delete
 // db.Exec() 调用完毕后会马上把连接返回给连接池
 // 但是它返回的Result对象还保留这连接的引用，当后面的代码需要处理结果集的时候连接将会被重用
-func (db *DB) Exec(sqlStr string) (res sql.Result, err error) {
+func (db *DB) Exec(sqlStr string, args ...interface{}) (res sql.Result, err error) {
     if db.InTransaction {
-        res, err = db.StdTx.Exec(sqlStr)
+        res, err = db.StdTx.Exec(sqlStr, args...)
     } else {
-        res, err = db.StdDB.Exec(sqlStr)
+        res, err = db.StdDB.Exec(sqlStr, args...)
     }
     return res, err
 }
@@ -577,6 +578,95 @@ func (db *DB) Escape(sql string) string {
 
     // SQL standard is to use single-quotes for all values
     return "'" + string(dest) + "'"
+}
+
+// ProcessForeignKeys is 
+func (db *DB) ProcessForeignKeys(foreignKeys []map[string]interface{}) string {
+    var fkList []string    
+    for _, definition := range foreignKeys {
+        // some sanity checks
+        if _, ok := definition["key"]; !ok {
+            db.AddError(errors.New("Foreign keys on processForeignKeys() must specify a foreign key name"))
+            return ""
+        }
+
+        if _, ok := definition["reference"]; !ok {
+            db.AddError(errors.New("Foreign keys on processForeignKeys() must specify a foreign key reference"))
+            return ""
+        }
+
+        reference := definition["reference"].(map[string]string)
+
+        var referenceTable, referenceColumn string    
+        if table, ok := reference["table"]; ok {
+            referenceTable = table
+        } else {
+            db.AddError(errors.New("Foreign keys on processForeignKeys() must specify a reference table name"))
+            return ""
+        }
+
+        if column, ok := reference["column"]; ok {
+            referenceColumn = column
+        } else {
+            db.AddError(errors.New("Foreign keys on processForeignKeys() must specify a reference column name"))
+            return ""
+        }
+
+        var sqlStr string    
+        if table, ok := definition["constraint"]; ok {
+            sqlStr += " CONSTRAINT " + db.QuoteTable(table.(string)) 
+        }
+
+        sqlStr += " FOREIGN KEY (" + db.QuoteIdentifier(definition["key"].(string)) + ")"
+        sqlStr += " REFERENCES " + db.QuoteTable(referenceTable) + " ("
+        referenceColumnArr := strings.Split(referenceColumn, ",")
+        for k, v := range referenceColumnArr {
+            referenceColumnArr[k] = db.QuoteIdentifier(v)
+        }
+        sqlStr += strings.Join(referenceColumnArr, ", ")
+        sqlStr += ")"
+
+        if val, ok := definition["on_update"]; ok {
+            sqlStr += " ON UPDATE " + val.(string) 
+        }
+        if val, ok := definition["on_delete"]; ok {
+            sqlStr += " ON DELETE " + val.(string)
+        }
+
+        fkList = append(fkList, "\n\t" + strings.TrimLeft(sqlStr, " "))
+    }
+
+    return ", " + strings.Join(fkList, ",")
+}
+
+// ProcessCharset is
+func (db *DB) ProcessCharset(charset string, isDefault bool, args ...string) string {
+
+    var collation string    
+    if len(args) > 0 {
+        collation = args[0]
+    }
+
+    // utf8_unicode_ci
+    charsets := strings.Split(charset, "_")
+    if collation == "" && len(charsets) > 1 {
+        collation = charset     // utf8_unicode_ci
+        charset   = charsets[0] // utf8
+    }
+
+    charset = " CHARACTER SET " + charset
+    if isDefault {
+        charset = " DEFAULT " + charset
+    }
+
+    if collation != "" {
+        if isDefault {
+            charset += " DEFAULT"
+        }
+        charset += " COLLATE " + collation
+    }
+
+    return charset
 }
 
 // Caching Per connection cache controller setter/getter

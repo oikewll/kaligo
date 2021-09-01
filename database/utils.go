@@ -438,14 +438,15 @@ func StructToMap(value reflect.Value, data map[string]interface{}) {
 
 // MapChangeKeyCase is change key case
 func MapChangeKeyCase(values map[string]interface{}, caseUpper bool) map[string]interface{}{
+    valueMaps := make(map[string]interface{}, len(values))
     for k, v := range values {
         if caseUpper {
-            values[strings.ToUpper(k)] = v
+            valueMaps[strings.ToUpper(k)] = v
         } else {
-            values[strings.ToLower(k)] = v
+            valueMaps[strings.ToLower(k)] = v
         }
     }
-    return values
+    return valueMaps
 }
 
 //// AddSlashes is ...

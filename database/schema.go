@@ -2,7 +2,7 @@ package database
 
 import (
     //"database/sql"
-    "errors"
+    //"errors"
     "fmt"
     "reflect"
     "strings"
@@ -161,6 +161,11 @@ func Parse(dest interface{}, cacheStore *sync.Map) (*Schema, error) {
     return schema, schema.err
 }
 
+// CurrentDatabase is Current Database
+func (s *Schema) CurrentDatabase() (name string) {
+    return s.Dialector.CurrentDatabase(s.DB)
+}
+
 // ListDatabases If a database name is given it will return the database name with the configured
 // prefix. If not, then just the prefix is returnd
 func (s *Schema) ListDatabases(args ...string) []string {
@@ -203,8 +208,6 @@ func (s *Schema) ListIndexes(table string, args ...string) []Indexes {
 
 // CreateDatabase Creates a database. Will throw a Database Exception if it cannot.
 func (s *Schema) CreateDatabase(database string, args ...interface{}) (err error) {
-    database = s.QuoteTable(database)
-
     var (
         ifNotExists bool   = true
         charset     string = "utf8"
@@ -217,63 +220,21 @@ func (s *Schema) CreateDatabase(database string, args ...interface{}) (err error
         ifNotExists = args[0].(bool)
     }
 
-    sqlStr := "CREATE DATABASE "
-    if ifNotExists {
-        sqlStr += "IF NOT EXISTS "
-    }
-    sqlStr += s.QuoteIdentifier(database) + s.processCharset(charset, true)
-
-    _, err = s.Query.Exec(sqlStr)
-    if err != nil {
-        s.Query.DB.AddError(err)
-    }
-    return err
+    return s.Dialector.CreateDatabase(database, charset, ifNotExists, s.DB)
 }
 
 // DropDatabase Drops a database. Will throw a Database Exception if it cannot.
 func (s *Schema) DropDatabase(database string) (err error) {
-    sqlStr := "DROP DATABASE " + s.QuoteIdentifier(database)
-
-    _, err = s.Query.Exec(sqlStr)
-    if err != nil {
-        s.Query.DB.AddError(err)
-    }
-    return err
-}
-
-// DropTable Drops a table. Will throw a Database Exception if it cannot.
-func (s *Schema) DropTable(table string) (err error) {
-    sqlStr := "DROP TABLE IF EXISTS "
-    sqlStr += s.QuoteTable(table)
-    
-    _, err = s.Query.Exec(sqlStr)
-    if err != nil {
-        s.Query.DB.AddError(err)
-    }
-    return err
-}
-
-// RenameTable Renames a table. Will throw a Database Exception if it cannot.
-func (s *Schema) RenameTable(table string, newTable string) (err error) {
-    sqlStr := "RENAME TABLE "
-    sqlStr += s.QuoteTable(table)
-    sqlStr += " TO "
-    sqlStr += s.QuoteTable(newTable)
-
-    _, err = s.Query.Exec(sqlStr)
-    if err != nil {
-        s.Query.DB.AddError(err)
-    }
-    return err
+    return s.Dialector.DropDatabase(database, s.DB)
 }
 
 // CreateTable Creates a table.
-func (s *Schema) CreateTable(table string, fields map[string] map[string]interface{}, args ...interface{}) (err error) {
+func (s *Schema) CreateTable(table string, fields []map[string]interface{}, args ...interface{}) (err error) {
     var (
         primaryKeys     []string
         ifNotExists     bool = true
         engine          string = "InnoDB"
-        charset         string = "utf8"
+        charset         string = "utf8_general_ci"
         foreignKeys     []map[string]interface{}
     )
 
@@ -301,49 +262,22 @@ func (s *Schema) CreateTable(table string, fields map[string] map[string]interfa
     default:
     }
 
-    sqlStr := "CREATE TABLE ";
-    if ifNotExists {
-        sqlStr += "IF NOT EXISTS "
-    }
+    return s.Dialector.CreateTable(table, fields, primaryKeys, ifNotExists, engine, charset, foreignKeys, s.DB)
+}
 
-    sqlStr += s.QuoteTable(table) + " ("
-    sqlStr += s.processFields(fields, "")
+// DropTable Drops a table. Will throw a Database Exception if it cannot.
+func (s *Schema) DropTable(table string) (err error) {
+    return s.Dialector.DropTable(table, s.DB)
+}
 
-    if len(primaryKeys) > 0 {
-        for k, v := range primaryKeys {
-            primaryKeys[k] = s.QuoteIdentifier(v)
-        }
-        sqlStr += ",\n\tPRIMARY KEY (" + strings.Join(primaryKeys, ", ") + ")"
-    }
-
-    if len(foreignKeys) > 0 {
-        sqlStr += s.processForeignKeys(foreignKeys)
-    }
-
-    sqlStr += "\n)"
-    if engine != "" {
-        sqlStr += " ENGINE = " + engine + " "
-    }
-
-    sqlStr += s.processCharset(charset, true, "") + ";"
-
-    _, err = s.Query.Exec(sqlStr)
-    if err != nil {
-        s.Query.DB.AddError(err)
-    }
-    return err
+// RenameTable Renames a table. Will throw a Database Exception if it cannot.
+func (s *Schema) RenameTable(oldTable, newTable string) (err error) {
+    return s.Dialector.RenameTable(oldTable, newTable, s.DB)
 }
 
 // TruncateTable Truncates a table.
 func (s *Schema) TruncateTable(table string) (err error) {
-    sqlStr := "TRUNCATE TABLE "
-    sqlStr += s.QuoteTable(table)
-
-    _, err = s.Query.Exec(sqlStr)
-    if err != nil {
-        s.Query.DB.AddError(err)
-    }
-    return err
+    return s.Dialector.TruncateTable(table, s.DB)
 }
 
 // AnalyzeTable Analyzes a table.
@@ -368,9 +302,9 @@ func (s *Schema) RepairTable(table string) bool {
 
 func (s *Schema) tableMaintenance(operation string, table string) bool {
     sqlStr := operation + " " + s.QuoteTable(table)
-    rows, err := s.Query.Rows(sqlStr)
+    rows, err := s.Rows(sqlStr)
     if err != nil {
-        s.Query.DB.AddError(err)
+        s.AddError(err)
     }
 
     // 字段名记得要大写开头，才是public，否则访问不到
@@ -422,9 +356,9 @@ func (s *Schema) TableExists(table string) bool {
     sqlStr += s.QuoteTable(table)
     sqlStr += " LIMIT 1"
 
-    _, err := s.Query.Rows(sqlStr)
+    _, err := s.Rows(sqlStr)
     if err != nil {
-        s.Query.DB.AddError(err)
+        s.AddError(err)
         return false
     }
     return true
@@ -450,115 +384,22 @@ func (s *Schema) FieldExists(table string, value interface{}) bool {
     sqlStr += s.QuoteTable(table)
     sqlStr += " LIMIT 1"
 
-    _, err := s.Query.Rows(sqlStr)
+    _, err := s.Rows(sqlStr)
     if err != nil {
-        s.Query.DB.AddError(err)
+        s.AddError(err)
         return false
     }
     return true
 }
 
 // CreateIndex Creates an index on that table.
-func (s *Schema) CreateIndex(table string, indexColumns interface{}, indexName string, index string) (err error) {
-    var sqlStr string    
-    acceptedIndex := []string{"UNIQUE", "FULLTEXT", "SPATIAL", "NONCLUSTERED", "PRIMARY"}
+func (s *Schema) CreateIndex(table string, indexColumns interface{}, indexName, index string) (err error) {
+    return s.Dialector.CreateIndex(table, indexColumns, indexName, index, s.DB)
+}
 
-    // make sure the index type is uppercase
-    if index != "" {
-        index = strings.ToUpper(index)
-    }
-
-    if indexName == "" {
-        switch indexColumns.(type) {
-        case []string:
-            for k, v := range indexColumns.([]string) {
-                if indexName == "" {
-                    indexName += ""
-                } else {
-                    indexName += "_"
-                }
-
-                key := ToString(k)
-                if IsNumeric(key) {
-                    indexName += v
-                } else {
-                    key = strings.Replace(key, "(", "", -1)
-                    key = strings.Replace(key, ")", "", -1)
-                    key = strings.Replace(key, " ", "", -1)
-                    indexName += key
-                }
-            }
-        default:
-            indexName = indexColumns.(string)
-        }
-    }
-
-    if index == "PRIMARY" {
-        sqlStr = "ALTER TABLE "
-        sqlStr += s.QuoteTable(table)
-        sqlStr += " ADD PRIMARY KEY "
-
-        switch indexColumns.(type) {
-        case []string:
-            columns := ""
-            for k, v := range indexColumns.([]string) {
-                if columns == "" {
-                    columns += ""
-                } else {
-                    columns += ", "
-                }
-
-                key := ToString(k)
-                if IsNumeric(key) {
-                    columns += s.QuoteIdentifier(v)
-                } else {
-                    columns += s.QuoteIdentifier(key) + " " + strings.ToUpper(v)
-                }
-            }
-            sqlStr += " (" + columns + ")"
-        }
-    } else {
-        sqlStr = "CREATE "
-
-        if index != "" {
-            if InSlice(index, &acceptedIndex) {
-                sqlStr += index + " "
-            }
-        }
-
-        sqlStr += "INDEX "
-        sqlStr += s.QuoteIdentifier(indexName)
-        sqlStr += " ON "
-        sqlStr += s.QuoteTable(table)
-
-        switch indexColumns.(type) {
-        case []string:
-            columns := ""
-            for k, v := range indexColumns.([]string) {
-                if columns == "" {
-                    columns += ""
-                } else {
-                    columns += ", "
-                }
-
-                key := ToString(k)
-                if IsNumeric(key) {
-                    columns += s.QuoteIdentifier(v)
-                } else {
-                    columns += s.QuoteIdentifier(key) + " " + strings.ToUpper(v)
-                }
-            }
-            sqlStr += " (" + columns + ")"
-        default:
-            sqlStr += " (" + s.QuoteIdentifier(indexColumns.(string)) + ")"
-        }
-    }
-
-    _, err = s.Query.Exec(sqlStr)
-    if err != nil {
-        s.Query.DB.AddError(err)
-    }
-    return err
+// RenameIndex Rename an index from a table.
+func (s *Schema) RenameIndex(table, oldName, newName string) (err error) {
+    return s.Dialector.RenameIndex(table, oldName, newName, s.DB)
 }
 
 // DropIndex Drop an index from a table.
@@ -568,16 +409,12 @@ func (s *Schema) DropIndex(table string, indexName string) (err error) {
 
 // AddForeignKey Adds a single foreign key to a table
 func (s *Schema) AddForeignKey(table string, foreignKey []map[string]interface{}) (err error) {
-    sqlStr := "ALTER TABLE " + s.QuoteTable(table) + " ADD " + strings.TrimLeft(s.processForeignKeys(foreignKey), ",")
+    sqlStr := "ALTER TABLE " + s.QuoteTable(table) + " ADD " + strings.TrimLeft(s.ProcessForeignKeys(foreignKey), ",")
 
-    res, err := s.Query.Exec(sqlStr)
+    fmt.Printf("%v\n", sqlStr)
+    _, err = s.Exec(sqlStr)
     if err != nil {
-        s.Query.DB.AddError(err)
-    }
-
-    _, err = res.RowsAffected()
-    if err != nil {
-        s.Query.DB.AddError(err)
+        s.AddError(err)
     }
     return err
 }
@@ -586,226 +423,35 @@ func (s *Schema) AddForeignKey(table string, foreignKey []map[string]interface{}
 func (s *Schema) DropForeignKey(table string, fkName string) (err error) {
     sqlStr := "ALTER TABLE " + s.QuoteTable(table) + " DROP FOREIGN KEY " + s.QuoteIdentifier(fkName)
 
-    _, err = s.Query.Exec(sqlStr)
+    _, err = s.Exec(sqlStr)
     if err != nil {
-        s.Query.DB.AddError(err)
+        s.AddError(err)
     }
     return err
 }
 
-func (s *Schema) processForeignKeys(foreignKeys []map[string]interface{}) string {
-    var fkList []string    
-    for _, definition := range foreignKeys {
-        // some sanity checks
-        if _, ok := definition["key"]; !ok {
-            s.AddError(errors.New("Foreign keys on processForeignKeys() must specify a foreign key name"))
-            return ""
-        }
-
-        if _, ok := definition["reference"]; !ok {
-            s.AddError(errors.New("Foreign keys on processForeignKeys() must specify a foreign key reference"))
-            return ""
-        }
-
-        reference := definition["reference"].(map[string]string)
-
-        var referenceTable, referenceColumn string    
-        if table, ok := reference["table"]; ok {
-            referenceTable = table
-        } else {
-            s.AddError(errors.New("Foreign keys on processForeignKeys() must specify a reference table name"))
-            return ""
-        }
-
-        if column, ok := reference["column"]; ok {
-            referenceColumn = column
-        } else {
-            s.AddError(errors.New("Foreign keys on processForeignKeys() must specify a reference column name"))
-            return ""
-        }
-
-        var sqlStr string    
-        if table, ok := definition["constraint"]; ok {
-            sqlStr += " CONSTRAINT " + s.QuoteTable(table.(string)) 
-        }
-
-        sqlStr += " FOREIGN KEY (" + s.QuoteIdentifier(definition["key"].(string)) + ")"
-        sqlStr += " REFERENCES " + s.QuoteTable(referenceTable) + " ("
-        referenceColumnArr := strings.Split(referenceColumn, ",")
-        for k, v := range referenceColumnArr {
-            referenceColumnArr[k] = s.QuoteIdentifier(v)
-        }
-        sqlStr += strings.Join(referenceColumnArr, ", ")
-        sqlStr += ")"
-
-        if val, ok := definition["on_update"]; ok {
-            sqlStr += " ON UPDATE " + val.(string) 
-        }
-        if val, ok := definition["on_delete"]; ok {
-            sqlStr += " ON DELETE " + val.(string)
-        }
-
-        fkList = append(fkList, "\n\t" + strings.TrimLeft(sqlStr, " "))
-    }
-
-    return ", " + strings.Join(fkList, ",")
-}
-
 // AddFields adds fields to a table.
-func (s *Schema) AddFields(table string, fields map[string] map[string]interface{}) error {
-    return s.alterFields("ADD", table, fields)
+func (s *Schema) AddFields(table string, fields []map[string]interface{}) error {
+    return s.Dialector.AddFields(table, fields, s.DB)
 }
 
 // DropFields drops fields from a table.
 func (s *Schema) DropFields(table string, value interface{}) error {
-    var fields []string
-    switch value.(type) {
-    case string:
-        fields = append(fields, value.(string))
-    default:
-        fields = value.([]string)
-    }
-    return s.alterFields("DROP", table, fields)
+    return s.Dialector.DropFields(table, value, s.DB)
 }
 
 // ModifyFields alters fields in a table.
-func (s *Schema) ModifyFields(table string, fields map[string] map[string]interface{}) error {
-    return s.alterFields("MODIFY", table, fields)
+func (s *Schema) ModifyFields(table string, fields []map[string]interface{}) error {
+    return s.Dialector.ModifyFields(table, fields, s.DB)
 }
 
-// 返回的 rowsAffected 为 0，但是实际上是修改成功了，不知道为什么
-func (s *Schema) alterFields(alterType string, table string, fields interface{}) (err error) {
-    sqlStr := "ALTER TABLE " + s.QuoteTable(table) + " "
+// AlterFields is ...
+//func (s *Schema) AlterFields(alterType, table string, fields interface{}) (err error) {
+    //return s.Dialector.AlterFields(alterType, table, fields, s.DB)
+//}
 
-    if alterType == "DROP" {
-        var dropFields, sqlDropFields []string
-        dropFields = fields.([]string)
-        for _, field := range dropFields {
-            sqlDropFields = append(sqlDropFields, "DROP " + s.QuoteIdentifier(field))
-        }
-        sqlStr += strings.Join(sqlDropFields, ", ")
-    } else {
-        fieldMaps := fields.(map[string] map[string]interface{})
-
-        useBrackets := true    
-        if InSlice(alterType, &[]string{"ADD", "CHANGE", "MODIFY"}) {
-            useBrackets = false
-        }
-        var prefix string    
-        if useBrackets {
-            sqlStr += alterType + " "
-            sqlStr += "("
-            prefix = ""
-        } else {
-            prefix = alterType + " "
-        }
-        sqlStr += s.processFields(fieldMaps, prefix)
-        if useBrackets {
-            sqlStr += ")"
-        }
-    }
-
-    _, err = s.Query.Exec(sqlStr)
-    if err != nil {
-        s.Query.DB.AddError(err)
-    }
-    return err
-}
-
-func (s *Schema) processCharset(charset string, isDefault bool, args ...string) string {
-
-    var collation string    
-    if len(args) > 0 {
-        collation = args[0]
-    }
-
-    // utf8_unicode_ci
-    charsets := strings.Split(charset, "_")
-    if collation == "" && len(charsets) > 1 {
-        collation = charset     // utf8_unicode_ci
-        charset   = charsets[0] // utf8
-    }
-
-    charset = " CHARACTER SET " + charset
-    if isDefault {
-        charset = " DEFAULT " + charset
-    }
-
-    if collation != "" {
-        if isDefault {
-            charset += " DEFAULT"
-        }
-        charset += " COLLATE " + collation
-    }
-
-    return charset
-}
-
-func (s *Schema) processFields(fields map[string] map[string]interface{}, prefix string) string {
-    var sqlFields []string    
-
-    for field, dict := range fields {
-        dict = MapChangeKeyCase(dict, true)
-        tmpPrefix := prefix
-        if value, ok := dict["NAME"]; ok && field != value && tmpPrefix == "MODIFY " {
-            tmpPrefix = "CHANGE "
-        }
-        sqlStr := "\n\t" + tmpPrefix
-        sqlStr += s.QuoteIdentifier(field)
-
-        if value, ok := dict["NAME"]; ok && field != value {
-            sqlStr += " " + s.QuoteIdentifier(value.(string)) + " "
-        }
-
-        if value, ok := dict["TYPE"]; ok {
-            sqlStr += " " + value.(string)
-        }
-
-        if value, ok := dict["CONSTRAINT"]; ok {
-            sqlStr += "(" + ToString(value) + ")"
-        }
-
-        if value, ok := dict["CHARSET"]; ok {
-            sqlStr += s.processCharset(value.(string), false)
-        }
-
-        if value, ok := dict["UNSIGNED"]; ok && value.(bool) == true {
-            sqlStr += " UNSIGNED"
-        }
-
-        if value, ok := dict["DEFAULT"]; ok {
-            sqlStr += " DEFAULT " + s.Quote(value.(string))
-        }
-
-        if value, ok := dict["NULL"]; ok && value.(bool) == true {
-            sqlStr += " NULL"
-        } else {
-            sqlStr += " NOT NULL"
-        }
-
-        if value, ok := dict["AUTO_INCREMENT"]; ok && value.(bool) == true {
-            sqlStr += " AUTO_INCREMENT"
-        }
-
-        if value, ok := dict["PRIMARY_KEY"]; ok && value.(bool) == true {
-            sqlStr += " PRIMARY_KEY"
-        }
-
-        if value, ok := dict["COMMENT"]; ok {
-            sqlStr += " COMMENT " + s.Escape(value.(string))
-        }
-
-        if value, ok := dict["FIRST"]; ok && value.(bool) == true {
-            sqlStr += " FIRST"
-        }
-
-        if value, ok := dict["AFTER"]; ok {
-            sqlStr += " AFTER " + s.QuoteIdentifier(value.(string))
-        }
-
-        sqlFields = append(sqlFields, sqlStr)
-    }
-
-    return strings.Join(sqlFields, ", ")
+// ProcessFields is ...
+func (s *Schema) ProcessFields(fields []map[string]interface{}, prefix string) string {
+    return s.Dialector.ProcessFields(fields, prefix, s.DB)
 }
 
