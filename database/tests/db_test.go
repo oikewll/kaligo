@@ -76,40 +76,40 @@ func TestDB(t *testing.T) {
     //db.Schema().CreateDatabase("demo2")
     //db.Schema().DropDatabase("demo2")
     
-    //fields := []map[string]interface{}{
-        //{
-            //"name": "id",
-            //"type": "int",
-            //"constraint": 11,
-            //"auto_increment": true,
-        //},
-        //{
-            //"name": "name",
-            //"type": "varchar",
-            //"constraint": 50,
-        //},
-        //{
-            //"name": "title",
-            //"type": "varchar",
-            //"constraint": 50,
-            //"default": "mr.",
-        //},
-    //}
-    //err = db.Schema().CreateTable("users9", fields, []string{"id"})
-    //err = db.Schema().RenameTable("users4", "users5")
-    //err = db.Schema().TruncateTable("users")
+    fields := []map[string]interface{}{
+        {
+            "name": "id",
+            "type": "int",
+            "constraint": 11,
+            "auto_increment": true,
+        },
+        {
+            "name": "name",
+            "type": "varchar",
+            "constraint": 50,
+        },
+        {
+            "name": "title",
+            "type": "varchar",
+            "constraint": 50,
+            "default": "mr.",
+        },
+    }
+    err = db.Schema().CreateTable("user", fields, []string{"id"})
+    //err = db.Schema().RenameTable("user", "user222")
+    //err = db.Schema().TruncateTable("user")
     //if err != nil {
         //t.Logf("Operation Table Err = %v", err)
     //}
-    //ok := db.Schema().TableExists("users8")
+    //ok := db.Schema().TableExists("user")
     //t.Logf("TableExists ok = %v", ok)
 
-    //ok := db.Schema().FieldExists("users8", "name")
-    //ok := db.Schema().FieldExists("users3", []string{"name"})
+    //ok := db.Schema().FieldExists("user", "name")
+    //ok := db.Schema().FieldExists("user", []string{"name"})
     //t.Logf("FieldExists ok = %v", ok)
 
-    //err = db.Schema().DropFields("users3", "title")
-    //err = db.Schema().DropFields("users4", []string{"name5", "title5"})
+    //err = db.Schema().DropFields("user", "title")
+    //err = db.Schema().DropFields("user", []string{"name5", "title5"})
 
     //fields := []map[string]interface{}{
         //{
@@ -125,7 +125,7 @@ func TestDB(t *testing.T) {
             //"default": "mr.",
         //},
     //}
-    //err = db.Schema().ModifyFields("users9", fields)
+    //err = db.Schema().ModifyFields("user", fields)
 
     //fields := []map[string]interface{}{
         //{
@@ -139,14 +139,14 @@ func TestDB(t *testing.T) {
         //t.Logf("Operation Fields Err = %v", err)
     //}
 
-    //ok := db.Schema().OptimizeTable("users3")
-    ok := db.Schema().CheckTable("users3")
-    t.Logf("Operation Table ok = %v", ok)
+    //ok := db.Schema().OptimizeTable("user")
+    //ok := db.Schema().CheckTable("user")
+    //t.Logf("Operation Table ok = %v", ok)
 
     //err = db.Schema().CreateIndex("user", "name", "name_idx6", "UNIQUE")
     //err = db.Schema().CreateIndex("user", []string{"age", "sex"}, "name_idx5", "UNIQUE")
     //err = db.Schema().RenameIndex("user", "ageindex2", "ageindex3")
-    //err = db.Schema().DropIndex("users3", "name")
+    //err = db.Schema().DropIndex("user", "name")
     //if err != nil {
         //t.Logf("Operation Index Err = %v", err)
     //}
