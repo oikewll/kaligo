@@ -409,25 +409,12 @@ func (s *Schema) DropIndex(table string, indexName string) (err error) {
 
 // AddForeignKey Adds a single foreign key to a table
 func (s *Schema) AddForeignKey(table string, foreignKey []map[string]interface{}) (err error) {
-    sqlStr := "ALTER TABLE " + s.QuoteTable(table) + " ADD " + strings.TrimLeft(s.ProcessForeignKeys(foreignKey), ",")
-
-    fmt.Printf("%v\n", sqlStr)
-    _, err = s.Exec(sqlStr)
-    if err != nil {
-        s.AddError(err)
-    }
-    return err
+    return s.Dialector.AddForeignKey(table, foreignKey, s.DB)
 }
 
 // DropForeignKey Drops a foreign key from a table
 func (s *Schema) DropForeignKey(table string, fkName string) (err error) {
-    sqlStr := "ALTER TABLE " + s.QuoteTable(table) + " DROP FOREIGN KEY " + s.QuoteIdentifier(fkName)
-
-    _, err = s.Exec(sqlStr)
-    if err != nil {
-        s.AddError(err)
-    }
-    return err
+    return s.Dialector.DropForeignKey(table, fkName, s.DB)
 }
 
 // AddFields adds fields to a table.
