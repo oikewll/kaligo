@@ -2,7 +2,7 @@ package driver
 
 import (
     "database/sql"
-    //"fmt"
+    "fmt"
     "reflect"
     "regexp"
     //"strconv"
@@ -49,44 +49,35 @@ func (dialector Dialector) Initialize(db *database.DB) (err error) {
     return
 }
 
+// CurrentDatabase is Current Database
+func (dialector Dialector) CurrentDatabase(db *database.DB) (name string) {
+    var null interface{}
+	db.Row("PRAGMA database_list").Scan(&null, &name, &null)
+    return
+}
+
 // ListDatabases If a database name is given it will return the database name with the configured
 // prefix. If not, then just the prefix is returnd
 func (dialector Dialector) ListDatabases(like string, db *database.DB) []string {
-    sqlStr := "PRAGMA database_list"
-
-    type DatabaseList struct {
-        Seq   int64
-        Name  string
-        File  string
-    }
-
-    //results := []map[string]interface{}{}
-    //db.Query(sqlStr).Scan(&results).Execute()
-    //fmt.Printf("%v\n", results)
-
-    rows, err := db.Rows(sqlStr)
+    rows, err := db.Rows("PRAGMA database_list")
     if err != nil {
         db.AddError(err)
     }
 
-    var databases []string
+    var (
+        null  interface{}
+        name  string
+        names []string
+    )
+
     for rows.Next() {
-        database := DatabaseList{}
-        o := reflect.ValueOf(&database).Elem()
-        numCols := o.NumField()
-        columns := make([]interface{}, numCols)
-        for i := 0; i < numCols; i++ {
-            field := o.Field(i)
-            columns[i] = field.Addr().Interface()
-        }
-        
-        if err := rows.Scan(columns...); err != nil {
+        if err := rows.Scan(&null, &name, &null); err != nil {
             db.AddError(err)
         } else {
-            databases = append(databases, database.Name)
+            names = append(names, name)
         }
     }
-    return databases
+    return names
 }
 
 // ListTables If a table name is given it will return the table name with the configured
@@ -100,14 +91,14 @@ func (dialector Dialector) ListTables(like string, db *database.DB) []string {
     }
     sqlStr += " ORDER BY name"
 
-    var tables []string
-    db.Query(sqlStr).Scan(&tables).Execute()
-    return tables
+    var names []string
+    db.Query(sqlStr).Scan(&names).Execute()
+    return names
 }
 
 // ListColumns Lists all of the columns in a table. Optionally, a LIKE string can be
 // used to search for specific fields.
-func (dialector Dialector) ListColumns(table string, like string, db *database.DB) []database.Column {
+func (dialector Dialector) ListColumns(table, like string, db *database.DB) []database.Column {
     sqlStr := "PRAGMA table_info(" + db.QuoteTable(table) + ")"
     rows, err := db.Rows(sqlStr)
     if err != nil {
@@ -158,54 +149,43 @@ func (dialector Dialector) ListColumns(table string, like string, db *database.D
 
 // ListIndexes Lists all of the idexes in a table. Optionally, a LIKE string can be
 // used to search for specific indexes by name.
-func (dialector Dialector) ListIndexes(table string, like string, db *database.DB) []database.Indexes {
+func (dialector Dialector) ListIndexes(table, like string, db *database.DB) []database.Indexes {
     sqlStr := "SELECT `name`, `tbl_name`, `sql` FROM `sqlite_master` WHERE `type` = 'index' AND `tbl_name` = " + db.Quote(table)
     if  like != "" {
         sqlStr += " LIKE " + db.Quote("%" + like + "%")
     }
-    
     rows, err := db.Rows(sqlStr)
     if err != nil {
         db.AddError(err)
     }
 
-    type IndexTmp struct {
-        KeyName string  `field:"name"`
-        Table   string  `field:"tbl_name"` 
-        SQLStr  string  `field:"sql"`
-    }
-
-    indexes := []database.Indexes{}
+    var (
+        name    string
+        tblName string
+        sql     string
+        indexes []database.Indexes
+    )
     for rows.Next() {
-        indexTmp := IndexTmp{}
-        o := reflect.ValueOf(&indexTmp).Elem()
-        numCols := o.NumField()
-        columns := make([]interface{}, numCols)
-        for i := 0; i < numCols; i++ {
-            field := o.Field(i)
-            columns[i] = field.Addr().Interface()
-        }
-        
-        if err := rows.Scan(columns...); err != nil {
+        if err := rows.Scan(&name, &tblName, &sql); err != nil {
             db.AddError(err)
         } else {
             index := database.Indexes{
-                Table     : indexTmp.Table,
-                Name      : indexTmp.KeyName,
+                Table : tblName,
+                Name  : name,
             }
 
             index.Unique = false
-            if strings.Index(indexTmp.SQLStr, "UNIQUE INDEX") != -1 {
+            if strings.Index(sql, "UNIQUE INDEX") != -1 {
                 index.Unique = true
             }
 
             index.Ascend = false
-            if strings.Index(indexTmp.SQLStr, "ASC") != -1 {
+            if strings.Index(sql, "ASC") != -1 {
                 index.Ascend = true
             }
 
-            reg := regexp.MustCompile("ON \""+table+"\" \\(\"(.*?)\"\\)")
-            arr := reg.FindStringSubmatch(indexTmp.SQLStr)
+            // 对于有ASC的提取不到，因为 ( 后面换行了，要修复一下
+            arr := regexp.MustCompile("ON \""+table+"\" \\(\"(.*?)\"\\)").FindStringSubmatch(sql)
             if len(arr) > 1 {
                 index.Column = arr[1]
             }
@@ -215,8 +195,191 @@ func (dialector Dialector) ListIndexes(table string, like string, db *database.D
     return indexes
 }
 
+// CreateDatabase Creates a database. Will throw a Database Exception if it cannot.
+func (dialector Dialector) CreateDatabase(database, charset string, ifNotExists bool, db *database.DB) (err error) {
+    return ErrCreateDatabaseNotImplemented
+}
+
+// DropDatabase Drops a database. Will throw a Database Exception if it cannot.
+func (dialector Dialector) DropDatabase(database string, db *database.DB) (err error) {
+    return ErrDropDatabaseNotImplemented
+}
+
+// CreateTable Creates a table.
+func (dialector Dialector) CreateTable(table string, fields []map[string]interface{}, primaryKeys []string, ifNotExists bool, engine, charset string, foreignKeys []map[string]interface{}, db *database.DB) (err error) {
+
+    sqlStr := "CREATE TABLE ";
+    if ifNotExists {
+        sqlStr += "IF NOT EXISTS "
+    }
+
+    sqlStr += db.QuoteTable(table) + " ("
+    sqlStr += dialector.ProcessFields(fields, "", db)
+
+    if len(primaryKeys) > 0 {
+        for k, v := range primaryKeys {
+            primaryKeys[k] = db.QuoteIdentifier(v)
+        }
+        sqlStr += ",\n\tPRIMARY KEY (" + strings.Join(primaryKeys, ", ") + ")"
+    }
+
+    if len(foreignKeys) > 0 {
+        sqlStr += db.ProcessForeignKeys(foreignKeys)
+    }
+
+    sqlStr += "\n)"
+    //if engine != "" {
+        //sqlStr += " ENGINE = " + engine + " "
+    //}
+
+    //sqlStr += db.ProcessCharset(charset, true, "") + ";"
+
+    _, err = db.Exec(sqlStr)
+    if err != nil {
+        db.AddError(err)
+    }
+    return err
+}
+
+// RenameTable Renames a table. Will throw a Database Exception if it cannot.
+func (dialector Dialector) RenameTable(oldTable, newTable string, db *database.DB) (err error) {
+    sqlStr := "ALTER TABLE "
+    sqlStr += db.QuoteTable(oldTable)
+    sqlStr += " RENAME TO "
+    sqlStr += db.QuoteTable(newTable)
+
+    _, err = db.Exec(sqlStr)
+    if err != nil {
+        db.AddError(err)
+    }
+    return err
+}
+
+// DropTable Drops a table. Will throw a Database Exception if it cannot.
+func (dialector Dialector) DropTable(table string, db *database.DB) (err error) {
+    sqlStr := "DROP TABLE IF EXISTS "
+    sqlStr += db.QuoteTable(table)
+    
+    _, err = db.Exec(sqlStr)
+    if err != nil {
+        db.AddError(err)
+    }
+    return err
+}
+
+// TruncateTable Truncates a table.
+func (dialector Dialector) TruncateTable(table string, db *database.DB) (err error) {
+    sqlStr := "DELETE FROM "    // sqlite DELETE FROM 可以让自增字段从0开始，mysql 要用 TRUNCATE TABLE 才行 
+    sqlStr += db.QuoteTable(table)
+
+    _, err = db.Exec(sqlStr)
+    if err != nil {
+        db.AddError(err)
+    }
+    return err
+}
+
+// CreateIndex Creates an index on that table.
+func (dialector Dialector) CreateIndex(table string, indexColumns interface{}, indexName, index string, db *database.DB) (err error) {
+    var sqlStr string    
+    acceptedIndex := []string{"UNIQUE", "PRIMARY"} // Can't support FULLTEXT, SPATIAL, NONCLUSTERED
+
+    // make sure the index type is uppercase
+    if index != "" {
+        index = strings.ToUpper(index)
+        if !database.InSlice(index, &acceptedIndex) {
+            return fmt.Errorf("failed to create index with name %s", index)
+        }
+    }
+
+    // 索引名为空，如果是多个字段则以下划线拼接，单个字段名以字段名为索引名
+    if indexName == "" {
+        switch indexColumns.(type) {
+        case []string:
+            for k, v := range indexColumns.([]string) {
+                if indexName == "" {
+                    indexName += ""
+                } else {
+                    indexName += "_"
+                }
+
+                key := database.ToString(k)
+                if database.IsNumeric(key) {
+                    indexName += v
+                } else {
+                    key = strings.Replace(key, "(", "", -1)
+                    key = strings.Replace(key, ")", "", -1)
+                    key = strings.Replace(key, " ", "", -1)
+                    indexName += key
+                }
+            }
+        default:
+            indexName = indexColumns.(string)
+        }
+    }
+
+    columns := ""
+    switch indexColumns.(type) {
+    case []string:
+        for k, v := range indexColumns.([]string) {
+            if columns == "" {
+                columns += ""
+            } else {
+                columns += ", "
+            }
+
+            key := database.ToString(k)
+            if database.IsNumeric(key) {
+                columns += db.QuoteIdentifier(v)
+            } else {
+                columns += db.QuoteIdentifier(key) + " " + strings.ToUpper(v)
+            }
+        }
+    default:
+        columns = db.QuoteIdentifier(indexColumns.(string))
+    }
+
+    if index != "PRIMARY" {
+        sqlStr = "CREATE "
+        if index != "" {
+            sqlStr += index + " "
+        }
+        sqlStr += "INDEX "
+        sqlStr += db.QuoteIdentifier(indexName)
+        sqlStr += " ON "
+        sqlStr += db.QuoteTable(table)
+        sqlStr += " (" + columns + ")"
+
+        _, err = db.Exec(sqlStr)
+        if err != nil {
+            db.AddError(err)
+        }
+    } else {
+        err = ErrPrimaryKeyNotImplemented
+    }
+    return err
+}
+
+// RenameIndex Rename an index from a table.
+func (dialector Dialector) RenameIndex(table, oldName, newName string, db *database.DB) (err error) {
+    var sql string
+    db.Row("SELECT sql FROM sqlite_master WHERE type = ? AND tbl_name = ? AND name = ?", "index", table, oldName).Scan(&sql)
+    if sql != "" {
+        // Drop old index
+        dialector.DropIndex(table, oldName, db)
+        // Create a new index
+        _, err = db.Exec(strings.Replace(sql, oldName, newName, 1))
+    } else {
+        err = fmt.Errorf("failed to find index with name %v", oldName)
+    }
+    if err != nil {
+        db.AddError(err)
+    }
+    return err
+}
+
 // DropIndex Drop an index from a table.
-func (dialector Dialector) DropIndex(table string, indexName string, db *database.DB) (err error) {
+func (dialector Dialector) DropIndex(table, indexName string, db *database.DB) (err error) {
     // sqlite 所有表的索引都不能重复，因为他不是依赖表的
     sqlStr := "DROP INDEX " + db.QuoteIdentifier(indexName)
 
@@ -225,4 +388,109 @@ func (dialector Dialector) DropIndex(table string, indexName string, db *databas
         db.AddError(err)
     }
     return err
+}
+
+// AddForeignKey Adds a single foreign key to a table
+func (dialector Dialector) AddForeignKey(table string, foreignKey []map[string]interface{}, db *database.DB) (err error) {
+    return ErrForeignKeyNotImplemented
+}
+
+// DropForeignKey Drops a foreign key from a table
+func (dialector Dialector) DropForeignKey(table string, fkName string, db *database.DB) (err error) {
+    return ErrForeignKeyNotImplemented
+}
+
+// AddFields adds fields to a table.
+func (dialector Dialector) AddFields(table string, fields []map[string]interface{}, db *database.DB) error {
+    // SQLite 不支持一条语句添加多个字段 
+    if len(fields) > 1 {
+        return ErrAlertTableMultipleAddNotImplemented
+    }
+    return dialector.AlterFields("ADD", table, fields, db)
+}
+
+// DropFields drops fields from a table.
+func (dialector Dialector) DropFields(table string, value interface{}, db *database.DB) error {
+    return ErrAlertTableNotImplemented
+}
+
+// ModifyFields alters fields in a table.
+func (dialector Dialector) ModifyFields(table string, fields []map[string]interface{}, db *database.DB) error {
+    return ErrAlertTableNotImplemented
+}
+
+// AlterFields is ...
+func (dialector Dialector) AlterFields(alterType string, table string, fields interface{}, db *database.DB) (err error) {
+    sqlStr := "ALTER TABLE " + db.QuoteTable(table) + " "
+
+    fieldMaps := fields.([]map[string]interface{})
+
+    useBrackets := true    
+    if database.InSlice(alterType, &[]string{"ADD"}) {
+        useBrackets = false
+    }
+    var prefix string    
+    if useBrackets {
+        sqlStr += alterType + " "
+        sqlStr += "("
+        prefix = ""
+    } else {
+        prefix = alterType + " "
+    }
+    sqlStr += dialector.ProcessFields(fieldMaps, prefix, db)
+    if useBrackets {
+        sqlStr += ")"
+    }
+
+    _, err = db.Exec(sqlStr)
+    if err != nil {
+        db.AddError(err)
+    }
+    return err
+}
+
+// ProcessFields is 
+func (dialector Dialector) ProcessFields(fields []map[string]interface{}, prefix string, db *database.DB) string {
+    var sqlFields []string    
+
+    for _, dict := range fields {
+        dict = database.MapChangeKeyCase(dict, true)
+        sqlStr := ""
+        // ALTER TABLE statement to modify、drop、rename a column in SQLite does not support.
+        if prefix == "ADD " {
+            sqlStr += "\n\tADD "
+        }
+
+        if value, ok := dict["NAME"]; ok {
+            sqlStr += " " + db.QuoteIdentifier(value.(string))
+        }
+
+        if value, ok := dict["UNSIGNED"]; ok && value.(bool) == true {
+            sqlStr += " UNSIGNED"
+        }
+
+        if value, ok := dict["TYPE"]; ok {
+            sqlStr += " " + value.(string)
+        }
+
+        if value, ok := dict["CONSTRAINT"]; ok {
+            sqlStr += "(" + database.ToString(value) + ")"
+        }
+
+        if value, ok := dict["NOTNULL"]; ok && value.(bool) == true {
+            sqlStr += " NOT NULL"
+        } else {
+            sqlStr += " NULL"
+        }
+
+        if value, ok := dict["DEFAULT"]; ok {
+            sqlStr += " DEFAULT " + db.Quote(value.(string))
+        }
+
+        // Sqlite does not support COMMENT、FIRST、AFTER
+
+        sqlFields = append(sqlFields, sqlStr)
+    }
+
+    return strings.Join(sqlFields, ", ")
 }

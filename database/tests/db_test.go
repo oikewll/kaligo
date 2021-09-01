@@ -58,14 +58,11 @@ func TestDB(t *testing.T) {
         t.Fatal(err)
     }
 
-    ////sqlStr = "drop table user;"
-    //sqlStr = "create table demo (id integer not null primary key, name text, age integer, sex integer);"
-    //sqlStr = "delete from user;"
-    //sqlStr = "insert into user(name, age, sex) values('test222', '30', '1')"
-    //_, err = db.Exec(sqlStr)
+    //databases := db.Schema().CurrentDatabase()
+    //t.Logf("jsonStr = %v\n", database.FormatJSON(databases))
 
-    databases := db.Schema().ListDatabases("demo")
-    t.Logf("jsonStr = %v\n", database.FormatJSON(databases))
+    //databases := db.Schema().ListDatabases("demo")
+    //t.Logf("jsonStr = %v\n", database.FormatJSON(databases))
 
     //tables := db.Schema().ListTables("user")
     //t.Logf("jsonStr = %v\n", database.FormatJSON(tables))
@@ -79,72 +76,78 @@ func TestDB(t *testing.T) {
     //db.Schema().CreateDatabase("demo2")
     //db.Schema().DropDatabase("demo2")
     
-    //fields := map[string] map[string]interface{}{
-        //"id": {
+    //fields := []map[string]interface{}{
+        //{
+            //"name": "id",
             //"type": "int",
             //"constraint": 11,
             //"auto_increment": true,
         //},
-        //"name": {
+        //{
+            //"name": "name",
             //"type": "varchar",
             //"constraint": 50,
         //},
-        //"title": {
-            //"type": "varchar",
-            //"constraint": 50,
-            //"default": "mr.",
-        //},
-    //}
-    //db.Schema().CreateTable("users", fields, []string{"id"})
-    //db.Schema().RenameTable("users", "users2")
-    //db.Schema().TruncateTable("users")
-    //db.Schema().TableExists("users")
-
-    //fieldExists := db.Schema().FieldExists("users3", "name")
-    //fieldExists := db.Schema().FieldExists("users3", []string{"name"})
-    //t.Logf("FieldExists = %v", fieldExists)
-
-    //dropFields := db.Schema().DropFields("users3", "title")
-    //dropFields := db.Schema().DropFields("users3", []string{"title"})
-    //t.Logf("dropFields = %v", dropFields)
-
-    //fields := map[string] map[string]interface{}{
-        //"name": {
-            //"type": "varchar",
-            //"constraint": 50,
-        //},
-        //"title": {
+        //{
+            //"name": "title",
             //"type": "varchar",
             //"constraint": 50,
             //"default": "mr.",
         //},
     //}
-    //modifyFields := db.Schema().ModifyFields("users3", fields)
-    //t.Logf("modifyFields = %v", modifyFields)
+    //err = db.Schema().CreateTable("users9", fields, []string{"id"})
+    //err = db.Schema().RenameTable("users4", "users5")
+    //err = db.Schema().TruncateTable("users")
+    //err = db.Schema().TableExists("users")
+    //if err != nil {
+        //t.Logf("Operation Table Err = %v", err)
+    //}
 
-    //fields := map[string] map[string]interface{}{
-        //"name5": {
+    //ok := db.Schema().FieldExists("users4", "name")
+    //ok := db.Schema().FieldExists("users3", []string{"name"})
+    //t.Logf("FieldExists ok = %v", ok)
+
+    //err = db.Schema().DropFields("users3", "title")
+    //err = db.Schema().DropFields("users4", []string{"name5", "title5"})
+
+    //fields := []map[string]interface{}{
+        //{
+            //"oldname" : "name",
+            //"name": "name111",
             //"type": "varchar",
             //"constraint": 50,
         //},
-        //"title5": {
+        //{
+            //"name": "title",
             //"type": "varchar",
             //"constraint": 50,
             //"default": "mr.",
         //},
     //}
-    //addFields := db.Schema().AddFields("users3", fields)
-    //t.Logf("addFields = %v", addFields)
+    //err = db.Schema().ModifyFields("users9", fields)
 
-    //checkTable := db.Schema().OptimizeTable("users3")
-    //checkTable := db.Schema().CheckTable("users3")
-    //t.Logf("checkTable = %v", checkTable)
+    //fields := []map[string]interface{}{
+        //{
+            //"name": "name6",
+            //"type": "varchar",
+            //"constraint": 50,
+        //},
+    //}
+    //err = db.Schema().AddFields("user", fields)
+    //if err != nil {
+        //t.Logf("Operation Fields Err = %v", err)
+    //}
 
-    //createIndex := db.Schema().CreateIndex("users3", "name", "name", "UNIQUE")
-    //createIndex := db.Schema().CreateIndex("users3", []string{"name", "name2"}, "name333", "UNIQUE")
-    //t.Logf("checkTable = %v", createIndex)
-    //if err = db.Schema().DropIndex("users3", "name"); err != nil {
-        //t.Logf("dropIndex Err = %v", err)
+    //ok := db.Schema().OptimizeTable("users3")
+    //ok := db.Schema().CheckTable("users3")
+    //t.Logf("Operation Table ok = %v", ok)
+
+    //err = db.Schema().CreateIndex("user", "name", "name_idx6", "UNIQUE")
+    //err = db.Schema().CreateIndex("user", []string{"age", "sex"}, "name_idx5", "UNIQUE")
+    //err = db.Schema().RenameIndex("user", "ageindex2", "ageindex3")
+    //err = db.Schema().DropIndex("users3", "name")
+    //if err != nil {
+        //t.Logf("Operation Index Err = %v", err)
     //}
 
     //foreignKey := []map[string]interface{}{
@@ -159,9 +162,11 @@ func TestDB(t *testing.T) {
             //"on_delete": "RESTRICT",
         //},
     //}
-    //addForeignKey := db.Schema().AddForeignKey("player", foreignKey)
-    //t.Logf("addForeignKey = %v", addForeignKey)
-    //db.Schema().DropForeignKey("player", "fk_uid")
+    //err = db.Schema().AddForeignKey("player", foreignKey)
+    ////err = db.Schema().DropForeignKey("player", "fk_uid")
+    //if err != nil {
+        //t.Logf("Operation Foreign Key Err = %v", err)
+    //}
 
     //db.Transaction(func(tx *DB) error {
         //// 在事务中执行一些 db 操作（从这里开始，您应该使用 'tx' 而不是 'db'）
