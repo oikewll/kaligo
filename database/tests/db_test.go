@@ -29,6 +29,13 @@ import (
 	//"github.com/owner888/kaligo/cache"
 )
 
+type statefulCamable func(name string) error
+
+func (c statefulCamable) Auth(password string) bool{
+    _ = c("test")
+    return true
+}
+
 type User struct {
     ID   int    `db:"id"`
     Name string `db:"name"`
@@ -37,6 +44,10 @@ type User struct {
 }
 
 func TestDB(t *testing.T) {
+    //var (
+        //regRealDataType = regexp.MustCompile(`[^\d](\d+)[^\d]?`)
+        //regFullDataType = regexp.MustCompile(`[^\d]*(\d+)[^\d]?`)
+    //)
 
     //var sqlStr string
 
@@ -44,7 +55,6 @@ func TestDB(t *testing.T) {
     //conf.AppPath = str + "/../"
     //log.Printf("TestDB AppPath: [ %v ]", conf.AppPath)
     //define('APPPATH', __DIR__.'/../app');
-
     dbuser := "root"
     dbpass := "root"
     dbhost := "127.0.0.1"
@@ -67,8 +77,9 @@ func TestDB(t *testing.T) {
     //tables := db.Schema().ListTables("user")
     //t.Logf("jsonStr = %v\n", database.FormatJSON(tables))
 
-    //columns := db.Schema().ListColumns("user")
-    //t.Logf("jsonStr = %v\n", database.FormatJSON(columns))
+    //db.Schema().ListColumns("user")
+    columns := db.Schema().ListColumns("user")
+    t.Logf("jsonStr = %v\n", database.FormatJSON(columns))
 
     //indexes := db.Schema().ListIndexes("user")
     //t.Logf("jsonStr = %v\n", database.FormatJSON(indexes))
@@ -185,22 +196,20 @@ func TestDB(t *testing.T) {
         //return nil
     //})
 
+    // Test Rollback and Rollback
     //db.Begin()
     ////defer db.Rollback()
-
-
-    ////db.Rollback()
+    //db.Insert("user", []string{"name", "age"}).Values([]string{"test111", "20"}).Execute()
+    //db.Rollback()
     //db.Commit()
 
-    db.Begin()
-    db.Insert("user", []string{"name", "age"}).Values([]string{"test111", "20"}).Execute()
-
-    db.SavePoint("sp1")
-    db.Insert("user", []string{"name", "age"}).Values([]string{"test222", "23"}).Execute()
-    db.RollbackTo("sp1")    // Rollback the user name is test222
-
-    db.Commit()  // Commit the user name is test111 
-
+    // Test SavePoint and RollbackTo
+    //db.Begin()
+    //db.Insert("user", []string{"name", "age"}).Values([]string{"test111", "20"}).Execute()
+    //db.SavePoint("sp1")
+    //db.Insert("user", []string{"name", "age"}).Values([]string{"test222", "23"}).Execute()
+    //db.RollbackTo("sp1")    // Rollback the user name is test222
+    //db.Commit()  // Commit the user name is test111 
 
     //db.Debug = false
     //func main() {

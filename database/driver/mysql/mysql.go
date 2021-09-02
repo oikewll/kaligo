@@ -4,6 +4,7 @@ import (
     "database/sql"
     "fmt"
     "reflect"
+    //"regexp"
     //"strconv"
     "strings"
     _ "github.com/go-sql-driver/mysql"   // need comment
@@ -87,9 +88,75 @@ func (dialector Dialector) ListColumns(table, like string, db *database.DB) []da
     if  like != "" {
         sqlStr += " LIKE " + db.Quote("%" + like + "%")
     }
+    rows, err := db.Rows(sqlStr)
+    if err != nil {
+        db.AddError(err)
+    }
+
+    var (
+        columnField       string
+        columnType        string
+        columnCollation   sql.NullString
+        columnNull        string
+        columnKey         string
+        columnDefault     sql.NullString
+        columnExtra       string
+        columnPrivileges  string
+        columnComment     string
+    )
 
     listColumns := []database.Column{}
-    db.Query(sqlStr).Scan(&listColumns).Execute()
+    for rows.Next() {
+        if err := rows.Scan(&columnField, &columnType, &columnCollation, &columnNull, &columnKey, &columnDefault, &columnExtra, &columnPrivileges, &columnComment); err != nil {
+            db.AddError(err)
+        } else {
+            //if strings.Index(columnType, "unsigned") != -1 { }
+            //if strings.Index(columnType, "zerofill") != -1 { }
+            var readable, creatable, updatable, notNull, unique, primaryKey, autoIncrement  bool = true, true, true, true, false, false, false
+            if strings.Index(columnPrivileges, "select") != -1 {
+                readable = true
+            }
+            if strings.Index(columnPrivileges, "insert") != -1 {
+                creatable = true
+            }
+            if strings.Index(columnPrivileges, "update") != -1 {
+                updatable = true
+            }
+            if columnNull == "NO" {
+                notNull = false
+            }
+            if columnKey == "PRI" {
+                primaryKey = true
+            } else if columnKey == "UNI" {
+                unique = true
+            }
+            if columnExtra == "auto_increment" {
+                autoIncrement = true
+            }
+
+            dataType, dataSize := database.ParseType(columnType)
+            column := database.Column{
+                Name            : database.ToSchemaName(columnField),
+                DBName          : columnField,
+                DataType        : dataType,
+                Size            : dataSize,
+                Precision       : 0,
+                NotNull         : notNull,
+                DefaultValue    : columnDefault.String,
+                Unique          : unique,
+                PrimaryKey      : primaryKey,
+                AutoIncrement   : autoIncrement,
+                Comment         : columnComment,
+                Readable        : readable,
+                Creatable       : creatable,
+                Updatable       : updatable,
+                Extra           : columnExtra,
+            }
+
+            listColumns = append(listColumns, column)
+        }
+    }
+
     return listColumns
 }
 

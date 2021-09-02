@@ -3,7 +3,7 @@ package driver
 import (
     "database/sql"
     "fmt"
-    "reflect"
+    //"reflect"
     "regexp"
     //"strconv"
     "strings"
@@ -104,47 +104,73 @@ func (dialector Dialector) ListColumns(table, like string, db *database.DB) []da
     if err != nil {
         db.AddError(err)
     }
-
-    type Column struct {
-        Cid         string
-        Name        string
-        Type        string
-        NotNull     int64
-        DfltValue   sql.NullString
-        PK          string
+    var createSQL string    
+    // CREATE UNIQUE INDEX "id_idx" ON "user" ("id")
+    db.Row("SELECT sql FROM sqlite_master WHERE type = ? AND tbl_name = ?", "index", table).Scan(&createSQL)
+    var unique bool = false    
+    if strings.Index(createSQL, "UNIQUE INDEX") != -1 {
+        unique = true
     }
+
+    var (
+        columnCid, columnNotNull, columnPK  int64
+        columnName, columnType              string
+        columnDfltValue                     sql.NullString
+    )
 
     listColumns := []database.Column{}
     for rows.Next() {
-        columnTmp := Column{}
-        o := reflect.ValueOf(&columnTmp).Elem()
-        numCols := o.NumField()
-        columns := make([]interface{}, numCols)
-        for i := 0; i < numCols; i++ {
-            field := o.Field(i)
-            columns[i] = field.Addr().Interface()
-        }
-        
-        if err := rows.Scan(columns...); err != nil {
+        if err := rows.Scan(&columnCid, &columnName, &columnType, &columnNotNull, &columnDfltValue, &columnPK); err != nil {
             db.AddError(err)
         } else {
-            column := database.Column{
-                Field     : columnTmp.Name,
-                Type      : columnTmp.Type,
-                Default   : columnTmp.DfltValue.String,
-                Key       : columnTmp.PK,
-                Extra     : columnTmp.Cid,
+            var notNull, primaryKey, autoIncrement bool = true, false, false
+            if columnNotNull == 0 {
+                notNull       = false
+            }
+            if columnPK == 1 {
+                primaryKey    = true
+                autoIncrement = true
             }
 
-            column.Null = "NO"
-            if columnTmp.NotNull == 1 {
-                column.Null = "YES"
+            dataType, dataSize := database.ParseType(columnType)
+            column := database.Column{
+                Name            : database.ToSchemaName(columnName),
+                DBName          : columnName,
+                DataType        : dataType,
+                Size            : dataSize,
+                Precision       : 0,
+                NotNull         : notNull,
+                DefaultValue    : columnDfltValue.String,
+                Unique          : unique,
+                PrimaryKey      : primaryKey,
+                AutoIncrement   : autoIncrement,
+                Comment         : "",
+                Readable        : true,
+                Creatable       : true,
+                Updatable       : true,
+                Extra           : database.ToString(columnCid),
             }
 
             listColumns = append(listColumns, column)
         }
     }
     return listColumns
+}
+
+func (dialector Dialector) getPrimaryKeyColumn(createSQL string) string {
+    arr := strings.Split(createSQL, "\n")
+    var primaryKeyStr, primaryKeyColumn string    
+    for _, v := range arr {
+        if strings.Index(v, "PRIMARY KEY") != -1 {
+            primaryKeyStr = v
+        }
+    }
+    if primaryKeyStr != "" {
+        arr = strings.Split(primaryKeyStr, " ")
+        primaryKeyColumn = strings.TrimSpace(arr[0])
+        primaryKeyColumn = strings.Replace(primaryKeyColumn, "\"", "", -1)
+    }
+    return primaryKeyColumn
 }
 
 // ListIndexes Lists all of the idexes in a table. Optionally, a LIKE string can be
@@ -223,6 +249,7 @@ func (dialector Dialector) CreateTable(table string, fields []map[string]interfa
         sqlStr += ",\n\tPRIMARY KEY (" + strings.Join(primaryKeys, ", ") + ")"
     }
 
+    // 要测试一下
     if len(foreignKeys) > 0 {
         sqlStr += db.ProcessForeignKeys(foreignKeys)
     }

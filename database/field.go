@@ -49,56 +49,50 @@ const (
 
 // Column is ...
 type Column struct {
-    Field       string
-    Type        string
-    Collation   string
-    Null        string
-    Key         string
-    Default     string
-    Extra       string
-    Privileges  string
-    Comment     string
+    Name                string      // 字段名
+    DBName              string      // 数据库栏位名
+    DataType            DataType    // 数据类型，这里模拟了一个enum
+    Size                int64       // 栏位长度
+    Precision           int64       // 精是，小数点保留多少位，decimal(10, 2) 里面的 2
+    NotNull             bool        // 是否允许为空
+    DefaultValue        string      // 默认值
+    Unique              bool        // 是否唯一索引
+    PrimaryKey          bool        // 是否主键
+    AutoIncrement       bool        // 是否自增
+    Comment             string      // 注释
+    Readable            bool        // Privileges select
+    Creatable           bool        // Privileges insert
+    Updatable           bool        // Privileges update
+    Extra               string
 }
 
 // Field is ...
 type Field struct {
-    Name                   string   // 字段名
+    *Column
 
-    Column                 string   // 数据库栏位名
-    DataType               DataType // 数据类型，这里模拟了一个enum
-    Size                   int      // 栏位长度
-    Precision              int      // 精度
-    Unique                 bool     // 是否唯一
-    NotNull                bool     // 是否允许为空
-    DefaultValue           string   // 默认值
-    PrimaryKey             bool     // 是否主键
-    AutoIncrement          bool     // 是否自增
-    Comment                string   // 注释
+    FieldType           reflect.Type
+    IndirectFieldType   reflect.Type
+    StructField         reflect.StructField
+    StructTag           reflect.StructTag
+    TagSettings         map[string]string
 
-    FieldType              reflect.Type
-    IndirectFieldType      reflect.Type
-    StructField            reflect.StructField
-    StructTag              reflect.StructTag
-    TagSettings            map[string]string
-
-    ReflectValueOf         func(reflect.Value) reflect.Value
-    ValueOf                func(reflect.Value) (value interface{}, zero bool)
-    Set                    func(reflect.Value, interface{}) error
+    ReflectValueOf      func(reflect.Value) reflect.Value
+    ValueOf             func(reflect.Value) (value interface{}, zero bool)
+    Set                 func(reflect.Value, interface{}) error
 }
 
 // ParseField is 解析字段
 func ParseField(fieldStruct reflect.StructField) *Field {
-    var err error
     //fmt.Printf("ParseField %v\n", FormatJSON(fieldStruct))
 
     field := &Field{
-		Name:                   fieldStruct.Name,
 		FieldType:              fieldStruct.Type,
 		IndirectFieldType:      fieldStruct.Type,
 		StructField:            fieldStruct,
 		StructTag:              fieldStruct.Tag,
         TagSettings:            ParseTagSetting(fieldStruct.Tag.Get("db"), ";"),
 	}
+    field.Name = fieldStruct.Name
 
     // Array、Slice、Struct 需要通过 Elem() 获取指针指向的值(子元素的值)，其他类型直接拿到的就是他的值
     for field.IndirectFieldType.Kind() == reflect.Ptr {
@@ -146,7 +140,7 @@ func ParseField(fieldStruct reflect.StructField) *Field {
     //fmt.Printf("field.TagSettings = %v\n", field.TagSettings)
 
     if val, ok := field.TagSettings["COLUMN"]; ok {
-        field.Column = val
+        field.DBName = val
     }
 
     // 是否主键索引
@@ -168,9 +162,7 @@ func ParseField(fieldStruct reflect.StructField) *Field {
 
     // 类型大小
     if num, ok := field.TagSettings["SIZE"]; ok {
-        if field.Size, err = strconv.Atoi(num); err != nil {
-            field.Size = -1
-        }
+        field.Size = ToInt64(num)
     }
 
     // 是否可以为NULL
@@ -458,7 +450,7 @@ func (field *Field) setupValuerAndSetter() {
             case int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64, string:
                 field.ReflectValueOf(value).SetString(ToString(data))
             case float64, float32:
-                field.ReflectValueOf(value).SetString(fmt.Sprintf("%."+strconv.Itoa(field.Precision)+"f", data))
+                field.ReflectValueOf(value).SetString(fmt.Sprintf("%."+ToString(field.Precision)+"f", data))
             default:
                 return fallbackSetter(value, v, field.Set)
             }

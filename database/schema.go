@@ -19,7 +19,7 @@ type Schema struct {
     Table                     string
     Fields                    []*Field
     FieldsByName              map[string]*Field     // 通过 struct 字段名查询
-    FieldsByColumn            map[string]*Field     // 通过 数据库 字段名查询
+    FieldsByDBName            map[string]*Field     // 通过 数据库 字段名查询
     err                       error
     initialized               chan struct{}
     cacheStore                *sync.Map
@@ -54,7 +54,7 @@ func (s Schema) String() string {
 
 // LookUpField is 通过表名 或者 数据库名 查询字段
 func (s Schema) LookUpField(name string) *Field {
-    if field, ok := s.FieldsByColumn[name]; ok {
+    if field, ok := s.FieldsByDBName[name]; ok {
         return field
     }
 
@@ -107,7 +107,7 @@ func Parse(dest interface{}, cacheStore *sync.Map) (*Schema, error) {
         Name:           modelType.Name(),
         ModelType:      modelType,
         FieldsByName:   map[string]*Field{},
-        FieldsByColumn: map[string]*Field{},
+        FieldsByDBName: map[string]*Field{},
         cacheStore:     cacheStore,
         initialized:    make(chan struct{}),
     }
@@ -140,16 +140,16 @@ func Parse(dest interface{}, cacheStore *sync.Map) (*Schema, error) {
         }
     }
 
-    // 循环字段，给 FieldsByColumn、FieldsByName 赋值
+    // 循环字段，给 FieldsByDBName、FieldsByName 赋值
     for _, field := range schema.Fields {
-        if field.Column == "" && field.DataType != "" {
+        if field.DBName == "" && field.DataType != "" {
             // 驼峰转下划线，数据库字段都是下划线写法
-            field.Column = toDBName(field.Name)
+            field.DBName = ToDBName(field.Name)
         }
 
-        if field.Column != "" {
-            if _, ok := schema.FieldsByColumn[field.Column]; !ok {
-                schema.FieldsByColumn[field.Column] = field
+        if field.DBName != "" {
+            if _, ok := schema.FieldsByDBName[field.DBName]; !ok {
+                schema.FieldsByDBName[field.DBName] = field
                 schema.FieldsByName[field.Name]     = field
                 //fmt.Printf("66666 ---> %v\n", field)
             }
