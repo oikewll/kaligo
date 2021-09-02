@@ -66,10 +66,58 @@ func FormatJSON(jsonObj interface{}) string {
     return string(jsonStr)
 }
 
+// ParseType is Extracts the text between parentheses, if any.
+//     Returns: []interface{}{"CHAR", 6}
+//     columnType, columnSize := parseType("CHAR(6)");
+func ParseType(columnType string) (retType DataType, retSize int64) {
+    var strOpen int    
+    if strOpen = strings.Index(columnType, "("); strOpen != -1 {
+        // Closing parenthesis
+        strClose := strings.Index(columnType, ")")
+
+        // Length without parentheses
+        strLength := columnType[strOpen + 1 : strClose]
+
+        // Type without the length
+        columnType = columnType[0:strOpen]
+        retSize = ToInt64(strLength)
+    } else {
+        // No length specified
+        retSize = 0
+    }
+
+    columnType = GetDataType(columnType)
+    retType    = DataType(columnType)
+    return
+}
+
+// GetDataType is ...
+func GetDataType(value string) (dataType string) {
+    switch strings.ToLower(value) {
+    case "boolean":
+        dataType = "bool"
+    case "int", "integer", "smallint", "bigint":
+        dataType = "int"
+    case "dec", "decimal", "double precision", "float", "numeric", "real":
+        dataType = "float"
+    case "date", "time", "time with time zone", "timestamp", "timestamp with time zone":
+        dataType = "time"
+    case "bit", "bit varying", "char", "char varying", "character", "character varying", "interval", "national char", "national char varying",
+        "national character", "national character varying", "nchar", "nchar varying", "varchar", "char large object", "character large object",
+        "clob", "national character large object", "nchar large object", "nclob":
+        dataType = "string"
+    case "binary large object", "blob", "binary", "binary varying", "varbinary":
+        dataType = "bytes"
+    default:
+        dataType = "bytes"
+    }
+    return
+}
+
 var commonInitialisms = []string{"API", "ASCII", "CPU", "CSS", "DNS", "EOF", "GUID", "HTML", "HTTP", "HTTPS", "ID", "IP", "JSON", "LHS", "QPS", "RAM", "RHS", "RPC", "SLA", "SMTP", "SSH", "TLS", "TTL", "UID", "UI", "UUID", "URI", "URL", "UTF8", "VM", "XML", "XSRF", "XSS"}
 
-// toSchemaName 转换字段名称，下划线写法转驼峰写法
-func toSchemaName(name string) string {
+// ToSchemaName 转换字段名称，下划线写法转驼峰写法
+func ToSchemaName(name string) string {
     result := strings.Replace(strings.Title(strings.Replace(name, "_", " ", -1)), " ", "", -1)
     for _, initialism := range commonInitialisms {
         result = regexp.MustCompile(strings.Title(strings.ToLower(initialism))+"([A-Z]|$|_)").ReplaceAllString(result, initialism+"$1")
@@ -77,8 +125,8 @@ func toSchemaName(name string) string {
     return result
 }
 
-// toDBName 转换字段名称，驼峰写法转下划线写法
-func toDBName(name string) string {
+// ToDBName 转换字段名称，驼峰写法转下划线写法
+func ToDBName(name string) string {
     if name == "" {
         return ""
     }
@@ -287,6 +335,10 @@ func ToInt64(value interface{}) int64 {
         if v != nil {
             return v.Unix()
         } 
+    case string:
+        if i, err := strconv.Atoi(v); err == nil {
+            return int64(i)
+        }
     }
     return 0
 }
@@ -320,6 +372,10 @@ func ToUint64(value interface{}) uint64 {
         return uint64(v)
     case time.Time:
         return uint64(v.Unix())
+    case string:
+        if i, err := strconv.Atoi(v); err == nil {
+            return uint64(i)
+        }
     }
     return 0
 }
@@ -353,6 +409,10 @@ func ToFloat(value interface{}) float64 {
         return v
     case time.Time:
         return float64(v.Unix())
+    case string:
+        if float, err := strconv.ParseFloat(v, 64); err == nil {
+            return float
+        }
     }
     return 0
 }
@@ -382,6 +442,10 @@ func ToString(value interface{}) string {
         return strconv.FormatUint(uint64(v), 10)
     case uint64:
         return strconv.FormatUint(v, 10)
+    case float32:
+        return strconv.FormatFloat(float64(v), 'E', -1, 32)
+    case float64:
+        return strconv.FormatFloat(v, 'E', -1, 64)
     }
     return ""
 }
@@ -427,7 +491,7 @@ func StructToMap(value reflect.Value, data map[string]interface{}) {
                     continue
                 }
                 if fieldName == "" {
-                    fieldName = toDBName(fieldType.Name)
+                    fieldName = ToDBName(fieldType.Name)
                 }
                 data[fieldName] = fieldValue.Interface()
                 //t.Log(fieldName + ":" + fieldValue.Interface().(string))
