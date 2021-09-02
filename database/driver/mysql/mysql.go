@@ -112,7 +112,7 @@ func (dialector Dialector) ListColumns(table, like string, db *database.DB) []da
         } else {
             //if strings.Index(columnType, "unsigned") != -1 { }
             //if strings.Index(columnType, "zerofill") != -1 { }
-            var readable, creatable, updatable, notNull, unique, primaryKey, autoIncrement  bool = true, true, true, true, false, false, false
+            var readable, creatable, updatable, notNull, unique, primaryKey, autoIncrement  bool = true, true, true, false, false, false, false
             if strings.Index(columnPrivileges, "select") != -1 {
                 readable = true
             }
@@ -122,8 +122,8 @@ func (dialector Dialector) ListColumns(table, like string, db *database.DB) []da
             if strings.Index(columnPrivileges, "update") != -1 {
                 updatable = true
             }
-            if columnNull == "NO" {
-                notNull = false
+            if columnNull == "NO" { // Allow Null
+                notNull = true
             }
             if columnKey == "PRI" {
                 primaryKey = true
