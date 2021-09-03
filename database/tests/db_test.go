@@ -247,13 +247,13 @@ func TestDB(t *testing.T) {
     //}
     //t.Logf("jsonStr = %v\n", database.FormatJSON(result))
 
-    results := []map[string]interface{}{}
-    //q := db.Query("SELECT name, age FROM user").Scan(&results).Execute()
-    q := db.Select("id", "name").From("user").Where("name", "=", "test").Scan(&results).Execute()
-    if q.Error != nil {
-        t.Logf("q.Error = %v\n", q.Error)
-    }
-    t.Logf("jsonStr = %v\n", database.FormatJSON(results))
+    //results := []map[string]interface{}{}
+    ////q := db.Query("SELECT name, age FROM user").Scan(&results).Execute()
+    //q := db.Select("id", "name").From("user").Where("name", "=", "test").Scan(&results).Execute()
+    //if q.Error != nil {
+        //t.Logf("q.Error = %v\n", q.Error)
+    //}
+    //t.Logf("jsonStr = %v\n", database.FormatJSON(results))
 
     ////users := []User{}
     //users := []map[string]interface{}{}
@@ -282,7 +282,11 @@ func TestDB(t *testing.T) {
     //sqlStr = db.Insert("user", []string{"id", "name"}).SubSelect(query).Compile()
     //t.Logf("sqlStr = %v", sqlStr)
 
-    //sets := map[string]string{"id": "10", "name":"demo"}
+    sets := map[string]string{"name":"demo111"}
+    q := db.Update("user").Set(sets).Where("id", "=", "1").Execute()
+    if q.Error != nil {
+        t.Logf("%v", q.Error)
+    }
     //sqlStr = db.Update("user").Join("player", "LEFT").On("user.uid", "=", "player.uid").Set(sets).Where("player.room_id", "=", "10").Compile()
     //t.Logf("sqlStr = %v", sqlStr)
 
@@ -291,47 +295,5 @@ func TestDB(t *testing.T) {
     //sqlStr = db.Delete("user").Where("nickname", "=", "test").Compile()
     //t.Logf("sqlStr = %v", sqlStr)
 
-    //data := map[string]string {
-    //"name": "nam'e111",
-    //"pass": "pas\"s111",
-    //"sex":"1",
-    //}
-    //t.Fatal(data)   // 输出并中断程序
-
-    //if ok, err := db.Update("user", data, "`id`=1"); err != nil {
-    //t.Log(err)
-    //} else {
-    //t.Log(db.AffectedRows())
-    //}
-
-    //if ok, err := db.Insert("user", data); err != nil {
-    //t.Log(err)
-    //} else {
-    //t.Log(db.InsertID())
-    //}
-
-    //sql := "Select a.id,a.name,b.date From `test` a Left Join `test_part` b On a.id=b.test_id;"
-    //sql := "Select * From user"
-    //row, _ := db.GetOne(sql)
-    //t.Logf("%v", row)
-    //t.Log(row["id"], " --- ", row["name"])
-
-    //rows, _ := db.GetAll(sql)
-    //t.Logf("%v", rows)
-    ////t.Logf("%#v", rows)
-
-    //jsonStr, err := json.Marshal(rows)
-    //if err != nil {
-    //t.Fatal(err)
-    //}
-
-    //t.Logf("Map2Json 得到 json 字符串内容:%s", jsonStr)
-    //t.Logf("map: %v", rows)
-    ////t.Log(rows)
-    //for _, v := range rows {
-    //t.Log("id = ", v["id"], " --- name = ", v["name"])
-    //}
-
-    //log.Print(db, err)
-
+    //sets := map[string]string{"id": "10", "name":"demo"}
 }
