@@ -27,16 +27,15 @@ type Schema struct {
 
 // Indexes 数据表索引，字段名记得要大写开头，才是public，否则访问不到
 type Indexes struct {
-    Table       string  `field:"Table"` 
-    Name        string  `field:"Key_name"`
-    Column      string  `field:"Column_name"`
-    Order       int64   `field:"Seq_in_index"`
-    Type        string  `field:"Index_type"`
-    Primary     bool    `field:"Key_name == 'PRIMARY'"`
-    Unique      bool    `field:"Non_unique == 0"`
-    Null        bool    `field:"Null == 'YES'"`
-    Ascend      bool    `field:"Collation == 'A'"`
-
+    Table             string   `field:"Table"` 
+    Name              string   `field:"Key_name"`
+    Column            string   `field:"Column_name"`
+    Order             int64    `field:"Seq_in_index"`
+    Type              string   `field:"Index_type"`
+    Primary           bool     `field:"Key_name == 'PRIMARY'"`
+    Unique            bool     `field:"Non_unique == 0"`
+    Null              bool     `field:"Null == 'YES'"`
+    Ascend            bool     `field:"Collation == 'A'"`
     //Collation       string   `field:"Collation"`
     //Cardinality     int64    `field:"Cardinality"`
     //SubPart         string   `field:"Sub_part"`
@@ -100,7 +99,7 @@ func Parse(dest interface{}, cacheStore *sync.Map) (*Schema, error) {
 
     //modelValue := reflect.New(modelType)
     // 其实没必要去弄表名，因为schema又不是一张表
-    //tableName  := TransFieldName(modelType.Name())
+    //tableName  := ToDBName(modelType.Name())
 
     // Model
     schema := &Schema{
@@ -363,6 +362,7 @@ func (s *Schema) DropIndex(table string, indexName string) (err error) {
 }
 
 // AddForeignKey Adds a single foreign key to a table
+// player.userid(fk_userid foreign key) -> user.id，user.id needed index(primary key or unique key)
 func (s *Schema) AddForeignKey(table string, foreignKey []map[string]interface{}) (err error) {
     return s.Dialector.AddForeignKey(table, foreignKey, s.DB)
 }

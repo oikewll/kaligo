@@ -1,6 +1,7 @@
 package database
 
 import (
+    "fmt"
     "strings"
     "strconv"
 )
@@ -93,8 +94,16 @@ func (q *Query) CompileConditions(conditions map[string][][]string) string {
                     value = q.Quote(value)
                 }
 
+                // Is the column need decrypt ???
+                for _, table := range  q.S.froms {
+                    if cryptFields, ok := q.cryptFields[table]; ok && q.cryptKey != "" && InSlice(column, &cryptFields) {
+                        column = fmt.Sprintf("AES_DECRYPT(%s, \"%s\")", q.QuoteIdentifier(column), q.cryptKey)
+                    } else {
+                        column = q.QuoteIdentifier(column)
+                    }
+                }
                 // Append the statement to the query
-                sqlStr += q.QuoteIdentifier(column) + " " + op + " " + value
+                sqlStr += column + " " + op + " " + value
             }
 
             lastCondition = conditionStr
