@@ -30,7 +30,6 @@ var (
 
 // 一导入conf package 就初始化变量
 func init() {
-    //confFile := "../conf/app.ini"
     ////confFile := AppPath + "conf/app.ini"
     ////if len(os.Args) > 1 {
         ////confFile = os.Args[1]

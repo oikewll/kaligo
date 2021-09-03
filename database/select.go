@@ -1,6 +1,7 @@
 package database
 
 import (
+    "fmt"
     "strconv"
     "strings"
 )
@@ -190,6 +191,11 @@ func arrayUnique(arr []string) []string{
 
 // SelectCompile Set the value of a single column.
 func (q *Query) SelectCompile() string {
+    if len(q.S.froms) == 0 {
+        q.AddError(ErrInvalidValue)
+    }
+    from := arrayUnique(q.S.froms)
+
     // Start a selection query
     sqlStr := "SELECT "
 
@@ -204,19 +210,23 @@ func (q *Query) SelectCompile() string {
     } else {
         q.S.selects = arrayUnique(q.S.selects)
         for k, v := range q.S.selects {
-            q.S.selects[k] = q.QuoteIdentifier(v)
+            // Is the column need decrypt ???
+            for _, table := range  q.S.froms {
+                if cryptFields, ok := q.cryptFields[table]; ok && q.cryptKey != "" && InSlice(v, &cryptFields) {
+                    q.S.selects[k] = fmt.Sprintf("AES_DECRYPT(%s, \"%s\") AS %v", q.QuoteIdentifier(v), q.cryptKey, q.QuoteIdentifier(v))
+                } else {
+                    q.S.selects[k] = q.QuoteIdentifier(v)
+                }
+            }
         }
         sqlStr += strings.Join(q.S.selects, ", ")
     }
 
-    if len(q.S.froms) != 0 {
-        // Set tables to select from
-        q.S.froms = arrayUnique(q.S.froms)
-        for k, v := range q.S.froms {
-            q.S.froms[k] = q.QuoteTable(v)
-        }
-        sqlStr += " FROM " + strings.Join(q.S.froms, ", ")
+    // Set tables to select from
+    for k, v := range from {
+        from[k] = q.QuoteTable(v)
     }
+    sqlStr += " FROM " + strings.Join(from, ", ")
 
     if len(q.joinObjs) != 0 {
         // Add tables to join
@@ -236,8 +246,8 @@ func (q *Query) SelectCompile() string {
     }
 
     if len(q.S.groupBys) != 0 {
-        // Add sorting
         q.S.groupBys = arrayUnique(q.S.groupBys)
+        // Add sorting
         for k, v := range q.S.groupBys {
             q.S.groupBys[k] = q.QuoteIdentifier(v)
         }

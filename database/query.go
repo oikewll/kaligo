@@ -26,19 +26,22 @@ type Query struct {
     D *Delete
     //R *Result
 
-    sqlStr        string             // SQL statement
-    queryType     QueryType          // Query type
-    TablePrefix   string
-    Dest          interface{}        // var user User、var users []User、var result map[string]interface{}、var results []map[string]interface{}、var ages []int64
-    Model         interface{}        // Object：&User{}
-    ReflectValue  reflect.Value
-    lifeTime      int                // Cache lifetime
-    cacheKey      string             // Cache key
-    cacheAll      bool               // boolean Cache all results
+    sqlStr        string                // SQL statement
+    queryType     QueryType             // Query type
+    tablePrefix   string
+    cryptKey      string
+    cryptFields   map[string][]string
 
-    joinObjs      []*Join            // join objects
-    lastJoin      *Join              // last join statement
-    parameters    map[string]string  // Quoted query parameters
+    Dest          interface{}           // var user User、var users []User、var result map[string]interface{}、var results []map[string]interface{}、var ages []int64
+    Model         interface{}           // Object：&User{}
+    ReflectValue  reflect.Value         // reflect.ValueOf(Dest)
+    lifeTime      int                   // Cache lifetime
+    cacheKey      string                // Cache key
+    cacheAll      bool                  // boolean Cache all results
+
+    joinObjs      []*Join               // join objects
+    lastJoin      *Join                 // last join statement
+    parameters    map[string]string     // Quoted query parameters
 }
 
 // QueryType get the type of the query

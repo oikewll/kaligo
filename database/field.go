@@ -63,7 +63,8 @@ type Column struct {
     Readable            bool        // Privileges select
     Creatable           bool        // Privileges insert
     Updatable           bool        // Privileges update
-    Extra               string
+    Extra               string      // 扩展
+    CryptKey            string      // 密钥 AES_DECRYPT、AES_ENCRYPT
 }
 
 // Field is ...

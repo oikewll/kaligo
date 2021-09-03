@@ -11,7 +11,7 @@ import (
      "sync"
      "time"
      "github.com/owner888/kaligo/config"
-     "github.com/owner888/kaligo/util"
+     //"github.com/owner888/kaligo/util"
      //"github.com/stretchr/testify/assert"
  )
 
@@ -52,35 +52,31 @@ const (
 
 // DB is the struct for MySQL connection handler
 type DB struct {
-    Error         error
-    RowsAffected  int64         // for select、update、insert
-    LastInsertId  int64         // only for insert
-    InTransaction bool
+    Error         error         // Global error
+    RowsAffected  int64         // For select、update、insert
+    LastInsertId  int64         // Only for insert
+    InTransaction bool          // 是否正在事务执行中
     query         *Query
     schema        *Schema
 
-    name          string        // instance name
-    DriverName    string        // driver name: mysql、sqlite3
-    DSN           string        // data source name: dbuser:dbpass@tcp(host:port)/dbname?charset=utf8mb4
+    Name          string        // Instance name
     Dialector                   // Dialector database dialector
+    StdDB         *sql.DB       // Connection
+    StdTx         *sql.Tx       // Connection for Transaction
+    initCmds      []string      // SQL commands/queries executed after connect
 
     timeout       time.Duration // Timeout for connect SetConnMaxLifetime(timeout)
     lastUse       time.Time     // The last use time
 
-    StdDB         *sql.DB       // Connection
-    StdTx         *sql.Tx       // Connection for Transaction
-	autoCommit    bool          // 是否正在事务执行中
-    initCmds      []string      // SQL commands/queries executed after connect
-
     debug         bool          // Debug logging. You may change it at any time.
-    logSlowQuery  bool
-    logSlowTime   int
+    logSlowQuery  bool          // 是否记录慢查询
+    logSlowTime   int           // 慢查询时长
 
-    queryCount    int
-    lastQuery     string
+    queryCount    int           // 执行过多少条SQL
 
     // Logger
     //Logger logger.Interface
+
     // NowFunc the function to be used when creating a new timestamp
     NowFunc func() time.Time
 
@@ -109,19 +105,6 @@ func Open(dialector Dialector) (db *DB, err error) {
 		db.cacheStore = &sync.Map{}
 	}
 
-    //dbuser := conf.Get("db", "user")
-    //dbpass := conf.Get("db", "pass")
-    //dbhost := conf.Get("db", "host")
-    //dbport := conf.Get("db", "port")
-    //dbname := conf.Get("db", "name")
-
-    //dbuser := "root"
-    //dbpass := "root"
-    //dbhost := "127.0.0.1"
-    //dbport := "3306"
-    //dbname := "test"
-    //db.dsn = fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=%s", dbuser, dbpass, dbhost+":"+dbport, dbname, "utf8mb4")
-    //db.StdDB, err = sql.Open(driver, dsn)
     if db.Dialector != nil {
         err = db.Dialector.Initialize(db)
     }
@@ -129,12 +112,18 @@ func Open(dialector Dialector) (db *DB, err error) {
     db.query = &Query{
         DB          : db,
 		StdDB       : db.StdDB, // 因为返回的是指针*sql.DB，所以 db.StdDB 和 db.conn.StdDB 是同一个，一个Close()，另一个也会Close()
-        TablePrefix : "",
+        tablePrefix : config.TablePrefix,
 		Context     : context.Background(),
     }
 
+    // 设置最大初始连接数
+    if config.MaxOpenConns > 0 {
+        db.StdDB.SetMaxOpenConns(config.MaxOpenConns)
+    }
     // 设置最大空闲连接数
-    db.StdDB.SetMaxIdleConns(util.StrToInt(config.Get("db", "max_idle_conns")))
+    if config.MaxIdleConns > 0 {
+        db.StdDB.SetMaxIdleConns(config.MaxIdleConns)
+    }
     // sql.Open 实际上返回了一个数据库抽象，并没有真的连接上
     if err == nil {
         // ping 调用完毕后会马上把连接返回给连接池
@@ -144,7 +133,7 @@ func Open(dialector Dialector) (db *DB, err error) {
     db.StdDB.Query("SET NAMES utf8");
 
     db.schema = &Schema{
-        Name  : db.name,
+        Name  : db.Name,
         Query : db.query,
     }
 
@@ -265,10 +254,12 @@ func (db *DB) Select(columns ...string) *Query {
         },
         W: &Where{},
         B: &Builder{},
-        sqlStr    : "",
-        queryType : SELECT,
-        DB        : db,
-        StdDB     : db.StdDB,
+        sqlStr      : "",
+        queryType   : SELECT,
+        cryptKey    : config.CryptKey,
+        cryptFields : config.CryptFields,
+        DB          : db,
+        StdDB       : db.StdDB,
     }
     return db.query
 }
@@ -294,10 +285,12 @@ func (db *DB) Insert(table string, args ...[]string) *Query {
         },
         //W: &Where{}, // Insert 暂时没有支持 Where 写法
         B: &Builder{},
-        sqlStr    : "",
-        queryType : INSERT,
-        DB        : db,
-        StdDB     : db.StdDB,
+        sqlStr      : "",
+        queryType   : INSERT,
+        cryptKey    : config.CryptKey,
+        cryptFields : config.CryptFields,
+        DB          : db,
+        StdDB       : db.StdDB,
     }
     return db.query
 }
@@ -317,10 +310,12 @@ func (db *DB) Update(table string) *Query {
         },
         W: &Where{},
         B: &Builder{},
-        sqlStr    : "",
-        queryType : UPDATE,
-        DB        : db,
-        StdDB     : db.StdDB,
+        sqlStr      : "",
+        queryType   : UPDATE,
+        cryptKey    : config.CryptKey,
+        cryptFields : config.CryptFields,
+        DB          : db,
+        StdDB       : db.StdDB,
     }
     return db.query
 }
@@ -377,7 +372,7 @@ func (db *DB) Expr(value string) *Expression {
 
 // TablePrefix Return the table prefix defined in the current configuration.
 func (db *DB) TablePrefix(table string) string {
-    return db.query.TablePrefix + table
+    return db.query.tablePrefix + table
 }
 
 // Row is the function for query one row
@@ -520,30 +515,54 @@ func (db *DB) Quote(values interface{}) string {
         return db.Escape(vals)
     case []string:
         for k, v := range vals {
-            vals[k] = db.Escape(v)
+            vals[k] = db.Quote(v)
         }
         return "(" + strings.Join(vals, ", ") + ")"
     case *Query:
         // Create a sub-query
         return "(" + vals.Compile() + ")"
+    case *Expression:
+        // Use a raw expression
+        return vals.value
     default:
-        return vals.(string)
+        return db.Escape(vals.(string))
     }
 }
 
 // QuoteTable Quote a database table name and adds the table prefix if needed.
-//table = strings.Replace(table, "#DB#", "lrs", 1 )
-// 表名添加引用符号(`)
-// 添加表前缀
-func (db *DB) QuoteTable(table string) string {
-    table = db.TablePrefix(table)
-    table = db.QuoteIdentifier(table)
+// table = strings.Replace(table, "#DB#", "lrs", 1 )
+// @param interface{} value table name or []string{"table", "alias"}
+func (db *DB) QuoteTable(values interface{}) string {
+    var table string    
+    switch vals := values.(type) {
+    case *Query:
+        // Create a sub-query
+        table = "(" + vals.Compile() + ")"
+    case string:
+        if strings.Index(vals, ".") == -1 {
+            // Add the table prefix for tables
+            table = db.QuoteIdentifier(db.TablePrefix(vals))
+        } else {
+            // table.alias 的写法，变成 `table`.`alias`
+            parts := regexp.MustCompile(`\.`).Split(vals, 2)
+            table = db.QuoteIdentifier(db.QuoteTable(parts[0]) ) + "." + db.QuoteIdentifier(parts[1])
+        }
+    case []string:
+        // Separate the table and alias
+        table := vals[0]
+        alias := vals[1]
+        table = db.QuoteIdentifier(table) + " AS " + db.QuoteIdentifier(alias)
+    default:
+        table = vals.(string)
+    }
+
     return table
 }
 
 // QuoteIdentifier Quote a database identifier, such as a column name. Adds the
 // table prefix to the identifier if a table name is present.
-// 字段名添加引用符号(`)
+// table  ---> `table`
+// column ---> `column`
 func (db *DB) QuoteIdentifier(values interface{}) string {
     switch vals := values.(type) {
     case string:
@@ -562,6 +581,12 @@ func (db *DB) QuoteIdentifier(values interface{}) string {
         value := vals[0]
         alias := vals[1]
         return db.QuoteIdentifier(value) + " AS " + db.QuoteIdentifier(alias)
+    case *Query:
+        // Create a sub-query
+        return "(" + vals.Compile() + ")"
+    case *Expression:
+        // Use a raw expression
+        return vals.value
     default:
         return vals.(string)
     }

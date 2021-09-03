@@ -1,7 +1,7 @@
 package database
 
 import (
-    //"fmt"
+    "fmt"
     "strings"
 )
 
@@ -59,17 +59,20 @@ func (q *Query) SubSelect(query *Query) *Query {
 // InsertCompile Compile the SQL query and return it.
 func (q *Query) InsertCompile() string {
     var sqlStr string    
+    table   := q.I.table
+    columns := q.I.columns
 
     // Start and update query
-    sqlStr = "INSERT INTO " + q.QuoteTable(q.I.table)
+    sqlStr = "INSERT INTO " + q.QuoteTable(table)
 
-    if len(q.I.columns) != 0 {
+    if len(columns) != 0 {
+        columns = arrayUnique(columns)
+        //fmt.Printf("table = %v; columns = %v; cryptFields = %v\n", table, FormatJSON(columns), q.cryptFields)
         // Add the column names
-        q.I.columns = arrayUnique(q.I.columns)
-        for k, v := range q.I.columns {
-            q.I.columns[k] = q.QuoteIdentifier(v)
+        for k, v := range columns {
+            columns[k] = q.QuoteIdentifier(v)
         }
-        sqlStr += " (" + strings.Join(q.I.columns, ", ") + ") "
+        sqlStr += " (" + strings.Join(columns, ", ") + ") "
     } else {
         sqlStr += " "
     }
@@ -77,13 +80,19 @@ func (q *Query) InsertCompile() string {
     if q.I.subQuery == "" {
         var groups []string    
         for _, group := range q.I.values {
-            for i, value := range group {
-                if q.parameters[value] != "" {
+            for k, v := range group {
+                if q.parameters[v] != "" {
                     // Use the parameter value
-                    group[i] = q.parameters[value]
+                    group[k] = q.parameters[v]
                 }
 
-                group[i] = q.Quote(group[i])
+                column := q.I.columns[k]
+                // Is the column need encrypt ???
+                if cryptFields, ok := q.cryptFields[table]; ok && q.cryptKey != "" && InSlice(column, &cryptFields) {
+                    group[k] = fmt.Sprintf("AES_ENCRYPT(%s, \"%s\")", q.Quote(v), q.cryptKey)
+                } else {
+                    group[k] = q.Quote(v)
+                }
             }
             
             groups = append(groups, "(" + strings.Join(group, ", ") + ")")

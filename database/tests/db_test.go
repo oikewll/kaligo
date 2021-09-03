@@ -7,12 +7,13 @@ package tests
 
 import (
 	//"encoding/json"
-    "fmt"
+    //"fmt"
 	"testing"
 
     //"database/sql"
     //_ "github.com/go-sql-driver/mysql"
     //_ "github.com/mattn/go-sqlite3" 
+    "github.com/owner888/kaligo/config"
     "github.com/owner888/kaligo/database"
     //sqlite "github.com/owner888/kaligo/database/driver/sqlite"
     mysql "github.com/owner888/kaligo/database/driver/mysql"
@@ -44,25 +45,9 @@ type User struct {
 }
 
 func TestDB(t *testing.T) {
-    //var (
-        //regRealDataType = regexp.MustCompile(`[^\d](\d+)[^\d]?`)
-        //regFullDataType = regexp.MustCompile(`[^\d]*(\d+)[^\d]?`)
-    //)
 
     //var sqlStr string
-
-    //str, _ := os.Getwd()
-    //conf.AppPath = str + "/../"
-    //log.Printf("TestDB AppPath: [ %v ]", conf.AppPath)
-    //define('APPPATH', __DIR__.'/../app');
-    dbuser := "root"
-    dbpass := "root"
-    dbhost := "127.0.0.1"
-    dbport := "3306"
-    dbname := "test"
-    dsn := fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=%s", dbuser, dbpass, dbhost+":"+dbport, dbname, "utf8mb4")
-    t.Logf("%v", dsn)
-    db, err := database.Open(mysql.Open(dsn))
+    db, err := database.Open(mysql.Open(config.DBDSN))
     //db, err := database.Open(sqlite.Open("./test.db"))
     if err != nil {
         t.Fatal(err)
@@ -78,8 +63,8 @@ func TestDB(t *testing.T) {
     //t.Logf("jsonStr = %v\n", database.FormatJSON(tables))
 
     //db.Schema().ListColumns("user")
-    columns := db.Schema().ListColumns("user")
-    t.Logf("jsonStr = %v\n", database.FormatJSON(columns))
+    //columns := db.Schema().ListColumns("user")
+    //t.Logf("jsonStr = %v\n", database.FormatJSON(columns))
 
     //indexes := db.Schema().ListIndexes("user")
     //t.Logf("jsonStr = %v\n", database.FormatJSON(indexes))
@@ -260,14 +245,15 @@ func TestDB(t *testing.T) {
     //if q.Error != nil {
         //t.Logf("q.Error = %v\n", q.Error)
     //}
-    //t.Logf("jsonStr = %v\n", FormatJSON(result))
+    //t.Logf("jsonStr = %v\n", database.FormatJSON(result))
 
-    //results := []map[string]interface{}{}
-    //q = db.Query("SELECT name, age FROM user").Scan(&results).Execute()
-    //if q.Error != nil {
-        //t.Logf("q.Error = %v\n", q.Error)
-    //}
-    //t.Logf("jsonStr = %v\n", FormatJSON(results))
+    results := []map[string]interface{}{}
+    //q := db.Query("SELECT name, age FROM user").Scan(&results).Execute()
+    q := db.Select("id", "name").From("user").Where("name", "=", "test").Scan(&results).Execute()
+    if q.Error != nil {
+        t.Logf("q.Error = %v\n", q.Error)
+    }
+    t.Logf("jsonStr = %v\n", database.FormatJSON(results))
 
     ////users := []User{}
     //users := []map[string]interface{}{}
@@ -276,10 +262,16 @@ func TestDB(t *testing.T) {
     ////Join("userinfo", "LEFT").On("user.uid", "=", "userinfo.uid").
     //Where("player.room_id", "=", "10").
     //Scan(&users).Execute()
-    //t.Logf("jsonStr = %v\n", FormatJSON(users))
+    //t.Logf("jsonStr = %v\n", database.FormatJSON(users))
 
     //sqlStr = db.Insert("user", []string{"id", "name"}).Values([]string{"10", "test"}).Compile()
+    //q := db.Insert("user", []string{"id", "name"}).Values([]string{"10", "test"}).Execute()
     //sqlStr = db.Insert("user", []string{"id", "name"}).Values([][]string{{"10", "test"}, {"20", "demo"}}).Compile()
+    //t.Logf("sqlStr = %v", sqlStr)
+    //if q.Error != nil {
+        //t.Fatal(q.Error)
+    //}
+
     //var query *Query
     //// 全部字段复制
     //query  = db.Query("SELECT * FROM `user_history`", SELECT)
