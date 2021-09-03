@@ -95,13 +95,20 @@ func (q *Query) CompileConditions(conditions map[string][][]string) string {
                 }
 
                 // Is the column need decrypt ???
-                for _, table := range  q.S.froms {
+                var tables []string   
+                if q.queryType == SELECT {
+                    tables = append(tables, q.S.froms...)
+                } else if q.queryType == UPDATE {
+                    tables = append(tables, q.U.table)
+                }
+                for _, table := range  tables {
                     if cryptFields, ok := q.cryptFields[table]; ok && q.cryptKey != "" && InSlice(column, &cryptFields) {
                         column = fmt.Sprintf("AES_DECRYPT(%s, \"%s\")", q.QuoteIdentifier(column), q.cryptKey)
                     } else {
                         column = q.QuoteIdentifier(column)
                     }
                 }
+
                 // Append the statement to the query
                 sqlStr += column + " " + op + " " + value
             }
@@ -118,22 +125,30 @@ func (q *Query) CompileSet(values [][]string) string {
     var sqlStr string    
 
     dict := make(map[string]string)
+    var sets []string    
     for _, group := range values {
         // Split the set
         column := group[0]
         value  := group[1]
 
-        // Quote the column name
-        column = q.QuoteIdentifier(column)
-
-        if val, ok := dict[value]; ok {
+        // set value 应该是interface{}, 当string进这里
+        if val, ok := q.parameters[value]; ok {
             // Use the parameter value
             value = val
         }
-        dict[column] = column + "=" + q.Quote(value)
+
+        // Is the value need encrypt ???
+        table := q.U.table
+        if cryptFields, ok := q.cryptFields[table]; ok && q.cryptKey != "" && InSlice(column, &cryptFields) {
+            value = fmt.Sprintf("AES_ENCRYPT(%s, \"%s\")", q.Quote(value), q.cryptKey)
+        } else {
+            value = q.Quote(value)
+        }
+
+        // Quote the column name
+        dict[column] = q.QuoteIdentifier(column) + " = " + value
     }
 
-    var sets []string    
     for _, v := range dict {
         sets = append(sets, v)
     }
