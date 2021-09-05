@@ -244,7 +244,7 @@ func (q *Query) Scan(value interface{}) *Query {
                 // var users []User
                 q.Model = q.Dest
             } else if q.ReflectValue.Type().Elem().Kind() != reflect.Map {
-                // var ages []int64 会到这里来
+                // var ages []int64、var names []string 这些slice类型会到这里来
                 // 这里先初始化，因为不会去到 Parse() 了，scan.go 里面会报错
                 q.Schema = &Schema{}
             }

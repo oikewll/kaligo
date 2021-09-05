@@ -13,10 +13,10 @@ import (
     //"database/sql"
     //_ "github.com/go-sql-driver/mysql"
     //_ "github.com/mattn/go-sqlite3" 
-    "github.com/owner888/kaligo/config"
+    //"github.com/owner888/kaligo/config"
     "github.com/owner888/kaligo/database"
-    //sqlite "github.com/owner888/kaligo/database/driver/sqlite"
-    mysql "github.com/owner888/kaligo/database/driver/mysql"
+    sqlite "github.com/owner888/kaligo/database/driver/sqlite"
+    //mysql "github.com/owner888/kaligo/database/driver/mysql"
 	//"strconv"
     //"strings"
     //"regexp"
@@ -47,8 +47,8 @@ type User struct {
 func TestDB(t *testing.T) {
 
     //var sqlStr string
-    db, err := database.Open(mysql.Open(config.DBDSN))
-    //db, err := database.Open(sqlite.Open("./test.db"))
+    //db, err := database.Open(mysql.Open(config.DBDSN))
+    db, err := database.Open(sqlite.Open("./test.db"))
     if err != nil {
         t.Fatal(err)
     }
@@ -160,7 +160,7 @@ func TestDB(t *testing.T) {
         //},
     //}
     //err = db.Schema().AddForeignKey("player", foreignKey)
-    ////err = db.Schema().DropForeignKey("player", "fk_uid")
+    //err = db.Schema().DropForeignKey("player", "fk_uid")
     //if err != nil {
         //t.Logf("Operation Foreign Key Err = %v", err)
     //}
@@ -247,13 +247,14 @@ func TestDB(t *testing.T) {
     //}
     //t.Logf("jsonStr = %v\n", database.FormatJSON(result))
 
-    //results := []map[string]interface{}{}
+    results := []map[string]interface{}{}
     ////q := db.Query("SELECT name, age FROM user").Scan(&results).Execute()
-    //q := db.Select("id", "name").From("user").Where("name", "=", "test").Scan(&results).Execute()
-    //if q.Error != nil {
-        //t.Logf("q.Error = %v\n", q.Error)
-    //}
-    //t.Logf("jsonStr = %v\n", database.FormatJSON(results))
+    q := db.Select("id", "name", "age").From("user").Where("id", "=", "8").Scan(&results).Execute()
+    if q.Error != nil {
+        t.Logf("q.Error = %v\n", q.Error)
+    } else {
+        t.Logf("jsonStr = %v\n", database.FormatJSON(results))
+    }
 
     ////users := []User{}
     //users := []map[string]interface{}{}
@@ -264,15 +265,12 @@ func TestDB(t *testing.T) {
     //Scan(&users).Execute()
     //t.Logf("jsonStr = %v\n", database.FormatJSON(users))
 
-    //sqlStr = db.Insert("user", []string{"id", "name"}).Values([]string{"10", "test"}).Compile()
-    //q := db.Insert("user", []string{"id", "name"}).Values([]string{"10", "test"}).Execute()
-    //sqlStr = db.Insert("user", []string{"id", "name"}).Values([][]string{{"10", "test"}, {"20", "demo"}}).Compile()
-    //t.Logf("sqlStr = %v", sqlStr)
+    //q := db.Insert("user", []string{"name", "age"}).Values([]string{"test111", "20"}).Execute()
+    //q := db.Insert("user", []string{"name", "age"}).Values([][]string{{"test111", "20"}, {"test222", "25"}}).Execute()
     //if q.Error != nil {
         //t.Fatal(q.Error)
     //}
 
-    //var query *Query
     //// 全部字段复制
     //query  = db.Query("SELECT * FROM `user_history`", SELECT)
     //sqlStr = db.Insert("user").SubSelect(query).Compile()
@@ -282,11 +280,11 @@ func TestDB(t *testing.T) {
     //sqlStr = db.Insert("user", []string{"id", "name"}).SubSelect(query).Compile()
     //t.Logf("sqlStr = %v", sqlStr)
 
-    sets := map[string]string{"name":"demo111"}
-    q := db.Update("user").Set(sets).Where("id", "=", "1").Execute()
-    if q.Error != nil {
-        t.Logf("%v", q.Error)
-    }
+    //sets := map[string]string{"name":"demo111"}
+    //q := db.Update("user").Set(sets).Where("id", "=", "1").Execute()
+    //if q.Error != nil {
+        //t.Logf("%v", q.Error)
+    //}
     //sqlStr = db.Update("user").Join("player", "LEFT").On("user.uid", "=", "player.uid").Set(sets).Where("player.room_id", "=", "10").Compile()
     //t.Logf("sqlStr = %v", sqlStr)
 
@@ -294,6 +292,4 @@ func TestDB(t *testing.T) {
     ////sqlStr = db.Delete("user").Join("player", "LEFT").On("user.uid", "=", "player.uid").Where("player.id", "=", "test").Compile()
     //sqlStr = db.Delete("user").Where("nickname", "=", "test").Compile()
     //t.Logf("sqlStr = %v", sqlStr)
-
-    //sets := map[string]string{"id": "10", "name":"demo"}
 }
