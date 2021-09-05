@@ -139,7 +139,7 @@ func (q *Query) CompileSet(values [][]string) string {
 
         // Is the value need encrypt ???
         table := q.U.table
-        if cryptFields, ok := q.cryptFields[table]; ok && q.cryptKey != "" && InSlice(column, &cryptFields) {
+        if cryptFields, ok := q.cryptFields[table]; ok && q.Dialector.Name() == "mysql" && q.cryptKey != "" && InSlice(column, &cryptFields) {
             value = fmt.Sprintf("AES_ENCRYPT(%s, \"%s\")", q.Quote(value), q.cryptKey)
         } else {
             value = q.Quote(value)

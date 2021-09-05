@@ -88,7 +88,7 @@ func (q *Query) InsertCompile() string {
 
                 column := q.I.columns[k]
                 // Is the column need encrypt ???
-                if cryptFields, ok := q.cryptFields[table]; ok && q.cryptKey != "" && InSlice(column, &cryptFields) {
+                if cryptFields, ok := q.cryptFields[table]; ok && q.Dialector.Name() == "mysql" && q.cryptKey != "" && InSlice(column, &cryptFields) {
                     group[k] = fmt.Sprintf("AES_ENCRYPT(%s, \"%s\")", q.Quote(v), q.cryptKey)
                 } else {
                     group[k] = q.Quote(v)

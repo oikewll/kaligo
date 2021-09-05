@@ -11,9 +11,9 @@ var (
     MaxOpenConns int
     MaxIdleConns int
 
-    // CryptKey is a mysql AES_ENCRYPT、AES_DECRYPT crypt key
+    // CryptKey is a crypt key for mysql AES_ENCRYPT、AES_DECRYPT
     CryptKey    string
-    // CryptFields is mysql AES_ENCRYPT、AES_DECRYPT crypt fields
+    // CryptFields is want encrypt field for mysql AES_ENCRYPT、AES_DECRYPT
     CryptFields map[string][]string
 )
 

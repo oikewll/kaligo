@@ -212,7 +212,7 @@ func (q *Query) SelectCompile() string {
         for k, v := range q.S.selects {
             // Is the column need decrypt ???
             for _, table := range  q.S.froms {
-                if cryptFields, ok := q.cryptFields[table]; ok && q.cryptKey != "" && InSlice(v, &cryptFields) {
+                if cryptFields, ok := q.cryptFields[table]; ok && q.Dialector.Name() == "mysql" && q.cryptKey != "" && InSlice(v, &cryptFields) {
                     q.S.selects[k] = fmt.Sprintf("AES_DECRYPT(%s, \"%s\") AS %v", q.QuoteIdentifier(v), q.cryptKey, q.QuoteIdentifier(v))
                 } else {
                     q.S.selects[k] = q.QuoteIdentifier(v)

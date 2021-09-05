@@ -16,3 +16,8 @@ type Model struct {
     UpdatorID uint
     DeletorID uint
 }
+
+// Save is ...
+func (model *Model) Save() bool{
+    return true
+}
