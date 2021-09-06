@@ -48,7 +48,8 @@ func (q *Query) UpdateCompile() string {
         sqlStr += " " + q.CompileOrderBy(q.W.orderBys)
     }
 
-    if q.W.limit != 0 {
+    // sqlite not support DELETE、UPDATE LIMIT
+    if q.W.limit != 0 && q.Dialector.Name() != "sqlite" {
         // Add limiting
         sqlStr += " LIMIT " + strconv.Itoa(q.W.limit)
     }

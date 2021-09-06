@@ -129,8 +129,8 @@ func Open(dialector Dialector) (db *DB, err error) {
         // ping 调用完毕后会马上把连接返回给连接池
         err = db.StdDB.Ping()
     }
-    // 执行初始化SQL
-    db.StdDB.Query("SET NAMES utf8");
+
+    db.setCharset("utf8")
 
     db.schema = &Schema{
         Name  : db.Name,
@@ -185,6 +185,15 @@ func (db *DB) InstanceSet(key string, value interface{}) *DB {
 // if _, ok := db.InstanceGet("kalidb:started_transaction"); ok {
 func (db *DB) InstanceGet(key string) (interface{}, bool) {
 	return db.cacheStore.Load(fmt.Sprintf("%p", db) + key)
+}
+
+// Set the charset
+func (db *DB) setCharset(charset string) {
+    if db.Dialector.Name() == "mysql" {
+        db.StdDB.Query("SET NAMES " + db.Quote(charset));
+    } else if db.Dialector.Name() == "sqlite" {
+        db.StdDB.Query("PRAGMA encoding = " + db.Quote(charset));
+    }
 }
 
 // Model specify the model you would like to run db operations
