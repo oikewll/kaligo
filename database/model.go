@@ -1,6 +1,8 @@
 package database
 
-import "time"
+import (
+    "time"
+)
 
 // Model a basic GoLang struct which includes the following fields: ID, CreatedAt, UpdatedAt, DeletedAt
 // It may be embedded into your model or you may build your own model without it
@@ -8,6 +10,7 @@ import "time"
 //      mysql.Model
 //    }
 type Model struct {
+    //DB        *DB
     ID        uint      `db:"primarykey"`
     CreatedAt time.Time
     UpdatedAt time.Time

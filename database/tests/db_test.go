@@ -17,6 +17,7 @@ import (
     "github.com/owner888/kaligo/database"
     sqlite "github.com/owner888/kaligo/database/driver/sqlite"
     //mysql "github.com/owner888/kaligo/database/driver/mysql"
+    "github.com/owner888/kaligo/model"
 	//"strconv"
     //"strings"
     //"regexp"
@@ -38,10 +39,11 @@ func (c statefulCamable) Auth(password string) bool{
 }
 
 type User struct {
-    ID   int    `db:"id"`
+    *model.Model
+    ID   uint   `db:"id"`
     Name string `db:"name"`
     Age  uint   `db:"age"`
-    Sex  int    `db:"sex"`
+    Sex  uint   `db:"sex"`
 }
 
 func TestDB(t *testing.T) {
@@ -52,6 +54,15 @@ func TestDB(t *testing.T) {
     if err != nil {
         t.Fatal(err)
     }
+
+    user := User{
+        ID   : 1,
+        Name : "test111",
+        Age  : 25,
+        Sex  : 1,
+    }
+    user.DB = db
+    user.Save()
 
     //databases := db.Schema().CurrentDatabase()
     //t.Logf("jsonStr = %v\n", database.FormatJSON(databases))
@@ -165,9 +176,9 @@ func TestDB(t *testing.T) {
         //t.Logf("Operation Foreign Key Err = %v", err)
     //}
 
-    //db.Transaction(func(tx *DB) error {
+    //db.Transaction(func(tx *database.DB) error {
         //// 在事务中执行一些 db 操作（从这里开始，您应该使用 'tx' 而不是 'db'）
-        //sqlStr = "insert into user(name, age, sex) values('test222', '30', '1')"
+        //sqlStr := "insert into user(name, age, sex) values('test222', '30', '1')"
         ////_, err = db.Exec(sqlStr)
         //db.Query(sqlStr).Execute()
         //if err != nil {
@@ -204,57 +215,62 @@ func TestDB(t *testing.T) {
     //}
 
     //var ages []int64
-    //db.Query("SELECT age FROM user").Scan(&ages).Execute()
-    //for _, v := range ages {
-        //t.Logf("ages %T = %v\n", v, v)
+    //q := db.Query("SELECT age FROM user").Scan(&ages).Execute()
+    //if q.Error != nil {
+        //t.Logf("q.Error = %v\n", q.Error)
+    //} else {
+        //t.Logf("jsonStr = %v\n", database.FormatJSON(ages))
     //}
-    //t.Logf("jsonStr = %v\n", FormatJSON(ages))
 
     //var user User
     //sqlStr = "SELECT id, name, age, sex FROM user WHERE id = :id"
     //q := db.Query(sqlStr).Bind(":id", "1").Scan(&user).Execute()
     //if q.Error != nil {
         //t.Logf("q.Error = %v\n", q.Error)
+    //} else {
+        //t.Logf("jsonStr = %v\n", database.FormatJSON(user))
     //}
-    //t.Logf("jsonStr = %v\n", FormatJSON(user))
 
     ////var users []User
     //users := []User{}
     //q := db.Query("SELECT id, name, age, sex FROM user").Scan(&users).Execute()
     //if q.Error != nil {
         //t.Logf("q.Error = %v\n", q.Error)
+    //} else {
+        //t.Logf("jsonStr = %v\n", database.FormatJSON(users))
     //}
-    //t.Logf("jsonStr = %v\n", FormatJSON(users))
 
     //var count int64
-    //q = db.Query("SELECT COUNT(*) FROM user").Scan(&count).Execute();
+    //q := db.Query("SELECT COUNT(*) FROM user").Scan(&count).Execute();
     //if q.Error != nil {
         //t.Logf("q.Error = %v\n", q.Error)
+    //} else {
+        //t.Logf("jsonStr = %v\n", database.FormatJSON(count))
     //}
-    //t.Logf("jsonStr = %v\n", FormatJSON(count))
 
     //var name string
-    //q = db.Query("SELECT name FROM user WHERE id = 1").Bind(":id", "1").Scan(&name).Execute();
+    //q := db.Query("SELECT `name` FROM `user` WHERE `id` = '1'").Scan(&name).Execute();
     //if q.Error != nil {
         //t.Logf("q.Error = %v\n", q.Error)
+    //} else {
+        //t.Logf("jsonStr = %v\n", database.FormatJSON(name))
     //}
-    //t.Logf("jsonStr = %v\n", FormatJSON(name))
 
     //result := map[string]interface{}{}
-    //q = db.Query("SELECT name, age FROM user WHERE id = 1").Bind(":id", "1").Scan(&result).Execute()
+    //q := db.Query("SELECT name, age FROM user WHERE id = :id").Bind("id", "2").Scan(&result).Execute()
     //if q.Error != nil {
         //t.Logf("q.Error = %v\n", q.Error)
+    //} else {
+        //t.Logf("jsonStr = %v\n", database.FormatJSON(result))
     //}
-    //t.Logf("jsonStr = %v\n", database.FormatJSON(result))
 
-    results := []map[string]interface{}{}
-    ////q := db.Query("SELECT name, age FROM user").Scan(&results).Execute()
-    q := db.Select("id", "name", "age").From("user").Where("id", "=", "8").Scan(&results).Execute()
-    if q.Error != nil {
-        t.Logf("q.Error = %v\n", q.Error)
-    } else {
-        t.Logf("jsonStr = %v\n", database.FormatJSON(results))
-    }
+    //results := []map[string]interface{}{}
+    //q := db.Select("id", "name", "age").From("user").Scan(&results).Execute()
+    //if q.Error != nil {
+        //t.Logf("q.Error = %v\n", q.Error)
+    //} else {
+        //t.Logf("jsonStr = %v\n", database.FormatJSON(results))
+    //}
 
     ////users := []User{}
     //users := []map[string]interface{}{}
