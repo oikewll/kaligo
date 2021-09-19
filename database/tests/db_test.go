@@ -46,6 +46,10 @@ type User struct {
     Sex  uint   `db:"sex"`
 }
 
+func TestDBDemo(t *testing.T) {
+    var err error = nil    
+}
+
 func TestDB(t *testing.T) {
 
     //var sqlStr string
