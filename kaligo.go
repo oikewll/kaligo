@@ -2,7 +2,7 @@ package kaligo
 
 import (
     "fmt"
-    "github.com/owner888/kaligo/conf"
+    "github.com/owner888/kaligo/config"
     "github.com/owner888/kaligo/util"
     "io"
     "log"
@@ -92,8 +92,8 @@ func Run() {
     runtime.GOMAXPROCS(runtime.NumCPU())
     http.HandleFunc("/", loadController)
 
-    addr := conf.Get("http", "addr") 
-    port := conf.Get("http", "port") 
+    addr := config.Get("http", "addr") 
+    port := config.Get("http", "port") 
 
     str := util.Colorize(fmt.Sprintf("[I] Running on %s:%s", addr, port), "note")
     log.Printf(str)
