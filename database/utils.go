@@ -1,15 +1,15 @@
 package database
 
 import (
-    "encoding/json"
-    "fmt"
-    "io"
-    "runtime"
-    "reflect"
-    "regexp"
-    "strings"
-    "strconv"
-    "time"
+	"encoding/json"
+	"fmt"
+	"io"
+	"reflect"
+	"regexp"
+	"runtime"
+	"strconv"
+	"strings"
+	"time"
 )
 
 var kaliSourceDir string
@@ -511,6 +511,30 @@ func MapChangeKeyCase(values map[string]interface{}, caseUpper bool) map[string]
         }
     }
     return valueMaps
+}
+
+// LongestStr is 最长的字符串和下标
+func LongestStr(values []string) (value string, index int) {
+    var arr []int    
+    for _, val := range values {
+        arr = append(arr, len(val))
+    }
+
+    // 假设第一个元素是最大值，下标为0
+    maxVal := arr[0]
+    index = 0
+
+    for i := 1; i < len(arr); i++ {
+        // 从第二个 元素开始循环比较，如果发现有更大的，则交换
+        if maxVal < arr[i] {
+            maxVal = arr[i]
+            index  = i
+        }
+    }
+
+    value = values[index]
+
+    return value, index
 }
 
 //// AddSlashes is ...

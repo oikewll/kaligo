@@ -7,20 +7,21 @@ package tests
 
 import (
 	//"encoding/json"
-    //"fmt"
+	//"fmt"
 	"testing"
 
-    //"database/sql"
-    //_ "github.com/go-sql-driver/mysql"
-    //_ "github.com/mattn/go-sqlite3" 
-    //"github.com/owner888/kaligo/config"
-    "github.com/owner888/kaligo/database"
-    sqlite "github.com/owner888/kaligo/database/driver/sqlite"
-    //mysql "github.com/owner888/kaligo/database/driver/mysql"
-    "github.com/owner888/kaligo/model"
+	//"database/sql"
+	//_ "github.com/go-sql-driver/mysql"
+	//_ "github.com/mattn/go-sqlite3"
+	//"github.com/owner888/kaligo/config"
+	"github.com/owner888/kaligo/database"
+	sqlite "github.com/owner888/kaligo/database/driver/sqlite"
+
+	//mysql "github.com/owner888/kaligo/database/driver/mysql"
+	"github.com/owner888/kaligo/model"
 	//"strconv"
-    //"strings"
-    //"regexp"
+	//"strings"
+	//"regexp"
 	//"reflect"
 	//"time"
 	//"github.com/goinggo/mapstructure"
@@ -77,7 +78,6 @@ func TestDB(t *testing.T) {
     //tables := db.Schema().ListTables("user")
     //t.Logf("jsonStr = %v\n", database.FormatJSON(tables))
 
-    //db.Schema().ListColumns("user")
     //columns := db.Schema().ListColumns("user")
     //t.Logf("jsonStr = %v\n", database.FormatJSON(columns))
 
