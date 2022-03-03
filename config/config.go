@@ -12,7 +12,7 @@ import (
     "strings"
     "sync"
 
-    "github.com/astaxie/beego/logs"
+    // "github.com/astaxie/beego/logs"
     "github.com/owner888/kaligo/util"
 )
 
@@ -27,6 +27,7 @@ type configMap interface {
 // StrMap is use for string -> map
 type StrMap map[string]interface{}
 
+// Load is use for
 func (m StrMap) Load(key any) (value any, ok bool) {
     value = m[key.(string)]
     ok = value != nil
@@ -43,8 +44,6 @@ func Env(envName string, defaultValue ...interface{}) interface{} {
 
 // Add 新增配置项
 func Add(key string, value map[string]interface{}) {
-    logs.Debug("Add", key)
-    logs.Debug("Add", value)
     configMaps.Store(key, value)
 }
 
@@ -55,10 +54,10 @@ func Get(key string, defaultValue ...interface{}) interface{} {
     var maps configMap = &configMaps
     for i, k := range keys {
         if val, ok := maps.Load(k); ok {
-            if m, ok := val.(map[string]interface{}); ok {
-                maps = StrMap(m)
-            } else if i == lastIndex {
+            if i == lastIndex  {
                 return val
+            } else if m, ok := val.(map[string]interface{}); ok {
+                maps = StrMap(m)
             }
         }
     }
