@@ -2,6 +2,7 @@ package config
 
 import (
     "testing"
+
     "github.com/astaxie/beego/logs"
 )
 
@@ -21,8 +22,22 @@ func TestConfig(t *testing.T) {
             "max_open_connections": Env("DB_MAX_OPEN_CONNECTIONS", 25),
             "max_life_seconds":     Env("DB_MAX_LIFE_SECONDS", 5*60),
         },
+        "sqlite": "wrong",
     })
-    logs.Debug(Env("DB_HOST", "127.0.0.1"))
     logs.Debug(Get("database"))
-    logs.Debug(Get("database.mysql.charset"))
+    assertEqual(t, Env("DB_HOST", "127.0.0.1").(string), "127.0.0.1")
+    assertEqual(t, Get("database.mysql.charset").(string), "utf8mb4")
+    assertEqual(t, Get("database.sqlite").(string), "wrong")
+    assertEqual(t, Get("database.sqlite.host", "localhost").(string), "localhost")
+    assert(t, Get("database.sqlite.host") == nil)
+}
+
+func assertEqual[T comparable](t *testing.T, expected, actual T, messages ...any) {
+    assert(t, expected == actual, append(messages, actual, "is not expected", expected)...)
+}
+
+func assert(t *testing.T, result bool, messages ...any) {
+    if !result {
+        t.Fatal(append([]any{"Fail!"}, messages...)...)
+    }
 }
