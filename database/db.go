@@ -112,17 +112,17 @@ func Open(dialector Dialector) (db *DB, err error) {
     db.query = &Query{
         DB          : db,
 		StdDB       : db.StdDB, // 因为返回的是指针*sql.DB，所以 db.StdDB 和 db.conn.StdDB 是同一个，一个Close()，另一个也会Close()
-        tablePrefix : config.TablePrefix,
+        tablePrefix : config.Get[string]("database.mysql.table_prefix"),
 		Context     : context.Background(),
     }
 
     // 设置最大初始连接数
-    if config.MaxOpenConns > 0 {
-        db.StdDB.SetMaxOpenConns(config.MaxOpenConns)
+    if config.Get[int]("database.mysql.max_open_connections") > 0 {
+        db.StdDB.SetMaxOpenConns(config.Get[int]("database.mysql.max_open_connections"))
     }
     // 设置最大空闲连接数
-    if config.MaxIdleConns > 0 {
-        db.StdDB.SetMaxIdleConns(config.MaxIdleConns)
+    if config.Get[int]("database.mysql.max_idle_connections") > 0 {
+        db.StdDB.SetMaxIdleConns(config.Get[int]("database.mysql.max_idle_connections"))
     }
     // sql.Open 实际上返回了一个数据库抽象，并没有真的连接上
     if err == nil {
@@ -265,7 +265,7 @@ func (db *DB) Select(columns ...string) *Query {
         B: &Builder{},
         sqlStr      : "",
         queryType   : SELECT,
-        cryptKey    : config.CryptKey,
+        cryptKey    : config.Get[string]("database.mysql.crypt_key"),
         cryptFields : config.CryptFields,
         DB          : db,
         StdDB       : db.StdDB,
@@ -296,7 +296,7 @@ func (db *DB) Insert(table string, args ...[]string) *Query {
         B: &Builder{},
         sqlStr      : "",
         queryType   : INSERT,
-        cryptKey    : config.CryptKey,
+        cryptKey    : config.Get[string]("database.mysql.crypt_key"),
         cryptFields : config.CryptFields,
         DB          : db,
         StdDB       : db.StdDB,
@@ -321,7 +321,7 @@ func (db *DB) Update(table string) *Query {
         B: &Builder{},
         sqlStr      : "",
         queryType   : UPDATE,
-        cryptKey    : config.CryptKey,
+        cryptKey    : config.Get[string]("database.mysql.crypt_key"),
         cryptFields : config.CryptFields,
         DB          : db,
         StdDB       : db.StdDB,
