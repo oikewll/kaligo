@@ -1,23 +1,28 @@
 package config
 
 import (
-    "fmt"
     "testing"
+    "github.com/astaxie/beego/logs"
 )
 
-func Test(t *testing.T) {
-    InitConfig("../config/conf.ini")
-    user := Get("db", "user")
-    fmt.Printf("Test user: %v\n", user)
-    Delete("db", "user")
-    user = Get("db", "user")
-    if len(user) == 0 {
-        fmt.Println("username is not exists") //this stdout username is not exists
-    }
-    Set("db", "user", "widuu")
-    user = Get("db", "user")
-    fmt.Println(user) //widuu
-
-    //data := ReadList()
-    //fmt.Println(data)
+func TestConfig(t *testing.T) {
+    Add("database", StrMap{
+        "mysql": map[string]interface{}{
+            // 数据库连接信息
+            "host":     Env("DB_HOST", "127.0.0.1"),
+            "port":     Env("DB_PORT", "3306"),
+            "database": Env("DB_DATABASE", "test"),
+            "username": Env("DB_USERNAME", ""),
+            "password": Env("DB_PASSWORD", ""),
+            "charset":  "utf8mb4",
+            "loc":      Env("DB_LOC", "Asia/Shanghai"),
+            // 连接池配置
+            "max_idle_connections": Env("DB_MAX_IDLE_CONNECTIONS", 300),
+            "max_open_connections": Env("DB_MAX_OPEN_CONNECTIONS", 25),
+            "max_life_seconds":     Env("DB_MAX_LIFE_SECONDS", 5*60),
+        },
+    })
+    logs.Debug(Env("DB_HOST", "127.0.0.1"))
+    logs.Debug(Get("database"))
+    logs.Debug(Get("database.mysql.charset"))
 }

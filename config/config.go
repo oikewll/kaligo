@@ -9,161 +9,86 @@
 package config
 
 import (
-	"bufio"
-	"fmt"
-	"io"
-	"os"
-	"path/filepath"
-	"strings"
+    "strings"
+    "sync"
+    "github.com/owner888/kaligo/util"
+    "github.com/astaxie/beego/logs"
 )
 
 var (
-    // AppPath is ...
-    AppPath string
-    // PathRoot is PathRoot
-    PathRoot string
-    // PathData is PathData
-    PathData string
-	//confFile string                       // Your ini file path directory+file
-	confList []map[string]map[string]string // Configuration information slice
+    configMaps sync.Map
 )
 
-// 一导入conf package 就初始化变量
-func init() {
-    ////confFile := AppPath + "conf/app.ini"
-    ////if len(os.Args) > 1 {
-        ////confFile = os.Args[1]
-    ////}
-    //InitConfig(confFile)
-    //PathRoot = Get("base", "path_root")
-    //fmt.Println(PathRoot)
-    //PathData = PathRoot + "/data"
-}
+// StrMap is use for string -> map
+type StrMap map[string]interface{}
 
-// InitConfig is the function for create an empty configuration file
-func InitConfig(confFile string) {
-    fmt.Printf("confFile: [ %v ]", confFile)
-
-    err := ReadList(confFile)
-    if err != nil {
-        Set("http", "addr", "0.0.0.0")
-        Set("http", "port", "9527")
-        path, _ := filepath.Abs(os.Args[0])
-        //dir := filepath.Dir(path)
-        pathArr := strings.Split(path, "/")
-        Set("base", "basename", pathArr[len(pathArr)-1])
-    }
-}
-
-// Get is the function for obtain corresponding value of the key values
-func Get(section, name string) string {
-
-	for _, v := range confList {
-		for key, value := range v {
-			if key == section {
-				return value[name]
-			}
-		}
+// Env 读取环境变量(configMaps存入的值)，支持默认值
+func Env(envName string, defaultValue ...interface{}) interface{} {
+	if len(defaultValue) > 0 {
+		return Get(envName, defaultValue[0])
 	}
-	return ""
+	return Get(envName)
 }
 
-// Set is the function for set the corresponding value of the key value, if not add, if there is a key change
-func Set(section, key, value string) bool {
-
-	var ok bool
-	var index = make(map[int]bool)
-	var conf = make(map[string]map[string]string)
-	for i, v := range confList {
-		_, ok = v[section]
-		index[i] = ok
-	}
-
-	i, ok := func(m map[int]bool) (i int, v bool) {
-		for i, v := range m {
-			if v == true {
-				return i, true
-			}
-		}
-		return 0, false
-	}(index)
-
-	if ok {
-		confList[i][section][key] = value
-        return true
-    }
-
-    conf[section] = make(map[string]string)
-    conf[section][key] = value
-    confList = append(confList, conf)
-    return true
+// Add 新增配置项
+func Add(key string, value map[string]interface{}) {
+    logs.Debug("Add", key)
+    logs.Debug("Add", value)
+    configMaps.Store(key, value)
 }
 
-// Delete is the function for delete the corresponding key values
-func Delete(section, name string) bool {
-
-	for i, v := range confList {
-		for key := range v {
-			if key == section {
-				delete(confList[i][key], name)
-				return true
-			}
-		}
-	}
-	return false
-}
-
-// ReadList is the function for list all the configuration file
-func ReadList(confFile string) (err error) {
-
-	file, err := os.Open(confFile)
-	if err != nil {
-        return err
-	}
-
-	defer file.Close()
-	var data map[string]map[string]string
-	var section string
-	buf := bufio.NewReader(file)
-    for {
-        l, err := buf.ReadString('\n')
-        line := strings.TrimSpace(l)
-        if err != nil {
-            if err != io.EOF {
-                return err
-            }
-            if len(line) == 0 {
-                break
-            }
+// Get 获取配置项，允许使用点式获取，如：core.name
+func Get(key string, defaultValue ...interface{}) interface{} {
+    var keys []string = strings.Split(key, ".")
+    key = keys[0]
+    logs.Debug("Get", key)
+    val, ok := configMaps.Load(key)     // StrMap{}
+    logs.Debug("Get", val)
+    if !ok {
+        if len(defaultValue) > 0 {
+            return defaultValue[0]
         }
-        switch {
-        case strings.Index(line, "#") >= 0 || strings.Index(line, ";") >= 0:
-        case len(line) == 0:
-        case line[0] == '[' && line[len(line)-1] == ']':
-            section = strings.TrimSpace(line[1 : len(line)-1])
-            data = make(map[string]map[string]string)
-            data[section] = make(map[string]string)
-        default:
-            i := strings.IndexAny(line, "=")
-            value := strings.TrimSpace(line[i+1:])
-            data[section][strings.TrimSpace(line[0:i])] = value
-            if uniquappend(section) == true {
-                confList = append(confList, data)
-            }
+        return nil
+    }
+    if len(keys) > 1 {
+        smVal := val.(map[string]interface {})
+        smKey := keys[1]
+        logs.Debug("smKey", smKey)
+        v := (smVal[smKey])
+        logs.Debug("smVal", v)
+        if len(keys) > 2 {
         }
     }
-
-	return err
+    // return (interface{})(val).(T)
+    return val
 }
 
-// uniquappend is the function for ban repeated appended to the slice method
-func uniquappend(conf string) bool {
-	for _, v := range confList {
-		for k := range v {
-			if k == conf {
-				return false
-			}
-		}
-	}
-	return true
+// GetString 获取 String 类型的配置信息
+func GetString(path string, defaultValue ...interface{}) string {
+    return util.ToString(Get(path, defaultValue...))
+}
+
+// GetInt 获取 Int 类型的配置信息
+func GetInt(path string, defaultValue ...interface{}) int {
+    return util.ToInt(Get(path, defaultValue...))
+}
+
+// GetInt64 获取 Int64 类型的配置信息
+func GetInt64(path string, defaultValue ...interface{}) int64 {
+    return util.ToInt64(Get(path, defaultValue...))
+}
+
+// GetInt32 获取 Int64 类型的配置信息
+func GetInt32(path string, defaultValue ...interface{}) int32 {
+    return util.ToInt32(Get(path, defaultValue...))
+}
+
+// GetUint 获取 Uint 类型的配置信息
+func GetUint(path string, defaultValue ...interface{}) uint {
+    return util.ToUint(Get(path, defaultValue...))
+}
+
+// GetBool 获取 Bool 类型的配置信息
+func GetBool(path string, defaultValue ...interface{}) bool {
+    return util.ToBool(Get(path, defaultValue...))
 }

@@ -14,11 +14,11 @@ import (
 	//_ "github.com/go-sql-driver/mysql"
 	//_ "github.com/mattn/go-sqlite3"
 	//"github.com/owner888/kaligo/config"
-	"github.com/owner888/kaligo/database"
-	sqlite "github.com/owner888/kaligo/database/driver/sqlite"
+	// "github.com/owner888/kaligo/database"
+	// sqlite "github.com/owner888/kaligo/database/driver/sqlite"
 
 	//mysql "github.com/owner888/kaligo/database/driver/mysql"
-	"github.com/owner888/kaligo/model"
+	// "github.com/owner888/kaligo/model"
 	//"strconv"
 	//"strings"
 	//"regexp"
@@ -40,34 +40,30 @@ func (c statefulCamable) Auth(password string) bool{
 }
 
 type User struct {
-    *model.Model
+    // *model.Model
     ID   uint   `db:"id"`
     Name string `db:"name"`
     Age  uint   `db:"age"`
     Sex  uint   `db:"sex"`
 }
 
-func TestDBDemo(t *testing.T) {
-    var err error = nil    
-}
-
 func TestDB(t *testing.T) {
 
     //var sqlStr string
     //db, err := database.Open(mysql.Open(config.DBDSN))
-    db, err := database.Open(sqlite.Open("./test.db"))
-    if err != nil {
-        t.Fatal(err)
-    }
-
-    user := User{
-        ID   : 1,
-        Name : "test111",
-        Age  : 25,
-        Sex  : 1,
-    }
-    user.DB = db
-    user.Save()
+    // db, err := database.Open(sqlite.Open("./test.db"))
+    // if err != nil {
+    //     t.Fatal(err)
+    // }
+    //
+    // user := User{
+    //     ID   : 1,
+    //     Name : "test111",
+    //     Age  : 25,
+    //     Sex  : 1,
+    // }
+    // user.DB = db
+    // user.Save()
 
     //databases := db.Schema().CurrentDatabase()
     //t.Logf("jsonStr = %v\n", database.FormatJSON(databases))
