@@ -11,23 +11,34 @@ package config
 import (
     "strings"
     "sync"
-    "github.com/owner888/kaligo/util"
+
     "github.com/astaxie/beego/logs"
+    "github.com/owner888/kaligo/util"
 )
 
 var (
     configMaps sync.Map
 )
 
+type configMap interface {
+    Load(key any) (value any, ok bool)
+}
+
 // StrMap is use for string -> map
 type StrMap map[string]interface{}
 
+func (m StrMap) Load(key any) (value any, ok bool) {
+    value = m[key.(string)]
+    ok = value != nil
+    return
+}
+
 // Env 读取环境变量(configMaps存入的值)，支持默认值
 func Env(envName string, defaultValue ...interface{}) interface{} {
-	if len(defaultValue) > 0 {
-		return Get(envName, defaultValue[0])
-	}
-	return Get(envName)
+    if len(defaultValue) > 0 {
+        return Get(envName, defaultValue[0])
+    }
+    return Get(envName)
 }
 
 // Add 新增配置项
@@ -40,27 +51,21 @@ func Add(key string, value map[string]interface{}) {
 // Get 获取配置项，允许使用点式获取，如：core.name
 func Get(key string, defaultValue ...interface{}) interface{} {
     var keys []string = strings.Split(key, ".")
-    key = keys[0]
-    logs.Debug("Get", key)
-    val, ok := configMaps.Load(key)     // StrMap{}
-    logs.Debug("Get", val)
-    if !ok {
-        if len(defaultValue) > 0 {
-            return defaultValue[0]
-        }
-        return nil
-    }
-    if len(keys) > 1 {
-        smVal := val.(map[string]interface {})
-        smKey := keys[1]
-        logs.Debug("smKey", smKey)
-        v := (smVal[smKey])
-        logs.Debug("smVal", v)
-        if len(keys) > 2 {
+    lastIndex := len(keys) - 1
+    var maps configMap = &configMaps
+    for i, k := range keys {
+        if val, ok := maps.Load(k); ok {
+            if m, ok := val.(map[string]interface{}); ok {
+                maps = StrMap(m)
+            } else if i == lastIndex {
+                return val
+            }
         }
     }
-    // return (interface{})(val).(T)
-    return val
+    if len(defaultValue) > 0 {
+        return defaultValue[0]
+    }
+    return nil
 }
 
 // GetString 获取 String 类型的配置信息
