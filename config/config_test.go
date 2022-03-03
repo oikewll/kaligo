@@ -25,7 +25,7 @@ func TestConfig(t *testing.T) {
         },
         "sqlite": "wrong",
     })
-    logs.Debug(Get("database"))
+    logs.Debug(GetString("database.mysql.charset"))
     assertEqual(t, Env("DB_HOST", "127.0.0.1").(string), "127.0.0.1")
     assertEqual(t, Get("database.mysql.charset").(string), "utf8mb4")
     assertEqual(t, GetBool("database.mysql.enable"), true)
