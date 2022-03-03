@@ -3,10 +3,10 @@ package util
 import (
 	"bufio"
 	"errors"
-	"github.com/owner888/kaligo/config"
+	// "github.com/owner888/kaligo/config"
 	"io"
 	"io/ioutil"
-	"log"
+	// "log"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -43,18 +43,18 @@ func FileExists(name string) bool {
         log.Print(err)
     }
  */
-func WriteLog(filename string, format string) (bool, error) {
+// func WriteLog(filename string, format string) (bool, error) {
 
-    logfile := config.PathData+"/log/"+filename+".log"
-    f, err := os.OpenFile(logfile, os.O_RDWR | os.O_APPEND |  os.O_CREATE, 0777)
-    if err != nil {
-        return false, err
-    }
-    defer f.Close() 
-    logger := log.New(f, "", log.Ldate | log.Ltime | log.Lshortfile)
-    logger.Print(format)
-    return true, err
-}
+    // logfile := config.PathData+"/log/"+filename+".log"
+    // f, err := os.OpenFile(logfile, os.O_RDWR | os.O_APPEND |  os.O_CREATE, 0777)
+    // if err != nil {
+    //     return false, err
+    // }
+    // defer f.Close()
+    // logger := log.New(f, "", log.Ldate | log.Ltime | log.Lshortfile)
+    // logger.Print(format)
+    // return true, err
+// }
 
 /**
  *  使用方法

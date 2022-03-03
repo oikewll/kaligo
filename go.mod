@@ -1,19 +1,21 @@
 module github.com/owner888/kaligo
 
-go 1.16
+go 1.18
 
 require (
+	github.com/astaxie/beego v1.12.3
 	github.com/bradfitz/gomemcache v0.0.0-20190913173617-a41fca850d0b
-	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/go-sql-driver/mysql v1.6.0 // indirect
-	github.com/goinggo/mapstructure v0.0.0-20140717182941-194205d9b4a9 // indirect
-	github.com/gomodule/redigo v1.8.5
-	github.com/google/uuid v1.3.0 // indirect
-	github.com/jinzhu/now v1.1.2 // indirect
-	github.com/mailru/easyjson v0.7.7 // indirect
-	github.com/mattn/go-sqlite3 v1.14.8 // indirect
+	github.com/go-sql-driver/mysql v1.6.0
+	github.com/gomodule/redigo v2.0.0+incompatible
+	github.com/jinzhu/now v1.1.2
+	github.com/mattn/go-sqlite3 v2.0.3+incompatible
 	github.com/stretchr/testify v1.7.0
-	github.com/surol/speedtest-cli v0.0.0-20191102145116-3e7dc3fb45c3 // indirect
 	golang.org/x/crypto v0.0.0-20210711020723-a769d52b0f97
+)
+
+require (
+	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/pmezard/go-difflib v1.0.0 // indirect
+	github.com/shiena/ansicolor v0.0.0-20151119151921-a422bbe96644 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 )
