@@ -20,18 +20,25 @@ var (
     configMaps sync.Map
 )
 
+// configMap 是用于保存多层级数据的 map，已实现此接口的类型: sync.Map, StrMap
 type configMap interface {
     Load(key any) (value any, ok bool)
+    Store(key, value any)
 }
 
 // StrMap is use for string -> map
 type StrMap map[string]interface{}
 
-// Load is use for
+// Load is used to read value by key
 func (m StrMap) Load(key any) (value any, ok bool) {
     value = m[key.(string)]
     ok = value != nil
     return
+}
+
+// Store is used to write value by key
+func (m StrMap) Store(key, value any) {
+    m[key.(string)] = value
 }
 
 // Env 读取环境变量(configMaps存入的值)，支持默认值
@@ -45,6 +52,8 @@ func Env(key string, defaultValue ...interface{}) interface{} {
                 return val
             } else if m, ok := val.(map[string]interface{}); ok {
                 maps = StrMap(m)
+            } else if m, ok := val.(StrMap); ok {
+                maps = m
             }
         }
     }
@@ -57,6 +66,28 @@ func Env(key string, defaultValue ...interface{}) interface{} {
 // Add 新增配置项
 func Add(key string, value map[string]interface{}) {
     configMaps.Store(key, value)
+}
+
+// Set 设置配置项
+func Set(key string, value any) {
+    var keys []string = strings.Split(key, ".")
+    lastIndex := len(keys) - 1
+    var maps configMap = &configMaps
+    for i, k := range keys {
+        if i == lastIndex {
+            maps.Store(k, value)
+        } else {
+            if val, ok := maps.Load(k); ok {
+                if m, ok := val.(map[string]interface{}); ok {
+                    maps = StrMap(m)
+                    continue
+                }
+            }
+            newMap := StrMap{}
+            maps.Store(k, newMap)
+            maps = newMap
+        }
+    }
 }
 
 // Get 获取配置项，允许使用点式获取，如：core.name

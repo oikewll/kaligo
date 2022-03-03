@@ -8,7 +8,7 @@ import (
 
 func TestConfig(t *testing.T) {
     Add("database", StrMap{
-        "mysql": map[string]interface{}{
+        "mysql": StrMap{
             // 数据库连接信息
             "host":     Env("DB_HOST", "127.0.0.1"),
             "port":     Env("DB_PORT", "3306"),
@@ -34,6 +34,12 @@ func TestConfig(t *testing.T) {
     assertEqual(t, Get[string]("database.sqlite"), "wrong")
     assertEqual(t, Get("database.sqlite.host", "localhost"), "localhost")
     assert(t, Get[any]("database.sqlite.host") == nil)
+}
+
+func TestSet(t *testing.T) {
+    Set("database.mysql.port", "1234")
+    logs.Debug(Env("database"))
+    assertEqual(t, Get[string]("database.mysql.port"), "1234")
 }
 
 func assertEqual[T comparable](t *testing.T, expected, actual T, messages ...any) {
