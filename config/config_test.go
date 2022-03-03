@@ -27,12 +27,13 @@ func TestConfig(t *testing.T) {
     })
     logs.Debug(GetString("database.mysql.charset"))
     assertEqual(t, Env("DB_HOST", "127.0.0.1").(string), "127.0.0.1")
-    assertEqual(t, Get("database.mysql.charset").(string), "utf8mb4")
-    assertEqual(t, GetBool("database.mysql.enable"), true)
-    assertNotEqual(t, GetBool("database.mysql.enable"), false)
-    assertEqual(t, Get("database.sqlite").(string), "wrong")
-    assertEqual(t, Get("database.sqlite.host", "localhost").(string), "localhost")
-    assert(t, Get("database.sqlite.host") == nil)
+    assertEqual(t, Get[string]("database.mysql.charset"), "utf8mb4")
+    assertEqual(t, Get[bool]("database.mysql.enable"), true)
+    assertNotEqual(t, Get[bool]("database.mysql.enable"), false)
+    assertEqual(t, Get("database.sqlite", "default value"), "wrong")
+    assertEqual(t, Get[string]("database.sqlite"), "wrong")
+    assertEqual(t, Get("database.sqlite.host", "localhost"), "localhost")
+    assert(t, Get[any]("database.sqlite.host") == nil)
 }
 
 func assertEqual[T comparable](t *testing.T, expected, actual T, messages ...any) {
@@ -40,7 +41,7 @@ func assertEqual[T comparable](t *testing.T, expected, actual T, messages ...any
 }
 
 func assertNotEqual[T comparable](t *testing.T, expected, actual T, messages ...any) {
-    assert(t, expected != actual, append(messages, actual, "is not expected", expected)...)
+    assert(t, expected != actual, append(messages, actual, "is not expected")...)
 }
 
 func assert(t *testing.T, result bool, messages ...any) {
