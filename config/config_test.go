@@ -16,6 +16,7 @@ func TestConfig(t *testing.T) {
             "username": Env("DB_USERNAME", ""),
             "password": Env("DB_PASSWORD", ""),
             "charset":  "utf8mb4",
+            "enable":   true,
             "loc":      Env("DB_LOC", "Asia/Shanghai"),
             // 连接池配置
             "max_idle_connections": Env("DB_MAX_IDLE_CONNECTIONS", 300),
@@ -27,6 +28,8 @@ func TestConfig(t *testing.T) {
     logs.Debug(Get("database"))
     assertEqual(t, Env("DB_HOST", "127.0.0.1").(string), "127.0.0.1")
     assertEqual(t, Get("database.mysql.charset").(string), "utf8mb4")
+    assertEqual(t, GetBool("database.mysql.enable"), true)
+    assertNotEqual(t, GetBool("database.mysql.enable"), false)
     assertEqual(t, Get("database.sqlite").(string), "wrong")
     assertEqual(t, Get("database.sqlite.host", "localhost").(string), "localhost")
     assert(t, Get("database.sqlite.host") == nil)
@@ -34,6 +37,10 @@ func TestConfig(t *testing.T) {
 
 func assertEqual[T comparable](t *testing.T, expected, actual T, messages ...any) {
     assert(t, expected == actual, append(messages, actual, "is not expected", expected)...)
+}
+
+func assertNotEqual[T comparable](t *testing.T, expected, actual T, messages ...any) {
+    assert(t, expected != actual, append(messages, actual, "is not expected", expected)...)
 }
 
 func assert(t *testing.T, result bool, messages ...any) {
