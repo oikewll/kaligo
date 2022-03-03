@@ -266,7 +266,7 @@ func (db *DB) Select(columns ...string) *Query {
         sqlStr      : "",
         queryType   : SELECT,
         cryptKey    : config.Get[string]("database.mysql.crypt_key"),
-        cryptFields : config.CryptFields,
+        cryptFields : config.Get[map[string][]string]("database.mysql.crypt_fields"),
         DB          : db,
         StdDB       : db.StdDB,
     }
@@ -297,7 +297,7 @@ func (db *DB) Insert(table string, args ...[]string) *Query {
         sqlStr      : "",
         queryType   : INSERT,
         cryptKey    : config.Get[string]("database.mysql.crypt_key"),
-        cryptFields : config.CryptFields,
+        cryptFields : config.Get[map[string][]string]("database.mysql.crypt_fields"),
         DB          : db,
         StdDB       : db.StdDB,
     }
@@ -322,7 +322,7 @@ func (db *DB) Update(table string) *Query {
         sqlStr      : "",
         queryType   : UPDATE,
         cryptKey    : config.Get[string]("database.mysql.crypt_key"),
-        cryptFields : config.CryptFields,
+        cryptFields : config.Get[map[string][]string]("database.mysql.crypt_fields"),
         DB          : db,
         StdDB       : db.StdDB,
     }
