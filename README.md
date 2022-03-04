@@ -14,6 +14,8 @@ More info [doc.kaligo.com](https://doc.kaligo.com)
 
 ## Changelog
 
+v1.2.8: 重构config类，支持点式获取方式，config.Get[string]("database.mysql.charset")
+
 v1.2.7: 定时器增加全局锁，修复同时设置多个定时器时协程并发写Timer map出现空指针异常Bug，增加用读写锁实现的安全map，排序map类改名
 
 v1.2.6: 迁移util类到util namespace里面去，调用就不用每次都new那么麻烦了，修改CRUD数据库类插入、批量插入、修改为返回sql，以便记录日志;增加项目绝对路径，数据绝对路径util.PATH_ROOT、util.PATH_DATA
@@ -36,7 +38,7 @@ v1.0: 本地的MVC框架，实现控制器
 
 ## Installation
 
-    $ go get github.com/owner888/kaligo
+    `go get -u github.com/owner888/kaligo@v1.2.14`
 
 ## Examples
 
@@ -106,23 +108,25 @@ v1.0: 本地的MVC框架，实现控制器
 
 ### Example 1 - 路由设置
 
-    // main.go
-    package main
+```go
+// main.go
+package main
 
-    import (
-        "kaligoprojects/control"
-        "github.com/owner888/kaligo"
-    )
+import (
+    "kaligoprojects/control"
+    "github.com/owner888/kaligo"
+)
 
-    func main() {
-        // 设置路由
-        // 当用户访问 /?ct=index&ac=login 的时候就是调用了 control/ctl_index.go 里面的login方法
-        kaligo.Router("index", &control.Index{})
-        // 设置静态路径，当用户访问 /static 的时候，就访问 static 目录下面的静态文件
-        kaligo.SetStaticPath("/static", "static")
-        // 解析配置文件、编译模板、启动模块、监听服务端口
-        kaligo.Run()
-    }
+func main() {
+    // 设置路由
+    // 当用户访问 /?ct=index&ac=login 的时候就是调用了 control/ctl_index.go 里面的login方法
+    kaligo.Router("index", &control.Index{})
+    // 设置静态路径，当用户访问 /static 的时候，就访问 static 目录下面的静态文件
+    kaligo.SetStaticPath("/static", "static")
+    // 解析配置文件、编译模板、启动模块、监听服务端口
+    kaligo.Run()
+}
+```
 
 ### Example 2 - Controller 编写
 
