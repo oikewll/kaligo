@@ -24,6 +24,7 @@ func TestConfig(t *testing.T) {
             "max_life_seconds":     Env("DB_MAX_LIFE_SECONDS", 5*60),
         },
         "sqlite": "wrong",
+        "custom": []string{"1", "2"},
     })
     logs.Debug(GetString("database.mysql.charset"))
     assertEqual(t, Env("DB_HOST", "127.0.0.1").(string), "127.0.0.1")
@@ -34,11 +35,23 @@ func TestConfig(t *testing.T) {
     assertEqual(t, Get[string]("database.sqlite"), "wrong")
     assertEqual(t, Get("database.sqlite.host", "localhost"), "localhost")
     assert(t, Get[any]("database.sqlite.host") == nil)
+    assert(t, arrayEqual(Get[[]string]("database.custom"), []string{"1", "2"}))
+}
+
+func arrayEqual[T comparable](a, b []T) bool {
+    if len(a) != len(b) {
+        return false
+    }
+    for i, v := range a {
+        if b[i] != v {
+            return false
+        }
+    }
+    return true
 }
 
 func TestSet(t *testing.T) {
     Set("database.mysql.port", "1234")
-    logs.Debug(Env("database"))
     assertEqual(t, Get[string]("database.mysql.port"), "1234")
 }
 
