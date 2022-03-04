@@ -4,6 +4,9 @@
  * @copyright   (C) 2014  seatle
  * @lastmodify  2021-07-06
  *
+ * Point-to-point acquisition
+ * config.Get[string]("database.mysql.charset") 
+ *
  */
 
 package config
@@ -107,8 +110,6 @@ func Get[T any](key string, defaultValue ...T) (t T) {
         value = GetUint(key, anyDefaultValue...)
     case bool:
         value = GetBool(key, anyDefaultValue...)
-    case map[string][]string:
-        value = GeoToStringMapStringSlice(key, anyDefaultValue...)
     default:
         value = Env(key, anyDefaultValue...)
     }
@@ -116,11 +117,6 @@ func Get[T any](key string, defaultValue ...T) (t T) {
         return value.(T)
     }
     return
-}
-
-// GeoToStringMapStringSlice is use for get map[string][]string configure
-func GeoToStringMapStringSlice(path string, defaultValue ...interface{}) map[string][]string {
-    return util.ToStringMapStringSlice(Env(path, defaultValue...))
 }
 
 // GetString 获取 String 类型的配置信息

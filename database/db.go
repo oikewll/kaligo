@@ -130,7 +130,7 @@ func Open(dialector Dialector) (db *DB, err error) {
         err = db.StdDB.Ping()
     }
 
-    db.setCharset("utf8")
+    db.setCharset(config.Get[string]("database.mysql.charset"))
 
     db.schema = &Schema{
         Name  : db.Name,
