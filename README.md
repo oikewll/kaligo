@@ -38,73 +38,77 @@ v1.0: 本地的MVC框架，实现控制器
 
 ## Installation
 
-    `go get -u github.com/owner888/kaligo@v1.2.14`
+    go get -u github.com/owner888/kaligo@v1.2.14
 
 ## Examples
 
 ### 新建项目
 
     $ cd $GOPATH/src/
-    $ mkdir kaligoprojects
-    $ cd kaligoprojects
+    $ mkdir project
+    $ cd project
     $ tree
-        ├── conf
-        │   └── app.ini
+        ├── config
+        │   └── app.go
+        │   └── database.go
         ├── control
-        │   └── ctl_index.go
+        │   └── user.go
+        ├── model
+        │   └── user.go
         ├── data
         │   ├── cache
         │   └── log
-        ├── main.go
-        ├── model
-        │   └── mod_common.go
         ├── static
         │   ├── css
         │   ├── images
         │   └── js
         └── template
             └── index.tpl
+        └── main.go
 
-### 配置项目 - conf/app.ini
+### 配置项目 - config/database.go
     
-    [base]
-    ; --------------------------
-    ; 基本配置
-    ; --------------------------
-    display_errors = true
-    log_errors = true
-    static_path = /static
-    [http]
-    ; --------------------------
-    ; Web服务器监听地址和端口
-    ; --------------------------
-    addr = 0.0.0.0
-    port = 9527
-    [db]
-    ; --------------------------
-    ; 数据库配置
-    ; --------------------------
-    user = root
-    pass = root
-    host = localhost
-    port = 3306
-    name = test
-    ; 是否记录慢查询
-    log_slow_query = true
-    ; 记录慢查询时间，单位：秒
-    log_slow_time = 1
-    [redis]
-    ; --------------------------
-    ; Redis配置
-    ; --------------------------
-    host = 127.0.0.1
-    port = 6379
-    ; --------------------------
-    ; 连接池连接数配置
-    ; --------------------------
-    [pool]
-    mysql = 1000
-    redis = 12000
+```go
+package config
+
+import (
+    "fmt"
+    "github.com/owner888/kaligo/config"
+)
+
+func init() {
+    config.Add("database", config.StrMap{
+        "mysql": map[string]interface{}{
+            "host":     "127.0.0.1",
+            "port":     "3306",
+            "name":     "test",
+            "user":     "root",
+            "pass":     "root",
+            "charset":  "utf8mb4",
+            "loc":      "Asia/Shanghai",
+            "table_prefix" : "",
+            "crypt_key"    : "",
+            "crypt_fields" : map[string][]string{
+                "user"  : {"name", "age"},
+                "player": {"nickname"},
+            },
+            "check_privilege" : true,
+            // 连接池配置
+            "max_idle_connections": 300,
+            "max_open_connections": 25,
+            "max_life_seconds":     5*60,
+        },
+    })
+
+    user := config.Get[string]("database.mysql.user")
+    pass := config.Get[string]("database.mysql.pass")
+    host := config.Get[string]("database.mysql.host")
+    port := config.Get[string]("database.mysql.port")
+    name := config.Get[string]("database.mysql.name")
+    dsn  := fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=%s", user, pass, host+":"+port, name, "utf8mb4")
+    config.Set("database.mysql.dsn", dsn)
+}
+```
 
 ### Example 1 - 路由设置
 
@@ -113,7 +117,7 @@ v1.0: 本地的MVC框架，实现控制器
 package main
 
 import (
-    "kaligoprojects/control"
+    "project/control"
     "github.com/owner888/kaligo"
 )
 
@@ -161,7 +165,7 @@ func main() {
 #### 在控制器ctl_index.go 中使用model 
 
     import (
-        "kaligoprojects/model"
+        "project/model"
         "net/http"
         "io"
     )
@@ -396,9 +400,6 @@ func main() {
 * [control](http://www.godoc.org/pkg/github.com/owner888/kaligo/control)
 * [db](http://www.godoc.org/pkg/github.com/owner888/kaligo/db)
 * [redis](http://www.godoc.org/pkg/github.com/owner888/kaligo/redis)
-
-## Contact US
-QQ:525773145
 
 ## LICENSE
 
