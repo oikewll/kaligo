@@ -1,7 +1,6 @@
 package kaligo
 
 import (
-    "fmt"
     "log"
     "net/http"
     "path"
@@ -48,12 +47,47 @@ func (a *App) AddDB(db *database.DB) {
     a.db = db
 }
 
+// DelTasker is the function for delete tasker
+func DelTasker(name string) bool {
+    tasker, ok := storeTimers.Load(name)
+    if ok {
+        tasker.(*time.Ticker).Stop()
+        return true
+    }
+    return false
+}
+
+// DelTimer is the function for delete timer
+func DelTimer(name string) bool {
+    tasker, ok := storeTimers.Load(name)
+    if ok {
+        tasker.(*time.Timer).Stop()
+        return true
+    }
+    return false
+}
+
+// AddTasker is the function for add tasker
+// AddTasker("default", &control.Task{}, "import_database", "2014-10-15 15:33:00")
+// func AddTasker(name string, control interface{}, action string, taskTime string) {
+func (a *App) AddTasker(name, taskTime, m string, c controller.Interface) {
+    go func() {
+        then, _ := time.ParseInLocation("2006-01-02 15:04:05", taskTime, time.Local)
+        dura := then.Sub(time.Now())
+        //fmt.Println(dura)
+        if dura > 0 {
+            timeTasker := time.AfterFunc(dura, func() {
+                a.controllerMethodCall(reflect.Indirect(reflect.ValueOf(c)).Type(), m, nil, nil, nil)
+            })
+            storeTimers.Store(name, timeTasker)
+        } else {
+            logs.Error("定时任务 --- [ " + name + " ] --- 小于当前时间，将不会被执行")
+        }
+    }()
+}
+
 // AddTimer is the function for add timer, The interval is in microseconds
-// AddTimer("default", &control.Timer{}, "Import_database_login_v2", 5000)
-// app.AddRoute("/statistics/:channel(.*)/:apkurl(.*)", map[string]string{
-//     "GET": "Statistics",
-// }, &controller.Get{})
-// func AddTimer(name string, control func(), action string, duration time.Duration) {
+// app.AddTimer("import_database", 3000, "ImportDatabase", &controller.Get{})
 func (a *App) AddTimer(name string, duration time.Duration, m string, c controller.Interface) {
     go func() {
         timeTicker := time.NewTicker(duration * time.Millisecond)
@@ -61,39 +95,7 @@ func (a *App) AddTimer(name string, duration time.Duration, m string, c controll
         for {
             select {
             case <-timeTicker.C:
-                controllerType := reflect.Indirect(reflect.ValueOf(c)).Type()
-                // Invoke the request handler
-                vc := reflect.New(controllerType)
-
-                // Init callback
-                method := vc.MethodByName("Init")
-                contex := &contex.Context{
-                    // ResponseWriter: w,
-                    // Request:        r,
-                    // Params:         params,
-                    DB:             a.db,
-                }
-                args := make([]reflect.Value, 2)
-                args[0] = reflect.ValueOf(contex)
-                args[1] = reflect.ValueOf(controllerType.Name())
-                method.Call(args)
-
-                args = make([]reflect.Value, 0)
-
-                // Prepare callback
-                method = vc.MethodByName("Prepare")
-                method.Call(args)
-
-                // Request callback
-                method = vc.MethodByName(m)
-                if !method.IsValid() {
-                    // http.NotFound(w, r)
-                }
-                method.Call(args)
-
-                // Finish callback
-                method = vc.MethodByName("Finish")
-                method.Call(args)
+                a.controllerMethodCall(reflect.Indirect(reflect.ValueOf(c)).Type(), m, nil, nil, nil)
             }
         }
     }()
@@ -226,41 +228,15 @@ func (a *App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
             // r.URL.RawQuery = url.Values(values).Encode()
         }
 
-        // Invoke the request handler
-        vc := reflect.New(route.ControllerType)
-
-        // Init callback
-        method := vc.MethodByName("Init")
-        contex := &contex.Context{
-            ResponseWriter: w,
-            Request:        r,
-            Params:         params,
-            DB:             a.db,
-        }
-        args := make([]reflect.Value, 2)
-        args[0] = reflect.ValueOf(contex)
-        args[1] = reflect.ValueOf(route.ControllerType.Name())
-        method.Call(args)
-
-        args = make([]reflect.Value, 0)
-
-        // Prepare callback
-        method = vc.MethodByName("Prepare")
-        method.Call(args)
-
+        var ok bool
+        var m  string    
         // Request callback
-        if _, ok := route.Methods[r.Method]; !ok {
+        if m, ok = route.Methods[r.Method]; !ok {
             http.NotFound(w, r)
         }
-        method = vc.MethodByName(route.Methods[r.Method])
-        if !method.IsValid() {
-            http.NotFound(w, r)
-        }
-        method.Call(args)
 
-        // Finish callback
-        method = vc.MethodByName("Finish")
-        method.Call(args)
+        c := route.ControllerType
+        a.controllerMethodCall(reflect.Indirect(reflect.ValueOf(c)).Type(), m, w, r, params)
         matchRouted = true
     }
 
@@ -278,52 +254,42 @@ func Run(app *App) {
     }
 }
 
-// AddTasker is the function for add tasker
-func AddTasker(name string, control interface{}, action string, taskTime string) {
+// func (a *App) controllerMethodCall(c controller.Interface, m string, w http.ResponseWriter, r *http.Request, params map[string]string) (err error) {
+func (a *App) controllerMethodCall(t reflect.Type, m string, w http.ResponseWriter, r *http.Request, params map[string]string) (err error) {
+    // controllerType := reflect.Indirect(reflect.ValueOf(c)).Type()
+    // Invoke the request handler
+    vc := reflect.New(t)
 
-    llen := len(Tasker)
-    if llen == 0 {
-        Tasker = make(map[string]*time.Timer)
+    // Init callback
+    method := vc.MethodByName("Init")
+    contex := &contex.Context{
+        ResponseWriter: nil,
+        Request:        nil,
+        Params:         params,
+        DB:             a.db,
     }
-    then, _ := time.ParseInLocation("2006-01-02 15:04:05", taskTime, time.Local)
-    dura := then.Sub(time.Now())
-    //fmt.Println(dura)
-    if dura > 0 {
-        Tasker[name] = time.AfterFunc(dura, func() {
-            action = strings.Title(action)
-            callMethod(control, action)
-        })
-    } else {
-        fmt.Println("定时任务 --- [ " + name + " ] --- 小于当前时间，将不会被执行")
+    args := make([]reflect.Value, 2)
+    args[0] = reflect.ValueOf(contex)
+    args[1] = reflect.ValueOf(t.Name())
+    method.Call(args)
+
+    args = make([]reflect.Value, 0)
+
+    // Prepare callback
+    method = vc.MethodByName("Prepare")
+    method.Call(args)
+
+    // Request callback
+    method = vc.MethodByName(m)
+    if !method.IsValid() {
+        // http.NotFound(w, r)
     }
+    method.Call(args)
+
+    // Finish callback
+    method = vc.MethodByName("Finish")
+    method.Call(args)
+
+    return err
 }
 
-// DelTasker is the function for delete tasker
-func DelTasker(name string) bool {
-    return Tasker[name].Stop()
-}
-
-// DelTimer is the function for delete timer
-func DelTimer(name string) bool {
-    if timer, ok := Timer[name]; ok {
-        timer.Stop()
-    } else {
-        fmt.Println("定时任务 --- [ " + name + " ] --- 不存在，考虑是否在协程里面生成而且尚未生成，不能执行Stop()")
-    }
-    //Timer[name].Stop()
-    return true
-}
-
-// 反射调用函数, 注意被调用的object要带 &，表示指针传递
-func callMethod(object interface{}, methodName string, args ...interface{}) {
-    params := make([]reflect.Value, len(args))
-    for i := range args {
-        params[i] = reflect.ValueOf(args[i])
-    }
-    method := reflect.ValueOf(object).MethodByName(methodName)
-    if method.IsValid() {
-        method.Call(params)
-    } else {
-        panic("Method " + methodName + " is not exists!")
-    }
-}
