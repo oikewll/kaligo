@@ -13,11 +13,9 @@ import (
     "sync"
     "time"
 
-    "github.com/owner888/kaligo/config"
     "github.com/owner888/kaligo/contex"
     "github.com/owner888/kaligo/controller"
     "github.com/owner888/kaligo/database"
-    mysql "github.com/owner888/kaligo/database/driver/mysql"
     "github.com/owner888/kaligo/routes"
     "github.com/owner888/kaligo/util"
 
@@ -26,7 +24,6 @@ import (
 
 // 定义当前package中使用的全局变量
 var (
-    db         *database.DB // global variable to share it between all HTTP handler
     Timer      map[string]*time.Ticker
     Tasker     map[string]*time.Timer
     Mutex      sync.Mutex
@@ -35,14 +32,6 @@ var (
 func init() {
     logs.SetLogFuncCall(true)
     logs.SetLogFuncCallDepth(3)
-    if config.Get[bool]("database.mysql.open") {
-        var err error
-        // db, err := database.Open(sqlite.Open("./test.db"))
-        db, err = database.Open(mysql.Open(config.Get[string]("database.mysql.dsn")))
-        if err != nil {
-            panic(err)
-        }
-    }
 }
 
 // App is use for add Route struct and StaticRoute struct
@@ -50,6 +39,12 @@ type App struct {
     http.Handler // http.ServeMux
     routes       []*routes.Route
     staticRoutes []*routes.StaticRoute
+    db           *database.DB
+}
+
+// AddDB is use for add a db
+func (a *App) AddDB(db *database.DB) {
+    a.db = db
 }
 
 // AddStaticRoute is use for add a static file route
@@ -188,7 +183,7 @@ func (a *App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
             ResponseWriter: w,
             Request:        r,
             Params:         params,
-            DB:             db,
+            DB:             a.db,
         }
         args := make([]reflect.Value, 2)
         args[0] = reflect.ValueOf(contex)
@@ -225,7 +220,6 @@ func (a *App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 // Run is to run a app
 func Run(app *App) {
-    // http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
     err := http.ListenAndServe(":9090", app)
     if err != nil {
         log.Fatal("ListenAndServe: ", err)

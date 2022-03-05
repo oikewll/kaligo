@@ -5,12 +5,14 @@ import (
     "regexp"
 
     "github.com/owner888/kaligo/controller"
+    "github.com/owner888/kaligo/database"
 )
 
 // App is use for add Route struct and StaticRoute struct
 type App interface {
     AddRoute(pattern string, m map[string]string, c controller.Interface)
     AddStaticRoute(prefix, staticDir string)
+    AddDB(db *database.DB)
 }
 
 // Route is a app route
