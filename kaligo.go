@@ -8,27 +8,29 @@ import (
     "path"
     "reflect"
     "regexp"
+
     // "runtime"
     "strings"
     "sync"
     "time"
 
-    mysql "github.com/owner888/kaligo/database/driver/mysql"
-    "github.com/owner888/kaligo/database"
+    "github.com/owner888/kaligo/config"
     "github.com/owner888/kaligo/contex"
     "github.com/owner888/kaligo/controller"
-    "github.com/owner888/kaligo/config"
+    "github.com/owner888/kaligo/database"
+    mysql "github.com/owner888/kaligo/database/driver/mysql"
+
     // "github.com/owner888/kaligo/util"
 
-    "github.com/owner888/kaligo/routes"
     "github.com/astaxie/beego/logs"
+    "github.com/owner888/kaligo/routes"
 )
 
 // 定义当前package中使用的全局变量
 var (
-    db *database.DB // global variable to share it between all HTTP handler
+    db         *database.DB // global variable to share it between all HTTP handler
     controlMap map[string]func()
-    StaticDir  map[string]string 
+    StaticDir  map[string]string
     Timer      map[string]*time.Ticker
     Tasker     map[string]*time.Timer
     Mutex      sync.Mutex
@@ -38,7 +40,7 @@ func init() {
     logs.SetLogFuncCall(true)
     logs.SetLogFuncCallDepth(3)
     if config.Get[bool]("database.mysql.open") {
-        var err error    
+        var err error
         // db, err := database.Open(sqlite.Open("./test.db"))
         db, err = database.Open(mysql.Open(config.Get[string]("database.mysql.dsn")))
         if err != nil {
@@ -50,25 +52,24 @@ func init() {
 // App is a app
 type App struct {
     http.Handler // http.ServeMux
-	routes       []*routes.Route
-	staticRoutes []*routes.StaticRoute
+    routes       []*routes.Route
+    staticRoutes []*routes.StaticRoute
 }
 
 // AddStaticRoute is use for add a static file route
 func (a *App) AddStaticRoute(prefix, staticDir string) {
     route := &routes.StaticRoute{}
-	route.Prefix    = prefix
-	route.StaticDir = staticDir
+    route.Prefix = prefix
+    route.StaticDir = staticDir
 
-	a.staticRoutes = append(a.staticRoutes, route)
+    a.staticRoutes = append(a.staticRoutes, route)
 }
-
 
 // AddRoute is use for add a http route
 func (a *App) AddRoute(pattern string, m map[string]string, c controller.Interface) {
-	parts := strings.Split(pattern, "/")
+    parts := strings.Split(pattern, "/")
 
-	j := 0
+    j := 0
     params := make(map[int]string)
     for i, part := range parts {
         if strings.HasPrefix(part, ":") {
@@ -92,27 +93,27 @@ func (a *App) AddRoute(pattern string, m map[string]string, c controller.Interfa
         }
     }
 
-	// recreate the url pattern, with parameters replaced
-	// by regular expressions. then compile the regex
+    // recreate the url pattern, with parameters replaced
+    // by regular expressions. then compile the regex
 
-	pattern = strings.Join(parts, "/")
-	regex, regexErr := regexp.Compile(pattern)
-	if regexErr != nil {
-		// TODO add error handling here to avoid panic
-		panic(regexErr)
-	}
+    pattern = strings.Join(parts, "/")
+    regex, regexErr := regexp.Compile(pattern)
+    if regexErr != nil {
+        // TODO add error handling here to avoid panic
+        panic(regexErr)
+    }
 
     // logs.Debug("params", params)
-    
-	// now create the Route
-	t := reflect.Indirect(reflect.ValueOf(c)).Type()
-	route := &routes.Route{}
-	route.Regex          = regex
-	route.Methods        = m
-	route.Params         = params
-	route.ControllerType = t
 
-	a.routes = append(a.routes, route)
+    // now create the Route
+    t := reflect.Indirect(reflect.ValueOf(c)).Type()
+    route := &routes.Route{}
+    route.Regex = regex
+    route.Methods = m
+    route.Params = params
+    route.ControllerType = t
+
+    a.routes = append(a.routes, route)
 }
 
 // ServeHTTP is a http Handler
@@ -121,12 +122,12 @@ func (a *App) AddRoute(pattern string, m map[string]string, c controller.Interfa
 // }
 func (a *App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
-	matchRouted := false
+    matchRouted := false
     requestPath := r.URL.RawPath
     if requestPath == "" {
-        requestPath = r.URL.Path    // 会自动 unescape, 先用 RawPath ,不行才用这个
+        requestPath = r.URL.Path // 会自动 unescape, 先用 RawPath ,不行才用这个
     }
-    requestPath = path.Clean(requestPath)   // 多个反斜杠变成一个
+    requestPath = path.Clean(requestPath) // 多个反斜杠变成一个
 
     // find a matching Route
     // for _, staticRoute := range a.staticRoutes {
@@ -147,94 +148,90 @@ func (a *App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
     //     }
     // }
 
-	// find a matching Route
-	for _, route := range a.routes {
+    // find a matching Route
+    for _, route := range a.routes {
 
-		// check if Route pattern matches url
-		if !route.Regex.MatchString(requestPath) {
-			continue
-		}
+        // check if Route pattern matches url
+        if !route.Regex.MatchString(requestPath) {
+            continue
+        }
 
-		// get submatches (params)
-		matches := route.Regex.FindStringSubmatch(requestPath)
+        // get submatches (params)
+        matches := route.Regex.FindStringSubmatch(requestPath)
 
-		// double check that the Route matches the URL pattern.
-		if len(matches[0]) != len(requestPath) {
-			continue
-		}
+        // double check that the Route matches the URL pattern.
+        if len(matches[0]) != len(requestPath) {
+            continue
+        }
 
-		params := make(map[string]string)
+        params := make(map[string]string)
 
-		if len(route.Params) > 0 {
-			// add url parameters to the query param map
-			values := r.URL.Query()
+        if len(route.Params) > 0 {
+            // add url parameters to the query param map
+            values := r.URL.Query()
 
             logs.Debug("values", values)
 
-			for i, match := range matches[1:] {
-				values.Add(route.Params[i], match)
-				params[route.Params[i]] = match
-				// fmt.Println(route.Params[i])
-				// fmt.Println(match)
-			}
+            for i, match := range matches[1:] {
+                values.Add(route.Params[i], match)
+                params[route.Params[i]] = match
+                // fmt.Println(route.Params[i])
+                // fmt.Println(match)
+            }
 
-			// reassemble query params and add to RawQuery
-			// r.URL.RawQuery = url.Values(values).Encode() + "&" + r.URL.RawQuery
-			// r.URL.RawQuery = url.Values(values).Encode()
-		}
+            // reassemble query params and add to RawQuery
+            // r.URL.RawQuery = url.Values(values).Encode() + "&" + r.URL.RawQuery
+            // r.URL.RawQuery = url.Values(values).Encode()
+        }
 
-		// Invoke the request handler
-		vc := reflect.New(route.ControllerType)
+        // Invoke the request handler
+        vc := reflect.New(route.ControllerType)
 
-		// Init callback
-		method := vc.MethodByName("Init")
-		contex := &contex.Context{
-			ResponseWriter: w,
-			Request:        r,
-			Params:         params,
+        // Init callback
+        method := vc.MethodByName("Init")
+        contex := &contex.Context{
+            ResponseWriter: w,
+            Request:        r,
+            Params:         params,
             DB:             db,
-		}
-		args := make([]reflect.Value, 2)
-		args[0] = reflect.ValueOf(contex)
-		args[1] = reflect.ValueOf(route.ControllerType.Name())
-		method.Call(args)
+        }
+        args := make([]reflect.Value, 2)
+        args[0] = reflect.ValueOf(contex)
+        args[1] = reflect.ValueOf(route.ControllerType.Name())
+        method.Call(args)
 
-		args = make([]reflect.Value, 0)
+        args = make([]reflect.Value, 0)
 
-		// Prepare callback
-		method = vc.MethodByName("Prepare")
-		method.Call(args)
+        // Prepare callback
+        method = vc.MethodByName("Prepare")
+        method.Call(args)
 
-		// Request callback
-		if _, ok := route.Methods[r.Method]; !ok {
-			http.NotFound(w, r)
-		}
-		method = vc.MethodByName(route.Methods[r.Method])
-		if !method.IsValid() {
-			http.NotFound(w, r)
-		}
-		method.Call(args)
+        // Request callback
+        if _, ok := route.Methods[r.Method]; !ok {
+            http.NotFound(w, r)
+        }
+        method = vc.MethodByName(route.Methods[r.Method])
+        if !method.IsValid() {
+            http.NotFound(w, r)
+        }
+        method.Call(args)
 
-		// Finish callback
-		method = vc.MethodByName("Finish")
-		method.Call(args)
-		matchRouted = true
-	}
+        // Finish callback
+        method = vc.MethodByName("Finish")
+        method.Call(args)
+        matchRouted = true
+    }
 
-	// if no matches to url, throw a not found exception
-	if matchRouted == false {
+    // if no matches to url, throw a not found exception
+    if matchRouted == false {
         http.NotFound(w, r)
-	}
+    }
 }
 
 // Run is to run a app
-func Run() {
-    app := &App{}
-
-    routes.AddRoutes(app)
-
+func Run(app *App) {
     // http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
-    err := http.ListenAndServe(":9090", app) 
+    err := http.ListenAndServe(":9090", app)
     if err != nil {
         log.Fatal("ListenAndServe: ", err)
     }
@@ -242,19 +239,19 @@ func Run() {
 
 // Run is the function for start the web service
 // func Run() {
-    // runtime.GOMAXPROCS(runtime.NumCPU())
-    // http.HandleFunc("/", loadController)
-    //
-    // addr := config.Get("http", "addr")
-    // port := config.Get("http", "port")
-    //
-    // str := util.Colorize(fmt.Sprintf("[I] Running on %s:%s", addr, port), "note")
-    // log.Printf(str)
-    //log.Printf("[I] Running on %s:%s", addr, port)
-    // err := http.ListenAndServe(addr+":"+port, nil)
-    // if err != nil {
-	//     log.Fatal("ListenAndServe: ", err)
-	// }
+// runtime.GOMAXPROCS(runtime.NumCPU())
+// http.HandleFunc("/", loadController)
+//
+// addr := config.Get("http", "addr")
+// port := config.Get("http", "port")
+//
+// str := util.Colorize(fmt.Sprintf("[I] Running on %s:%s", addr, port), "note")
+// log.Printf(str)
+//log.Printf("[I] Running on %s:%s", addr, port)
+// err := http.ListenAndServe(addr+":"+port, nil)
+// if err != nil {
+//     log.Fatal("ListenAndServe: ", err)
+// }
 // }
 
 // AddTasker is the function for add tasker
@@ -268,17 +265,17 @@ func AddTasker(name string, control interface{}, action string, taskTime string)
     dura := then.Sub(time.Now())
     //fmt.Println(dura)
     if dura > 0 {
-        Tasker[name] = time.AfterFunc(dura , func () {
+        Tasker[name] = time.AfterFunc(dura, func() {
             action = strings.Title(action)
             callMethod(control, action)
         })
     } else {
-        fmt.Println("定时任务 --- [ "+name+" ] --- 小于当前时间，将不会被执行")
+        fmt.Println("定时任务 --- [ " + name + " ] --- 小于当前时间，将不会被执行")
     }
 }
 
 // DelTasker is the function for delete tasker
-func DelTasker(name string) bool{
+func DelTasker(name string) bool {
     return Tasker[name].Stop()
 }
 
@@ -301,20 +298,20 @@ func AddTimer(name string, control func(), action string, duration time.Duration
         for {
             select {
             case <-Timer[name].C:
-            //case <-Timer.Get(name).(*time.Ticker).C:
+                //case <-Timer.Get(name).(*time.Ticker).C:
                 action = strings.Title(action)
                 callMethod(control, action)
             }
         }
-    } ()
+    }()
 }
 
 // DelTimer is the function for delete timer
-func DelTimer(name string) bool{
+func DelTimer(name string) bool {
     if timer, ok := Timer[name]; ok {
         timer.Stop()
     } else {
-        fmt.Println("定时任务 --- [ "+name+" ] --- 不存在，考虑是否在协程里面生成而且尚未生成，不能执行Stop()")
+        fmt.Println("定时任务 --- [ " + name + " ] --- 不存在，考虑是否在协程里面生成而且尚未生成，不能执行Stop()")
     }
     //Timer[name].Stop()
     return true
@@ -379,19 +376,19 @@ func SetStaticPath(key string, value string) {
 // }
 
 // Load controller
-func loadController(w http.ResponseWriter, r *http.Request) { 
+func loadController(w http.ResponseWriter, r *http.Request) {
 
     //r.ParseForm()
     //forms := make(map[string]string)
     //for k, v := range r.Form {
-        //forms[k] = v[0]
+    //forms[k] = v[0]
     //}
 
     defer func() {
         // 捕获异常并处理
         if r := recover(); r != nil {
             str := fmt.Sprintf("%s", r)
-            io.WriteString(w, str);
+            io.WriteString(w, str)
         }
     }()
 
@@ -425,7 +422,6 @@ func callMethod(object interface{}, methodName string, args ...interface{}) {
     if method.IsValid() {
         method.Call(params)
     } else {
-        panic("Method "+methodName+" is not exists!")
+        panic("Method " + methodName + " is not exists!")
     }
 }
-

@@ -3,10 +3,11 @@ package routes
 import (
     "reflect"
     "regexp"
-    "github.com/owner888/chrome/controller"
+
+    "github.com/owner888/kaligo/controller"
 )
 
-type app interface {
+type App interface {
     AddRoute(pattern string, m map[string]string, c controller.Interface)
     AddStaticRoute(prefix, staticDir string)
 }
@@ -23,26 +24,4 @@ type Route struct {
 type StaticRoute struct {
     Prefix    string
     StaticDir string
-}
-
-// AddRoutes is use for add Route
-// https://expressjs.com/en/5x/api.html
-func AddRoutes(a app) {
-    a.AddStaticRoute("/static", "static")
-
-    a.AddRoute("/statistics/:channel(.*)/:apkurl(.*)", map[string]string{
-        "GET": "Statistics",
-    }, &controller.Get{})
-
-    a.AddRoute("/channel/:ip(.*)", map[string]string{
-        "GET": "GetChannel",
-    }, &controller.Get{})
-
-    a.AddRoute("/", map[string]string{
-        "GET": "Index",
-    }, &controller.Get{})
-
-    a.AddRoute("/posts/:post_id([0-9]+)", map[string]string{
-        "POST": "Show",
-    }, &controller.Post{})
 }
