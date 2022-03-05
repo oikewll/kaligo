@@ -6,15 +6,65 @@ package util
 
 import "time"
 
-// To is use for all type 
+// To is use for all type
 func To[T any](i any) (t T) {
-    switch any(t).(type) {
-    case bool:
-        i = ToBool(i)
-    case time.Time:
-        i = ToTime(i)
-    }
-    return i.(T)
+	switch any(t).(type) {
+	case bool:
+		i = ToBool(i)
+	case time.Time:
+		i = ToTime(i)
+	case time.Duration:
+		i = ToDuration(i)
+	case float64:
+		i = ToFloat64(i)
+	case float32:
+		i = ToFloat32(i)
+	case int64:
+		i = ToInt64(i)
+	case int32:
+		i = ToInt32(i)
+	case int16:
+		i = ToInt16(i)
+	case int8:
+		i = ToInt8(i)
+	case int:
+		i = ToInt(i)
+	case uint:
+		i = ToUint(i)
+	case uint64:
+		i = ToUint64(i)
+	case uint32:
+		i = ToUint32(i)
+	case uint16:
+		i = ToUint16(i)
+	case uint8:
+		i = ToUint8(i)
+	case string:
+		i = ToString(i)
+	case map[string]string:
+		i = ToStringMapString(i)
+	case map[string][]string:
+		i = ToStringMapStringSlice(i)
+	case map[string]bool:
+		i = ToStringMapBool(i)
+	case map[string]int:
+		i = ToStringMapInt(i)
+	case map[string]int64:
+		i = ToStringMapInt64(i)
+	case map[string]any:
+		i = ToStringMap(i)
+	case []bool:
+		i = ToBoolSlice(i)
+	case []string:
+		i = ToStringSlice(i)
+	case []int:
+		i = ToIntSlice(i)
+	case []time.Duration:
+		i = ToDurationSlice(i)
+	case []any:
+		i = ToSlice(i)
+	}
+	return i.(T)
 }
 
 // ToBool casts an interface to a bool type.
