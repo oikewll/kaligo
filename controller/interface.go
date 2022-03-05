@@ -10,4 +10,3 @@ type Interface interface {
     Prepare()
     Finish()
 }
-

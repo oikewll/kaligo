@@ -7,6 +7,7 @@ import (
     "github.com/owner888/kaligo/controller"
 )
 
+// App is use for add Route struct and StaticRoute struct
 type App interface {
     AddRoute(pattern string, m map[string]string, c controller.Interface)
     AddStaticRoute(prefix, staticDir string)

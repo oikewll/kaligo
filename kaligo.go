@@ -39,7 +39,9 @@ var (
 func init() {
     logs.SetLogFuncCall(true)
     logs.SetLogFuncCallDepth(3)
+    logs.Debug("kaligo -> init()", config.Get[bool]("database.mysql.open"))
     if config.Get[bool]("database.mysql.open") {
+        logs.Debug("kaligo -> init()")
         var err error
         // db, err := database.Open(sqlite.Open("./test.db"))
         db, err = database.Open(mysql.Open(config.Get[string]("database.mysql.dsn")))
@@ -49,7 +51,7 @@ func init() {
     }
 }
 
-// App is a app
+// App is use for add Route struct and StaticRoute struct
 type App struct {
     http.Handler // http.ServeMux
     routes       []*routes.Route
@@ -239,19 +241,19 @@ func Run(app *App) {
 
 // Run is the function for start the web service
 // func Run() {
-// runtime.GOMAXPROCS(runtime.NumCPU())
-// http.HandleFunc("/", loadController)
+//     runtime.GOMAXPROCS(runtime.NumCPU())
+//     http.HandleFunc("/", loadController)
 //
-// addr := config.Get("http", "addr")
-// port := config.Get("http", "port")
+//     addr := config.Get("http", "addr")
+//     port := config.Get("http", "port")
 //
-// str := util.Colorize(fmt.Sprintf("[I] Running on %s:%s", addr, port), "note")
-// log.Printf(str)
-//log.Printf("[I] Running on %s:%s", addr, port)
-// err := http.ListenAndServe(addr+":"+port, nil)
-// if err != nil {
-//     log.Fatal("ListenAndServe: ", err)
-// }
+//     str := util.Colorize(fmt.Sprintf("[I] Running on %s:%s", addr, port), "note")
+//     log.Printf(str)
+//     log.Printf("[I] Running on %s:%s", addr, port)
+//     err := http.ListenAndServe(addr+":"+port, nil)
+//     if err != nil {
+//         log.Fatal("ListenAndServe: ", err)
+//     }
 // }
 
 // AddTasker is the function for add tasker
