@@ -2,7 +2,6 @@ package kaligo
 
 import (
     "fmt"
-    "io"
     "log"
     "net/http"
     "path"
@@ -19,18 +18,15 @@ import (
     "github.com/owner888/kaligo/controller"
     "github.com/owner888/kaligo/database"
     mysql "github.com/owner888/kaligo/database/driver/mysql"
-
-    // "github.com/owner888/kaligo/util"
+    "github.com/owner888/kaligo/routes"
+    "github.com/owner888/kaligo/util"
 
     "github.com/astaxie/beego/logs"
-    "github.com/owner888/kaligo/routes"
 )
 
 // 定义当前package中使用的全局变量
 var (
     db         *database.DB // global variable to share it between all HTTP handler
-    controlMap map[string]func()
-    StaticDir  map[string]string
     Timer      map[string]*time.Ticker
     Tasker     map[string]*time.Timer
     Mutex      sync.Mutex
@@ -39,9 +35,7 @@ var (
 func init() {
     logs.SetLogFuncCall(true)
     logs.SetLogFuncCallDepth(3)
-    logs.Debug("kaligo -> init()", config.Get[bool]("database.mysql.open"))
     if config.Get[bool]("database.mysql.open") {
-        logs.Debug("kaligo -> init()")
         var err error
         // db, err := database.Open(sqlite.Open("./test.db"))
         db, err = database.Open(mysql.Open(config.Get[string]("database.mysql.dsn")))
@@ -68,6 +62,7 @@ func (a *App) AddStaticRoute(prefix, staticDir string) {
 }
 
 // AddRoute is use for add a http route
+// https://expressjs.com/en/5x/api.html
 func (a *App) AddRoute(pattern string, m map[string]string, c controller.Interface) {
     parts := strings.Split(pattern, "/")
 
@@ -105,8 +100,6 @@ func (a *App) AddRoute(pattern string, m map[string]string, c controller.Interfa
         panic(regexErr)
     }
 
-    // logs.Debug("params", params)
-
     // now create the Route
     t := reflect.Indirect(reflect.ValueOf(c)).Type()
     route := &routes.Route{}
@@ -132,23 +125,23 @@ func (a *App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
     requestPath = path.Clean(requestPath) // 多个反斜杠变成一个
 
     // find a matching Route
-    // for _, staticRoute := range a.staticRoutes {
-    //
-    //     // logs.Debug(requestPath, staticRoute.Prefix, staticRoute.StaticDir)
-    //     // 如果设置的静态文件目录包含在url 路径信息中
-    //     if strings.HasPrefix(requestPath, staticRoute.Prefix) {
-    //         if len(requestPath) > len(staticRoute.Prefix) && requestPath[len(staticRoute.Prefix)] != '/' {
-    //             continue
-    //         }
-    //         file := path.Join(staticRoute.StaticDir, requestPath[len(staticRoute.Prefix):])
-    //         if util.FileExists(file) {
-    //             http.ServeFile(w, r, file)
-    //         } else {
-    //             http.NotFound(w, r)
-    //         }
-    //         return
-    //     }
-    // }
+    for _, staticRoute := range a.staticRoutes {
+
+        // logs.Debug(requestPath, staticRoute.Prefix, staticRoute.StaticDir)
+        // 如果设置的静态文件目录包含在url 路径信息中
+        if strings.HasPrefix(requestPath, staticRoute.Prefix) {
+            if len(requestPath) > len(staticRoute.Prefix) && requestPath[len(staticRoute.Prefix)] != '/' {
+                continue
+            }
+            file := path.Join(staticRoute.StaticDir, requestPath[len(staticRoute.Prefix):])
+            if util.FileExists(file) {
+                http.ServeFile(w, r, file)
+            } else {
+                http.NotFound(w, r)
+            }
+            return
+        }
+    }
 
     // find a matching Route
     for _, route := range a.routes {
@@ -239,23 +232,6 @@ func Run(app *App) {
     }
 }
 
-// Run is the function for start the web service
-// func Run() {
-//     runtime.GOMAXPROCS(runtime.NumCPU())
-//     http.HandleFunc("/", loadController)
-//
-//     addr := config.Get("http", "addr")
-//     port := config.Get("http", "port")
-//
-//     str := util.Colorize(fmt.Sprintf("[I] Running on %s:%s", addr, port), "note")
-//     log.Printf(str)
-//     log.Printf("[I] Running on %s:%s", addr, port)
-//     err := http.ListenAndServe(addr+":"+port, nil)
-//     if err != nil {
-//         log.Fatal("ListenAndServe: ", err)
-//     }
-// }
-
 // AddTasker is the function for add tasker
 func AddTasker(name string, control interface{}, action string, taskTime string) {
 
@@ -317,101 +293,6 @@ func DelTimer(name string) bool {
     }
     //Timer[name].Stop()
     return true
-}
-
-// Router is the function for configure dynamic routing
-//func Router(ct string, control interface{}) {
-func Router(ct string, control func()) {
-    if controlMap == nil {
-        controlMap = make(map[string]func())
-    }
-    controlMap[ct] = control
-}
-
-// SetStaticPath is the function forsconfigure static file path
-func SetStaticPath(key string, value string) {
-    if len(StaticDir) == 0 {
-        StaticDir = make(map[string]string)
-    }
-    StaticDir[key] = value
-}
-
-// Processing static files
-// func staticServer(w http.ResponseWriter, r *http.Request) bool {
-//
-//     // 如果没有设置静态路径
-//     if len(StaticDir) == 0 {
-//         return false
-//     }
-//     // 获取请求路径
-//     requestPath := path.Clean(r.URL.Path)
-//     for prefix, staticDir := range StaticDir {
-//         if len(prefix) == 0 {
-//             continue
-//         }
-//         // 浏览器每次访问都会请求多一次favicon.ico，这里要把它拦截下来,不然后面的代码会执行两次
-//         // 如果有数据库写入，就会写入两次，后果非常严重
-//         if requestPath == "/favicon.ico" || requestPath == "/robots.txt" {
-//             file := path.Join(staticDir, requestPath)
-//             if util.FileExists(file) {
-//                 http.ServeFile(w, r, file)
-//             } else {
-//                 http.NotFound(w, r)
-//             }
-//             return true
-//         }
-//         // 如果设置的静态文件目录包含在url 路径信息中
-//         if strings.HasPrefix(requestPath, prefix) {
-//             if len(requestPath) > len(prefix) && requestPath[len(prefix)] != '/' {
-//                 continue
-//             }
-//             file := path.Join(staticDir, requestPath[len(prefix):])
-//             if util.FileExists(file) {
-//                 http.ServeFile(w, r, file)
-//             } else {
-//                 http.NotFound(w, r)
-//             }
-//             return true
-//         }
-//     }
-//     return false
-// }
-
-// Load controller
-func loadController(w http.ResponseWriter, r *http.Request) {
-
-    //r.ParseForm()
-    //forms := make(map[string]string)
-    //for k, v := range r.Form {
-    //forms[k] = v[0]
-    //}
-
-    defer func() {
-        // 捕获异常并处理
-        if r := recover(); r != nil {
-            str := fmt.Sprintf("%s", r)
-            io.WriteString(w, str)
-        }
-    }()
-
-    // 拦截静态文件
-    // if !staticServer(w, r) {
-    //     // the default control、action
-    //     var ct, ac string
-    //     if ct = r.FormValue("ct"); ct == "" {
-    //         ct = "index"
-    //     }
-    //     if ac = r.FormValue("ac"); ac == "" {
-    //         ac = "index"
-    //     }
-    //     // 首字母转大写
-    //     ac = strings.Title(ac)
-    //     if v, ok := controlMap[ct]; ok {
-    //         callMethod(v, ac, w, r)
-    //     } else {
-    //         panic("Control "+ct+" is not exists!")
-    //     }
-    // }
 }
 
 // 反射调用函数, 注意被调用的object要带 &，表示指针传递
