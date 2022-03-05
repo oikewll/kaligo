@@ -1,57 +1,45 @@
 package config
-// Global variable
 
-import (
-    "fmt"
-)
-
-// TablePrefix is database table prefix
-var (
-    TablePrefix  string
-    MaxOpenConns int
-    MaxIdleConns int
-
-    // CryptKey is a crypt key for mysql AES_ENCRYPT、AES_DECRYPT
-    CryptKey    string
-    // CryptFields is want encrypt field for mysql AES_ENCRYPT、AES_DECRYPT
-    CryptFields map[string][]string
-)
-
-// DBUser is ...
-var (
-    DBUser string
-    DBPass string
-    DBhost string
-    DBPort string
-    DBName string
-    DBDSN  string
-    CheckDBPrivilege bool
-)
-
-func init() {
-
-    // --------------------------
-    // 数据库基础配置
-    // --------------------------
-    TablePrefix  = ""
-    MaxOpenConns = 100
-    MaxIdleConns = 16
-    CryptKey     = "tPVPnynVnsiqh"
-    CryptFields  = map[string][]string {
-        "user"  : {"name", "age"},
-        "player": {"nickname"},
-    }
-
-    // --------------------------
-    // 数据库链接配置
-    // --------------------------
-    DBUser = "root"
-    DBPass = "root"
-    DBhost = "127.0.0.1"
-    DBPort = "3306"
-    DBName = "test"
-    DBDSN  = fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=%s", DBUser, DBPass, DBhost+":"+DBPort, DBName, "utf8mb4")
-
-    // 是否检查数据库权限，show databases 出现 mysql、sys、information_schema、performance_schema 数据库则报错
-    CheckDBPrivilege = false
-}
+// import (
+//     "fmt"
+//     "github.com/owner888/kaligo/config"
+// )
+//
+// func init() {
+//     config.Add("database", config.StrMap{
+//         "mysql": map[string]interface{}{
+//             // 数据库连接信息
+//             "open"   : true,
+//             "host"   : "127.0.0.1",
+//             "port"   : "3306",
+//             "name"   : "test",
+//             "user"   : "root",
+//             "pass"   : "root",
+//             "charset": "utf8mb4",
+//             "loc"    : "Asia/Shanghai",
+//             // 安全性配置
+//             "table_prefix" : "",
+//             "check_privilege" : true,
+//             "crypt_key"    : "",
+//             "crypt_fields" : map[string][]string{
+//                 "user"  : {"name", "age"},
+//                 "player": {"nickname"},
+//             },
+//             // 连接池配置
+//             "max_idle_connections": 300,
+//             "max_open_connections": 25,
+//             "max_life_seconds":     5*60,
+//             // 慢查询日志
+//             "log_slow_query": true,
+//             "log_slow_time" : 1,    // 记录慢查询时间，单位：秒
+//         },
+//     })
+//
+//     user := config.Get[string]("database.mysql.user")
+//     pass := config.Get[string]("database.mysql.pass")
+//     host := config.Get[string]("database.mysql.host")
+//     port := config.Get[string]("database.mysql.port")
+//     name := config.Get[string]("database.mysql.name")
+//     dsn  := fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=%s", user, pass, host+":"+port, name, "utf8mb4")
+//     config.Set("database.mysql.dsn", dsn)
+// }
