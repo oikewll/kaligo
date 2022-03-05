@@ -38,6 +38,13 @@ func TestConfig(t *testing.T) {
     assert(t, arrayEqual(Get[[]string]("database.custom"), []string{"1", "2"}))
 }
 
+func TestSet(t *testing.T) {
+    Set("database.mysql.port", "1234")
+    assertEqual(t, Get[string]("database.mysql.port"), "1234")
+    Set("database.mysql.port", "4321")
+    assertEqual(t, Get[string]("database.mysql.port"), "4321")
+}
+
 func arrayEqual[T comparable](a, b []T) bool {
     if len(a) != len(b) {
         return false
@@ -48,11 +55,6 @@ func arrayEqual[T comparable](a, b []T) bool {
         }
     }
     return true
-}
-
-func TestSet(t *testing.T) {
-    Set("database.mysql.port", "1234")
-    assertEqual(t, Get[string]("database.mysql.port"), "1234")
 }
 
 func assertEqual[T comparable](t *testing.T, expected, actual T, messages ...any) {

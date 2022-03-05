@@ -5,7 +5,7 @@
  * @lastmodify  2021-07-06
  *
  * Point-to-point acquisition
- * config.Get[string]("database.mysql.charset") 
+ * config.Get[string]("database.mysql.charset")
  *
  */
 
@@ -23,14 +23,16 @@ var (
     configMaps sync.Map
 )
 
-// configMap 是用于保存多层级数据的 map，已实现此接口的类型: sync.Map, StrMap
-type configMap interface {
+// ConfigMap 是用于保存多层级数据的 map，已实现此接口的类型: sync.Map, StrMap
+type ConfigMap interface {
+    // Load 读取值
     Load(key any) (value any, ok bool)
+    // Store 保存值
     Store(key, value any)
 }
 
 // StrMap is use for string -> map
-type StrMap map[string]interface{}
+type StrMap map[string]any
 
 // Load is used to read value by key
 func (m StrMap) Load(key any) (value any, ok bool) {
@@ -48,16 +50,14 @@ func (m StrMap) Store(key, value any) {
 func Env(key string, defaultValue ...interface{}) interface{} {
     var keys []string = strings.Split(key, ".")
     lastIndex := len(keys) - 1
-    var maps configMap = &configMaps
+    var maps ConfigMap = &configMaps
     for i, k := range keys {
-        if val, ok := maps.Load(k); ok {
-            if i == lastIndex {
+        if i == lastIndex {
+            if val, ok := maps.Load(k); ok {
                 return val
-            } else if m, ok := val.(map[string]interface{}); ok {
-                maps = StrMap(m)
-            } else if m, ok := val.(StrMap); ok {
-                maps = m
             }
+        } else if m := getConfigMap(maps, k); m != nil {
+            maps = m
         }
     }
     if len(defaultValue) > 0 {
@@ -67,7 +67,7 @@ func Env(key string, defaultValue ...interface{}) interface{} {
 }
 
 // Add 新增配置项
-func Add(key string, value map[string]interface{}) {
+func Add(key string, value any) {
     configMaps.Store(key, value)
 }
 
@@ -75,20 +75,18 @@ func Add(key string, value map[string]interface{}) {
 func Set(key string, value any) {
     var keys []string = strings.Split(key, ".")
     lastIndex := len(keys) - 1
-    var maps configMap = &configMaps
+    var maps ConfigMap = &configMaps
     for i, k := range keys {
         if i == lastIndex {
             maps.Store(k, value)
         } else {
-            if val, ok := maps.Load(k); ok {
-                if m, ok := val.(map[string]interface{}); ok {
-                    maps = StrMap(m)
-                    continue
-                }
+            if m := getConfigMap(maps, k); m != nil {
+                maps = m
+            } else {
+                newMap := StrMap{}
+                maps.Store(k, newMap)
+                maps = newMap
             }
-            newMap := StrMap{}
-            maps.Store(k, newMap)
-            maps = newMap
         }
     }
 }
@@ -147,6 +145,18 @@ func GetUint(path string, defaultValue ...interface{}) uint {
 // GetBool 获取 Bool 类型的配置信息
 func GetBool(path string, defaultValue ...interface{}) bool {
     return util.ToBool(Env(path, defaultValue...))
+}
+
+// 获取下一级设置的 map，key 不存在或 value 不是 ConfigMap 则返回 nil
+func getConfigMap(config ConfigMap, key string) ConfigMap {
+    if val, ok := config.Load(key); ok {
+        if m, ok := val.(ConfigMap); ok {
+            return m
+        } else if m, ok := val.(map[string]any); ok {
+            return StrMap(m)
+        }
+    }
+    return nil
 }
 
 func cast[T any, B any](in []T) []B {
