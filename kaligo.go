@@ -24,6 +24,7 @@ import (
 
 // 定义当前package中使用的全局变量
 var (
+    storeTimers sync.Map
     Timer      map[string]*time.Ticker
     Tasker     map[string]*time.Timer
     Mutex      sync.Mutex
@@ -45,6 +46,57 @@ type App struct {
 // AddDB is use for add a db
 func (a *App) AddDB(db *database.DB) {
     a.db = db
+}
+
+// AddTimer is the function for add timer, The interval is in microseconds
+// AddTimer("default", &control.Timer{}, "Import_database_login_v2", 5000)
+// app.AddRoute("/statistics/:channel(.*)/:apkurl(.*)", map[string]string{
+//     "GET": "Statistics",
+// }, &controller.Get{})
+// func AddTimer(name string, control func(), action string, duration time.Duration) {
+func (a *App) AddTimer(name string, duration time.Duration, m string, c controller.Interface) {
+    go func() {
+        timeTicker := time.NewTicker(duration * time.Millisecond)
+        storeTimers.Store(name, timeTicker)
+        for {
+            select {
+            case <-timeTicker.C:
+                controllerType := reflect.Indirect(reflect.ValueOf(c)).Type()
+                // Invoke the request handler
+                vc := reflect.New(controllerType)
+
+                // Init callback
+                method := vc.MethodByName("Init")
+                contex := &contex.Context{
+                    // ResponseWriter: w,
+                    // Request:        r,
+                    // Params:         params,
+                    DB:             a.db,
+                }
+                args := make([]reflect.Value, 2)
+                args[0] = reflect.ValueOf(contex)
+                args[1] = reflect.ValueOf(controllerType.Name())
+                method.Call(args)
+
+                args = make([]reflect.Value, 0)
+
+                // Prepare callback
+                method = vc.MethodByName("Prepare")
+                method.Call(args)
+
+                // Request callback
+                method = vc.MethodByName(m)
+                if !method.IsValid() {
+                    // http.NotFound(w, r)
+                }
+                method.Call(args)
+
+                // Finish callback
+                method = vc.MethodByName("Finish")
+                method.Call(args)
+            }
+        }
+    }()
 }
 
 // AddStaticRoute is use for add a static file route
@@ -249,33 +301,6 @@ func AddTasker(name string, control interface{}, action string, taskTime string)
 // DelTasker is the function for delete tasker
 func DelTasker(name string) bool {
     return Tasker[name].Stop()
-}
-
-// AddTimer is the function for add timer, The interval is in microseconds
-func AddTimer(name string, control func(), action string, duration time.Duration) {
-
-    llen := len(Timer)
-    if llen == 0 {
-        Timer = make(map[string]*time.Ticker)
-    }
-    // 这里如果不用协程，main.go的主进程就会被堵住
-    // 用协程，要注意map要用读写锁，不然协程间会抢占导致空指针异常
-    go func() {
-        Mutex.Lock()
-        // 下面这个 defer 是永远不会执行的了，因为这个协程一直都不会退出
-        //defer Mutex.Unlock()
-        // Timer是一个全局的 map，多个协程写的时候会冲突，所以这里写之前要先Lock，写完Unlock
-        Timer[name] = time.NewTicker(duration * time.Millisecond)
-        Mutex.Unlock()
-        for {
-            select {
-            case <-Timer[name].C:
-                //case <-Timer.Get(name).(*time.Ticker).C:
-                action = strings.Title(action)
-                callMethod(control, action)
-            }
-        }
-    }()
 }
 
 // DelTimer is the function for delete timer
