@@ -242,7 +242,6 @@ func (a *App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
     }
 }
 
-// func (a *App) controllerMethodCall(c controller.Interface, m string, w http.ResponseWriter, r *http.Request, params map[string]string) (err error) {
 func (a *App) controllerMethodCall(controllerType reflect.Type, m string, w http.ResponseWriter, r *http.Request, params map[string]string) (err error) {
     // Invoke the request handler
     vc := reflect.New(controllerType)
