@@ -150,12 +150,11 @@ func (a *App) AddRoute(pattern string, m map[string]string, c controller.Interfa
     }
 
     // now create the Route
-    t := reflect.Indirect(reflect.ValueOf(c)).Type()
     route := &routes.Route{}
     route.Regex = regex
     route.Methods = m
     route.Params = params
-    route.ControllerType = t
+    route.ControllerType = reflect.Indirect(reflect.ValueOf(c)).Type()
 
     a.routes = append(a.routes, route)
 }
@@ -175,7 +174,6 @@ func (a *App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
     // find a matching Route
     for _, staticRoute := range a.staticRoutes {
-
         // logs.Debug(requestPath, staticRoute.Prefix, staticRoute.StaticDir)
         // 如果设置的静态文件目录包含在url 路径信息中
         if strings.HasPrefix(requestPath, staticRoute.Prefix) {
@@ -214,7 +212,7 @@ func (a *App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
             // add url parameters to the query param map
             values := r.URL.Query()
 
-            logs.Debug("values", values)
+            // logs.Debug("values", values)
 
             for i, match := range matches[1:] {
                 values.Add(route.Params[i], match)
@@ -235,8 +233,8 @@ func (a *App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
             http.NotFound(w, r)
         }
 
-        c := route.ControllerType
-        a.controllerMethodCall(reflect.Indirect(reflect.ValueOf(c)).Type(), m, w, r, params)
+        logs.Debug("controllerMethodCall", m)
+        a.controllerMethodCall(route.ControllerType, m, w, r, params)
         matchRouted = true
     }
 
@@ -246,31 +244,22 @@ func (a *App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
     }
 }
 
-// Run is to run a app
-func Run(app *App) {
-    err := http.ListenAndServe(":9090", app)
-    if err != nil {
-        log.Fatal("ListenAndServe: ", err)
-    }
-}
-
 // func (a *App) controllerMethodCall(c controller.Interface, m string, w http.ResponseWriter, r *http.Request, params map[string]string) (err error) {
-func (a *App) controllerMethodCall(t reflect.Type, m string, w http.ResponseWriter, r *http.Request, params map[string]string) (err error) {
-    // controllerType := reflect.Indirect(reflect.ValueOf(c)).Type()
+func (a *App) controllerMethodCall(controllerType reflect.Type, m string, w http.ResponseWriter, r *http.Request, params map[string]string) (err error) {
     // Invoke the request handler
-    vc := reflect.New(t)
+    vc := reflect.New(controllerType)
 
     // Init callback
     method := vc.MethodByName("Init")
     contex := &contex.Context{
-        ResponseWriter: nil,
-        Request:        nil,
+        ResponseWriter: w,
+        Request:        r,
         Params:         params,
         DB:             a.db,
     }
     args := make([]reflect.Value, 2)
     args[0] = reflect.ValueOf(contex)
-    args[1] = reflect.ValueOf(t.Name())
+    args[1] = reflect.ValueOf(controllerType.Name())
     method.Call(args)
 
     args = make([]reflect.Value, 0)
@@ -291,5 +280,13 @@ func (a *App) controllerMethodCall(t reflect.Type, m string, w http.ResponseWrit
     method.Call(args)
 
     return err
+}
+
+// Run is to run a app
+func Run(app *App) {
+    err := http.ListenAndServe(":9090", app)
+    if err != nil {
+        log.Fatal("ListenAndServe: ", err)
+    }
 }
 
