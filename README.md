@@ -180,6 +180,10 @@ func GetString() string {
 #### 在控制器 controller/get.go 中使用model 
 
 ```go
+import (
+    "github.com/owner888/project/model"
+)
+
 func (c *Get) Index() {
     str := model.GetString()
     c.JSON(200, H{"message": str})
