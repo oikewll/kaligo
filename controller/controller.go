@@ -10,7 +10,6 @@ type Controller struct {
     // Context   *contex.Context
     *contex.Context
     ChildName string
-    H         map[string]interface{}
 }
 
 // New returns a new initialized Controller.

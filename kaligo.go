@@ -1,6 +1,7 @@
 package kaligo
 
 import (
+    "fmt"
     "log"
     "net/http"
     "path"
@@ -174,7 +175,6 @@ func (a *App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
     // find a matching Route
     for _, staticRoute := range a.staticRoutes {
-        // logs.Debug(requestPath, staticRoute.Prefix, staticRoute.StaticDir)
         // 如果设置的静态文件目录包含在url 路径信息中
         if strings.HasPrefix(requestPath, staticRoute.Prefix) {
             if len(requestPath) > len(staticRoute.Prefix) && requestPath[len(staticRoute.Prefix)] != '/' {
@@ -211,7 +211,6 @@ func (a *App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
         if len(route.Params) > 0 {
             // add url parameters to the query param map
             values := r.URL.Query()
-
             // logs.Debug("values", values)
 
             for i, match := range matches[1:] {
@@ -233,7 +232,6 @@ func (a *App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
             http.NotFound(w, r)
         }
 
-        logs.Debug("controllerMethodCall", m)
         a.controllerMethodCall(route.ControllerType, m, w, r, params)
         matchRouted = true
     }
@@ -271,7 +269,11 @@ func (a *App) controllerMethodCall(controllerType reflect.Type, m string, w http
     // Request callback
     method = vc.MethodByName(m)
     if !method.IsValid() {
-        // http.NotFound(w, r)
+        // if is HTTP callback
+        if w != nil {
+            http.NotFound(w, r)
+        }
+        return fmt.Errorf("Controller Method not exist")
     }
     method.Call(args)
 
