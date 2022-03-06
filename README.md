@@ -117,7 +117,6 @@ func init() {
 package main
 
 import (
-    "project/control"
     "github.com/owner888/kaligo"
     "github.com/owner888/project/controller"
 )
@@ -250,20 +249,7 @@ func (c *Get) Index() {
         t.Execute(w, args)
     }
 
-### Example 5 - 静态文件处理
-    
-    // 如何把刚才创建的应用如下目录当做静态来访问：
-    ├── static
-    │   ├── css
-    │   ├── images
-    │   └── js
-
-    // 在项目初始文件 main.go 里面设置静态文件处理目录
-    kaligo.SetStaticPath("/static", "static")
-
-    这样用户访问 URL http://localhost/static/123.txt 则会请求 static 目录下的 123.txt 文件
-
-### Example 6 - 数据库操作
+### Example 5 - 数据库操作
 
 #### 原生SQL查询
     
@@ -275,130 +261,87 @@ func (c *Get) Index() {
 #### CRUD 操作
 
 ##### Select
-    
-    // 从连接池获取一个连接，不需要Close，Sql执行完框架会自动回收连接到池里
-    db, err := kaligo.MysqlConn.Get().(*kaligo.DB)
+```go
+type User struct {
+    ID   uint   `db:"id"`
+    Name string `db:"name"`
+    Age  uint   `db:"age"`
+}
+// 单条记录查询
+var user User
+db.Select("id", "name", "age").From("user").Where("id", "=", 1).Scan(&user).Execute()
 
-    // 单条记录查询,GetOne方法会自动给sql加上Limit 1
-    row := db.GetOne("Select `name`, `pass` From `user`")
-    // row的结构如下：
-    //row := map[string]string {
-    //    "name": "name111",
-    //    "pass": "pass111",
-    //}
-
-    // 多条记录查询
-    rows, err := db.GetAll("Select `name`, `pass` From `user`")
-    // rows的结构如下：
-    //rows := []map[string]string {
-    //    map[string]string {
-    //        "name": "name111",
-    //        "pass": "pass111",
-    //    },
-    //    map[string]string {
-    //        "name": "name222",
-    //        "pass": "pass222",
-    //    },
-    //}
-
-    // map方式存储的数据好处，就是不用每张表对应的写一个类与之对应，再配合Go强大的模板引擎，你懂的，easy到吓人
+// 多条记录查询
+var users []User
+db.Select("id", "name", "age").From("user").Limit(5).Scan(&users).Execute()
+```
 
 ##### Insert
 
-    // 单条插入，相当于 Insert Into `user`(`name`,`pass`) Values ("name111", "pass111")
-    row := map[string]string {
-        "name": "name111",
-        "pass": "pass111",
-    }
-    if sql, err := db.Insert("user", row); err != nil {
-        fmt.Println("错误信息：", err)
-    } else {
-        // 记录一下sql？
-        logfile := util.PATH_DATA+"/log/user_"+time.Now().Format("2006-01-02")+".sql";
-        util.PutFile(logfile, sql+"\n", 1)
-        fmt.Println("自增ID：", db.InsertId())
-    }
+```go
+// 单条插入，相当于 Insert Into `user`(`name`,`age`) Values ("test111", "20")
+db.Insert("user", []string{"name", "age"}).Values([]string{"test111", "20"}).Execute()
 
-##### InsertBatch
-
-    // 批量插入，相当于 Insert Into `user`(`name`,`pass`) Values ("name111", "pass111"),("name222", "pass222"),...
-    rows := []map[string]string {
-        map[string]string {
-            "name": "name111",
-            "pass": "pass111",
-        },
-        map[string]string {
-            "name": "name222",
-            "pass": "pass222",
-        },
-    }
-    // InsertBatch(table string, data []map[string]string) (string, error)
-    if sql, err := db.InsertBatch("user", rows); err != nil {
-        fmt.Println("错误信息：", err)
-    } else {
-        //要不要把sql记录起来？
-        fmt.Println("影响条数：", db.AffectedRows())
-    }
+// 批量插入，相当于 Insert Into `user`(`name`,`age`) Values ("test111", "20"),("test222", "25"),...
+db.Insert("user", []string{"name", "age"}).Values([][]string{{"test111", "20"}, {"test222", "25"}}).Execute()
+```
 
 ##### Update
 
-    // 单条修改，相当于 Update `user` Set `name`="name111",`pass`="pass111" Where `id`=10
-    row := map[string]string {
-        "name": "name111",
-        "pass": "pass111",
-    }
-    if sql, err := db.Update("user", rows, "`id`=10"); err != nil {
-        fmt.Println("错误信息：", err)
-    } else {
-        //要不要把sql记录起来？
-        fmt.Println("影响条数：", db.AffectedRows())
-    }
+```go
+// 单条修改，相当于 Update `user` Set `name`="demo111", `age`="20" Where `id`=10
+sets := map[string]string{"name":"demo111", "age":20}
+db.Update("user").Set(sets).Where("id", "=", "1").Execute()
+```
 
 ##### UpdateBatch
 
-    // 批量修改，相当于 
-    Update `user` Set 
-    `pass` = Case  
-    When `name` = 'name111' Then 'pass111' 
-    When `name` = 'name222' Then 'pass222' 
-    Else `plat_name` End, 
-    `age` = Case  
-    When `name` = 'name111' Then '11' 
-    When `name` = 'name222' Then '22' 
-    Else `channel` End 
-    Where `plat_user_name` In ('name111', 'name222')
+```go
+// 批量修改，相当于 
+Update `user` Set 
+`pass` = Case  
+When `name` = 'name111' Then 'pass111' 
+When `name` = 'name222' Then 'pass222' 
+Else `plat_name` End, 
+`age` = Case  
+When `name` = 'name111' Then '11' 
+When `name` = 'name222' Then '22' 
+Else `channel` End 
+Where `plat_user_name` In ('name111', 'name222')
 
-    rows := []map[string]string {
-        map[string]string {
-            "name": "name111",
-            "pass": "pass111",
-            "age": "11",
-        },
-        map[string]string {
-            "name": "name222",
-            "pass": "pass222",
-            "age": "22",
-        },
-    }
-    // UpdateBatch(table string, data []map[string]string, index string) (string, error)
-    if sql, err := db.UpdateBatch("user", rows, "name"); err != nil {
-        fmt.Println("错误信息：", err)
-    } else {
-        //要不要把sql记录起来？
-        fmt.Println("影响条数：", db.AffectedRows())
-    }
-
+rows := []map[string]string {
+    map[string]string {
+        "name": "name111",
+        "pass": "pass111",
+        "age": "11",
+    },
+    map[string]string {
+        "name": "name222",
+        "pass": "pass222",
+        "age": "22",
+    },
+}
+// UpdateBatch(table string, data []map[string]string, index string) (string, error)
+if sql, err := db.UpdateBatch("user", rows, "name"); err != nil {
+    fmt.Println("错误信息：", err)
+} else {
+    //要不要把sql记录起来？
+    fmt.Println("影响条数：", db.AffectedRows())
+}
+```
     
-### Example 7 - 定时器
+### Example 6 - 定时器
 
-    // 增加定时任务，设置时间小于当前时间则不执行，大于当前时间则当到达时间时执行
-    kaligo.AddTasker("default", &control.Task{}, "import_database", "2014-10-15 15:33:00")
-    // 删除定时任务
-    kaligo.DelTasker("default")
-    // 增加定时器，每5秒运行一次
-    kaligo.AddTimer("default", &control.Timer{}, "Import_database_login_v2", 5000)
-    // 删除定时器
-    kaligo.DelTimer("default")
+```go
+// 增加定时任务，设置时间小于当前时间则不执行，大于当前时间则当到达时间时执行
+app.AddTasker("import_database", "2021-03-05 20:08:00", "ImportDatabase", &controller.Get{})
+// 删除定时任务
+app.DelTasker("import_database")
+// 增加定时器，每5秒运行一次
+app.AddTimer("import_database", 5000, "ImportDatabaseLoginV2", &controller.Get{})
+// 删除定时器
+app.DelTimer("import_database")
+```
 
 ## To do
 
