@@ -119,88 +119,103 @@ package main
 import (
     "project/control"
     "github.com/owner888/kaligo"
+    "github.com/owner888/project/controller"
 )
 
 func main() {
-    // 设置路由
-    // 当用户访问 /?ct=index&ac=login 的时候就是调用了 control/ctl_index.go 里面的login方法
-    kaligo.Router("index", &control.Index{})
-    // 设置静态路径，当用户访问 /static 的时候，就访问 static 目录下面的静态文件
-    kaligo.SetStaticPath("/static", "static")
-    // 解析配置文件、编译模板、启动模块、监听服务端口
-    kaligo.Run()
+    app := &kaligo.App{}
+    AddRoutes(app)
+    kaligo.Run(app)
+}
+
+// AddRoutes is use for add route to App struct
+func AddRoutes(app *kaligo.App) {
+    app.AddStaticRoute("/static", "static")
+
+    app.AddRoute("/", map[string]string{
+        "GET": "Index",
+    }, &controller.Get{})
+
+    app.AddRoute("/posts/:post_id([0-9]+)", map[string]string{
+        "POST": "Show",
+    }, &controller.Post{})
 }
 ```
 
 ### Example 2 - Controller 编写
 
-    package control
+```go
+// controller/get.go
+package control
 
-    import (
-        "github.com/owner888/kaligo"
-        "net/http"
-        "io"
-    )
+import (
+    "github.com/owner888/kaligo"
+    "net/http"
+    "io"
+)
 
-    type Index struct {}
+// Get is use for
+type Get struct {
+    controller.Controller
+}
 
-    func (this *Index) Index(w http.ResponseWriter, r *http.Request) {
-        io.WriteString(w, "Hello World!")
-    }
+// H is a shortcut for map[string]interface{}
+type H map[string]interface{}
 
+// Index is a Get Index method
+func (c *Get) Index() {
+    c.JSON(200, H{"message": "hello world"})
+}
+```
 
 ### Example 3 - Model 编写
 
 #### model 编写 mod_common.go
 
-    package model
+```go
+// model/get.go
+package model
 
-    import (
-    )
+func GetString() string {
+    return "Hi"
+}
+```
 
-    func GetString() string {
-        return "Hi"
-    }
+#### 在控制器controller/get.go 中使用model 
 
-#### 在控制器ctl_index.go 中使用model 
-
-    import (
-        "project/model"
-        "net/http"
-        "io"
-    )
-
-    type Index struct {}
-
-    func (this *Index) Index(w http.ResponseWriter, r *http.Request) {
-        str := model.GetString()
-        io.WriteString(w, str)
-    }
+```go
+func (c *Get) Index() {
+    str := model.GetString()
+    c.JSON(200, H{"message": str})
+}
+```
 
 ### Example 4 - View 编写
 
 #### 模板文件：index.tpl
 
-    <!DOCTYPE html>
-    <html>
-        <head>
-            <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-            <title>KaliGo</title>
-        </head>
-        <body>
-            <h1>Hello Kali Go!</h1>
-            <p>Username: {{.username}}</p>
-            <p>
-                <ul>
-                    {{range .data}}
-                    <li>
-                        id: {{.id}} --- email: {{.email}}
-                    </li>
-                    {{end}}
-                </ul>
-            </p>
-        </body>
-    </html>
+```html
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <title>KaliGo</title>
+    </head>
+    <body>
+        <h1>Hello Kali Go!</h1>
+        <p>Username: {{.username}}</p>
+        <p>
+            <ul>
+                {{range .data}}
+                <li>
+                    id: {{.id}} --- email: {{.email}}
+                </li>
+                {{end}}
+            </ul>
+        </p>
+    </body>
+</html>
+```
 
 #### 在控制器ctl_index.go 中使用模板
 
