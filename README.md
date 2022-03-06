@@ -149,9 +149,7 @@ func AddRoutes(app *kaligo.App) {
 package control
 
 import (
-    "github.com/owner888/kaligo"
-    "net/http"
-    "io"
+    "github.com/owner888/kaligo/controller"
 )
 
 // Get is use for
@@ -170,8 +168,6 @@ func (c *Get) Index() {
 
 ### Example 3 - Model 编写
 
-#### model 编写 mod_common.go
-
 ```go
 // model/get.go
 package model
@@ -181,7 +177,7 @@ func GetString() string {
 }
 ```
 
-#### 在控制器controller/get.go 中使用model 
+#### 在控制器 controller/get.go 中使用model 
 
 ```go
 func (c *Get) Index() {
