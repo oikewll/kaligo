@@ -22,9 +22,9 @@ More info [doc.kaligo.com](https://doc.kaligo.com)
 - v1.2.3: channel实现连接池，tcp连接方式都可使用，在此基础上实现Mysql连接池，每秒处理并发读请求接近2W，写请求8K
 - v1.2.2: 封装MyMysql实现的CRUD数据库类，GetOne()、GetAll()、Insert()、InsertBatch()、Update()
 - v1.2.1: 实现基本类库编写: util.go、配置文件读取: app.ini
-- v1.2: github线上项目，实现 package 远程调用，只需短短几行代码，即可启用一个高并发Web服
-- v1.1: 采用redigo，成功调用redis连接池，应用在线上日志系统统计，每秒处理并发请求2W多
-- v1.0: 本地的MVC框架，实现控制器
+- v1.2.0: github线上项目，实现 package 远程调用，只需短短几行代码，即可启用一个高并发Web服
+- v1.1.0: 采用redigo，成功调用redis连接池，应用在线上日志系统统计，每秒处理并发请求2W多
+- v1.0.0: 本地的MVC框架，实现控制器
 
 ## Installation
 
