@@ -66,9 +66,9 @@ func Env(key string, defaultValue ...interface{}) interface{} {
     return nil
 }
 
-// Add 新增配置项
+// Deprecated: Use config.Set instead.Add 新增配置项
 func Add(key string, value any) {
-    configMaps.Store(key, value)
+    Set(key, value)
 }
 
 // Set 设置配置项
@@ -78,14 +78,17 @@ func Set(key string, value any) {
     var maps ConfigMap = &configMaps
     for i, k := range keys {
         if i == lastIndex {
+            if v, ok := value.(StrMap); ok {
+                value = v.toSyncMap()
+            }
             maps.Store(k, value)
         } else {
             if m := getConfigMap(maps, k); m != nil {
                 maps = m
             } else {
-                newMap := sync.Map{}
+                newMap := &sync.Map{}
                 maps.Store(k, newMap)
-                maps = &newMap
+                maps = newMap
             }
         }
     }
@@ -165,4 +168,16 @@ func cast[T any, B any](in []T) []B {
         interfaceSlice[i] = any(d).(B)
     }
     return interfaceSlice
+}
+
+// toSyncMap 转换为 sync.Map 以支持并发安全
+func (m StrMap) toSyncMap() *sync.Map {
+    syncMap := sync.Map{}
+    for k, v := range m {
+        if strMap, ok := v.(StrMap); ok {
+            v = strMap.toSyncMap()
+        }
+        syncMap.Store(k, v)
+    }
+    return &syncMap
 }
