@@ -1,7 +1,9 @@
 package config
 
 import (
+    "math/rand"
     "testing"
+    "time"
 
     "github.com/astaxie/beego/logs"
 )
@@ -43,6 +45,19 @@ func TestSet(t *testing.T) {
     assertEqual(t, Get[string]("database.mysql.port"), "1234")
     Set("database.mysql.port", "4321")
     assertEqual(t, Get[string]("database.mysql.port"), "4321")
+}
+
+func TestGoroutine(t *testing.T) {
+    rwConfig := func() {
+        key := "test.test2"
+        value := rand.Int()
+        Set(key, value)
+        _ = Get[int](key)
+    }
+    for i := 0; i < 100; i++ {
+        go rwConfig()
+    }
+    time.Sleep(time.Second * 1)
 }
 
 func arrayEqual[T comparable](a, b []T) bool {

@@ -83,9 +83,9 @@ func Set(key string, value any) {
             if m := getConfigMap(maps, k); m != nil {
                 maps = m
             } else {
-                newMap := StrMap{}
+                newMap := sync.Map{}
                 maps.Store(k, newMap)
-                maps = newMap
+                maps = &newMap
             }
         }
     }
