@@ -5,26 +5,21 @@ KaliGo is an open-source, high-performance, modularity, full-stack web framework
 More info [doc.kaligo.com](https://doc.kaligo.com)
 
 * [Changelog](https://github.com/owner888/kaligo/blob/master/README.md#changelog)
-* [Installing](https://github.com/owner888/kaligo/blob/master/README.md#installing)
+* [Installation](https://github.com/owner888/kaligo/blob/master/README.md#installation)
 * [Testing](https://github.com/owner888/kaligo/blob/master/README.md#testing)
 * [Examples](https://github.com/owner888/kaligo/blob/master/README.md#examples)
 * [To do](https://github.com/owner888/kaligo/blob/master/README.md#to-do)
-* [Known bugs](https://github.com/owner888/kaligo/blob/master/README.md#known-bugs)
 * [Documentation](https://github.com/owner888/kaligo/blob/master/README.md#documentation)
 
 ## Changelog
 
-v1.2.8: 重构config类，支持点式获取方式，config.Get[string]("database.mysql.charset")
-
-v1.2.7: 定时器增加全局锁，修复同时设置多个定时器时协程并发写Timer map出现空指针异常Bug，增加用读写锁实现的安全map，排序map类改名
-
-v1.2.6: 迁移util类到util namespace里面去，调用就不用每次都new那么麻烦了，修改CRUD数据库类插入、批量插入、修改为返回sql，以便记录日志;增加项目绝对路径，数据绝对路径util.PATH_ROOT、util.PATH_DATA
-
-v1.2.5: 增加计时器，修复InsertBatch()方法Bug
-
-v1.2.4: 抽取http监听地址和端口、mysql连接参数，redis连接参数 等公用资源到配置文件
-
-v1.2.3: 采用channel实现的多功能连接池，只要是tcp连接方式都可以使用，并在此基础上实现Mysql连接池，每秒处理并发读请求接近2W，写请求8K，有没有感觉，生成静态HTML，生成缓存已经意义不大了？呵呵
+- v1.2.9: 重构config类，支持范型、支持点式获取方式: `config.Get[string]("database.mysql.charset")`
+- v1.2.8: 重构DB类，和 kaliphp 操作保持一致
+- v1.2.7: 定时器增加全局锁，修复同时设置多个定时器时协程并发写Timer map出现空指针异常Bug，增加用读写锁实现的安全map，排序map类改名
+- v1.2.6: 迁移util类到util namespace里面去，调用就不用每次都new那么麻烦了，修改CRUD数据库类插入、批量插入、修改为返回sql，以便记录日志;增加项目绝对路径，数据绝对路径util.PATH_ROOT、util.PATH_DATA
+- v1.2.5: 增加计时器，修复InsertBatch()方法Bug
+- v1.2.4: 抽取http监听地址和端口、mysql连接参数，redis连接参数 等公用资源到配置文件
+- v1.2.3: 采用channel实现的多功能连接池，只要是tcp连接方式都可以使用，并在此基础上实现Mysql连接池，每秒处理并发读请求接近2W，写请求8K，有没有感觉，生成静态HTML，生成缓存已经意义不大了？呵呵
 
 v1.2.2: 封装MyMysql实现的CRUD数据库类，GetOne()、GetAll()、Insert()、InsertBatch()、Update()，采用Map，可直接利用post、get方式获取的Map进行数据库操作，比一张表就对应写一个类的ORM更轻量，更实用，让繁琐的ORM见鬼去吧
 
@@ -292,6 +287,12 @@ db.Insert("user", []string{"name", "age"}).Values([][]string{{"test111", "20"}, 
 // 单条修改，相当于 Update `user` Set `name`="demo111", `age`="20" Where `id`=10
 sets := map[string]string{"name":"demo111", "age":20}
 db.Update("user").Set(sets).Where("id", "=", "1").Execute()
+```
+
+##### Delete
+
+```go
+db.Delete("user").Where("name", "=", "test").Execute()
 ```
 
 ##### UpdateBatch
