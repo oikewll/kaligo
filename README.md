@@ -15,21 +15,16 @@ More info [doc.kaligo.com](https://doc.kaligo.com)
 
 - v1.2.9: 重构config类，支持范型、支持点式获取方式: `config.Get[string]("database.mysql.charset")`
 - v1.2.8: 重构DB类，和 kaliphp 操作保持一致
-- v1.2.7: 定时器增加全局锁，修复同时设置多个定时器时协程并发写Timer map出现空指针异常Bug，增加用读写锁实现的安全map，排序map类改名
-- v1.2.6: 迁移util类到util namespace里面去，调用就不用每次都new那么麻烦了，修改CRUD数据库类插入、批量插入、修改为返回sql，以便记录日志;增加项目绝对路径，数据绝对路径util.PATH_ROOT、util.PATH_DATA
+- v1.2.7: 定时器增加全局锁，修复同时设置多个定时器时协程并发写Timer map出现空指针异常Bug
+- v1.2.6: 迁移util类到util namespace
 - v1.2.5: 增加计时器，修复InsertBatch()方法Bug
 - v1.2.4: 抽取http监听地址和端口、mysql连接参数，redis连接参数 等公用资源到配置文件
-- v1.2.3: 采用channel实现的多功能连接池，只要是tcp连接方式都可以使用，并在此基础上实现Mysql连接池，每秒处理并发读请求接近2W，写请求8K，有没有感觉，生成静态HTML，生成缓存已经意义不大了？呵呵
-
-v1.2.2: 封装MyMysql实现的CRUD数据库类，GetOne()、GetAll()、Insert()、InsertBatch()、Update()，采用Map，可直接利用post、get方式获取的Map进行数据库操作，比一张表就对应写一个类的ORM更轻量，更实用，让繁琐的ORM见鬼去吧
-
-v1.2.1: 实现基本类库编写: util.go、配置文件读取: app.ini
-
-v1.2: github线上项目，实现 package 远程调用，只需短短几行代码，即可启用一个高并发Web服务，妈妈再也不用担心我不会写 Hello World 了
-
-v1.1: 采用redigo，成功调用redis连接池，应用在线上日志系统统计，每秒处理并发请求2W多
-
-v1.0: 本地的MVC框架，实现控制器
+- v1.2.3: 采用channel实现的多功能连接池，只要是tcp连接方式都可以使用，并在此基础上实现Mysql连接池，每秒处理并发读请求接近2W，写请求8K
+- v1.2.2: 封装MyMysql实现的CRUD数据库类，GetOne()、GetAll()、Insert()、InsertBatch()、Update()
+- v1.2.1: 实现基本类库编写: util.go、配置文件读取: app.ini
+- v1.2: github线上项目，实现 package 远程调用，只需短短几行代码，即可启用一个高并发Web服
+- v1.1: 采用redigo，成功调用redis连接池，应用在线上日志系统统计，每秒处理并发请求2W多
+- v1.0: 本地的MVC框架，实现控制器
 
 ## Installation
 
