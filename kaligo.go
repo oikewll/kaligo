@@ -283,9 +283,21 @@ func (a *App) controllerMethodCall(controllerType reflect.Type, m string, w http
     return err
 }
 
+// RunTLS is to run a tls server
+func RunTLS(app *App, port, crtFile, keyFile string) {
+    log.Printf("ListenAndServe: %s - %s - %s", port, crtFile, keyFile)
+
+    err := http.ListenAndServeTLS(port, crtFile, keyFile, app)
+    if err != nil {
+        log.Fatal("ListenAndServe: ", err)
+    }
+}
+
 // Run is to run a app
-func Run(app *App) {
-    err := http.ListenAndServe(":9090", app)
+func Run(app *App, port string) {
+    log.Printf("ListenAndServe: %s", port)
+
+    err := http.ListenAndServe(port, app)
     if err != nil {
         log.Fatal("ListenAndServe: ", err)
     }
