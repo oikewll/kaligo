@@ -3,14 +3,33 @@ package util
 import (
 	"bufio"
 	"errors"
-	// "github.com/owner888/kaligo/config"
 	"io"
 	"io/ioutil"
-	// "log"
 	"os"
+    "runtime"
+    "syscall"
 	"path/filepath"
 	"regexp"
 )
+
+// FileInit 初始化文件目录
+func FileInit(file string) (err error) {
+	if !FileExists(file) {
+		// 检查是否结尾是否存在点, 如果有点则吧最后一个当做文件处理
+		dir := filepath.Dir(file)
+		if dir != "." {
+			// 递归创建目录
+			if runtime.GOOS == "linux" {
+				mask := syscall.Umask(0)
+				defer syscall.Umask(mask)
+				err = os.MkdirAll(dir, 0766)
+			} else {
+				err = os.MkdirAll(dir, 0766)
+			}
+		}
+	}
+	return
+}
 
 //var PATH_ROOT = SelfDir()
 //var PATH_DATA = SelfDir()+"/data"
@@ -36,32 +55,27 @@ func FileExists(name string) bool {
 	return true
 }
 
-/**
- * WriteLog
- *  使用方法
-    if ok, err := util.WriteLog("Just a test\n"); !ok {
-        log.Print(err)
-    }
- */
+// WriteLog is use for
+// if ok, err := util.WriteLog("Just a test\n"); !ok {
+//     log.Print(err)
+// }
 // func WriteLog(filename string, format string) (bool, error) {
-
-    // logfile := config.PathData+"/log/"+filename+".log"
-    // f, err := os.OpenFile(logfile, os.O_RDWR | os.O_APPEND |  os.O_CREATE, 0777)
-    // if err != nil {
-    //     return false, err
-    // }
-    // defer f.Close()
-    // logger := log.New(f, "", log.Ldate | log.Ltime | log.Lshortfile)
-    // logger.Print(format)
-    // return true, err
+//     logfile := config.PathData+"/log/"+filename+".log"
+//     f, err := os.OpenFile(logfile, os.O_RDWR | os.O_APPEND |  os.O_CREATE, 0777)
+//     if err != nil {
+//         return false, err
+//     }
+//     defer f.Close()
+//     logger := log.New(f, "", log.Ldate | log.Ltime | log.Lshortfile)
+//     logger.Print(format)
+//     return true, err
 // }
 
-/**
- *  使用方法
-    if ok, err := util.PutFile("/data/golang/log/go.txt", "Just a test\n", 1); !ok {
-        log.Print(err)
-    }
- */
+// PutFile is use for
+// 使用方法
+// if ok, err := util.PutFile("/data/golang/log/go.txt", "Just a test\n", 1); !ok {
+//     log.Print(err)
+// }
 func PutFile(file string, format string, args ...interface{}) (bool, error) {
 
     f, err := os.OpenFile(file, os.O_RDWR | os.O_APPEND |  os.O_CREATE, 0777)
@@ -89,24 +103,20 @@ func PutFile(file string, format string, args ...interface{}) (bool, error) {
 
     f.WriteString(format)
     return true, err
-    //f.Write([]byte("Just a test!\r\n"))
 }
 
+// GetFile is use for get file content
 func GetFile(file string) (string, error) {
-
     f, err := os.Open(file)
     if err != nil {
-        // 抛出异常
-        //panic(err)
         return "", err
     }
     defer f.Close() 
-    // 这里不用处理错误了，如果是文件不存在或者没有读权限，上面都直接抛异常了，这里还可能有错误么？
-    fd, _  := ioutil.ReadAll(f)
+    fd, _ := ioutil.ReadAll(f)
     return string(fd), err
 }
 
-// Search a file in paths.
+// SearchFile is use for Search a file in paths.
 // this is often used in search config file in /etc ~/
 func SearchFile(filename string, paths ...string) (fullpath string, err error) {
 	for _, path := range paths {
@@ -118,7 +128,7 @@ func SearchFile(filename string, paths ...string) (fullpath string, err error) {
 	return
 }
 
-// like command grep -E
+// GrepFile like command grep -E
 // for example: GrepFile(`^hello`, "hello.txt")
 // \n is striped while read
 func GrepFile(patten string, filename string) (lines []string, err error) {

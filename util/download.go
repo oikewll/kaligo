@@ -1,4 +1,4 @@
-package file
+package util
 
 import (
 	"errors"
@@ -11,19 +11,19 @@ import (
 func isFileExist(filename string, filesize int64) bool {
 	info, err := os.Stat(filename)
 	if os.IsNotExist(err) {
-		//fmt.Println(info)
 		return false
 	}
 	if filesize == info.Size() {
-		//fmt.Println("安装包已存在！", info.Name(), info.Size(), info.ModTime())
 		return true
 	}
-	del := os.Remove(filename)
-	if del != nil {
-		//fmt.Println(del)
+	ok := os.Remove(filename)
+	if ok == nil {
+        return true
 	}
 	return false
 }
+
+// DownloadFile is use for download a file to local
 func DownloadFile(url string, localPath string, fb func(length, downLen int64)) error {
 	err := FileInit(localPath)
 	if err!=nil {
