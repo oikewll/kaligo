@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/astaxie/beego v1.10.1
-	github.com/bradfitz/gomemcache v0.0.0-20190913173617-a41fca850d0b
+	github.com/bradfitz/gomemcache v0.0.0-20220106215444-fb4bf637b56d
 	github.com/go-sql-driver/mysql v1.6.0
 	github.com/gomodule/redigo v1.8.8
 	github.com/jinzhu/now v1.1.2
