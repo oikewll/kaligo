@@ -11,7 +11,12 @@ type Cache interface {
 	Delete(key string) error
 }
 
-func New(c Cache) *Cache {
-    
+func New(driver string) Cache {
+	if driver == "memcache" {
+		return NewMemcache("")
+	} else if driver == "redis" {
+		return NewRedis(&RedisOpts{})
+	} else {
+		return NewMemory()
+	}
 }
-
