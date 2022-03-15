@@ -5,7 +5,7 @@ import (
     "time"
 )
 
-// Memory struct contains *memcache.Client
+// Memory struct contains *data
 type Memory struct {
     data sync.Map
 }

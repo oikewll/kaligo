@@ -22,17 +22,22 @@ type RedisOpts struct {
 	IdleTimeout int    `yml:"idle_timeout" json:"idle_timeout"` //second
 }
 
-//NewRedis 实例化
+// NewRedis 实例化
 func NewRedis(opts *RedisOpts) *Redis {
 	pool := &redis.Pool{
-		MaxActive:   opts.MaxActive,
-		MaxIdle:     opts.MaxIdle,
-		IdleTimeout: time.Second * time.Duration(opts.IdleTimeout),
+		MaxIdle:     opts.MaxIdle,                                  // 最大空闲连接数
+		MaxActive:   opts.MaxActive,                                // 最大连接数
+		IdleTimeout: time.Second * time.Duration(opts.IdleTimeout), // 闲连接超时时间
+        Wait:        true,                                          // 超过最大连接数的操作:等待
 		Dial: func() (redis.Conn, error) {
-			return redis.Dial("tcp", opts.Host,
+            c, err := redis.Dial("tcp", opts.Host,
 				redis.DialDatabase(opts.Database),
 				redis.DialPassword(opts.Password),
 			)
+            if err != nil {
+                return nil, err
+            }
+            return c, nil
 		},
 		TestOnBorrow: func(conn redis.Conn, t time.Time) error {
 			if time.Since(t) < time.Minute {
@@ -45,19 +50,9 @@ func NewRedis(opts *RedisOpts) *Redis {
 	return &Redis{pool}
 }
 
-//SetRedisPool 设置redis连接池
-func (r *Redis) SetRedisPool(pool *redis.Pool) {
-	r.conn = pool
-}
-
-//SetConn 设置conn
-func (r *Redis) SetConn(conn *redis.Pool) {
-	r.conn = conn
-}
-
-//Get 获取一个值
+// Get 获取一个值
 func (r *Redis) Get(key string) interface{} {
-	conn := r.conn.Get()
+	conn := r.conn.Get()    // 从连接池中获取一个链接
 	defer conn.Close()
 
 	var data []byte
@@ -73,7 +68,7 @@ func (r *Redis) Get(key string) interface{} {
 	return reply
 }
 
-//Set 设置一个值
+// Set 设置一个值
 func (r *Redis) Set(key string, val interface{}, timeout time.Duration) (err error) {
 	conn := r.conn.Get()
 	defer conn.Close()
@@ -88,7 +83,7 @@ func (r *Redis) Set(key string, val interface{}, timeout time.Duration) (err err
 	return
 }
 
-//IsExist 判断key是否存在
+// IsExist 判断key是否存在
 func (r *Redis) IsExist(key string) bool {
 	conn := r.conn.Get()
 	defer conn.Close()
@@ -98,7 +93,7 @@ func (r *Redis) IsExist(key string) bool {
 	return i > 0
 }
 
-//Delete 删除
+// Delete 删除
 func (r *Redis) Delete(key string) error {
 	conn := r.conn.Get()
 	defer conn.Close()

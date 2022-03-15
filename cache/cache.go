@@ -10,3 +10,8 @@ type Cache interface {
 	IsExist(key string) bool
 	Delete(key string) error
 }
+
+func New(c Cache) *Cache {
+    
+}
+
