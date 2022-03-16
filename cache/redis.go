@@ -19,7 +19,8 @@ type RedisOpts struct {
 	Database    int    `yml:"database" json:"database"`
 	MaxIdle     int    `yml:"max_idle" json:"max_idle"`
 	MaxActive   int    `yml:"max_active" json:"max_active"`
-	IdleTimeout int    `yml:"idle_timeout" json:"idle_timeout"` //second
+	IdleTimeout int    `yml:"idle_timeout" json:"idle_timeout"`
+	Wait        bool   `yml:"wait" json:"wait"`
 }
 
 // NewRedis 实例化

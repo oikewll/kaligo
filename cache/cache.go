@@ -1,7 +1,11 @@
 // Package cache 注意go语言的接口实现与接口的定义是没有依赖关系的
 package cache
 
-import "time"
+import (
+	"time"
+
+	"github.com/owner888/kaligo/config"
+)
 
 // Cache interface
 type Cache interface {
@@ -16,12 +20,13 @@ func New(driver string) Cache {
 		return NewMemcache("")
 	} else if driver == "redis" {
 		return NewRedis(&RedisOpts{
-            Host        : "127.0.0.1",
-            Password    : "",
-            Database    : 0,
-            MaxIdle     : 1,
-            MaxActive   : 1,
-            IdleTimeout : 1,
+            Host        : config.Get[string]("host"),
+            Password    : config.Get[string]("password"),
+            Database    : config.Get[int]("database"),
+            MaxIdle     : config.Get[int]("max_idle"),
+            MaxActive   : config.Get[int]("max_active"),
+            IdleTimeout : config.Get[int]("idle_timeout"),
+            Wait        : config.Get[bool]("wait"),
         })
     } else {
         return NewMemory()
