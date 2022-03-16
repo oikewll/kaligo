@@ -25,9 +25,9 @@ import (
 // 定义当前package中使用的全局变量
 var (
     storeTimers sync.Map
-    Timer      map[string]*time.Ticker
-    Tasker     map[string]*time.Timer
-    Mutex      sync.Mutex
+    Timer       map[string]*time.Ticker
+    Tasker      map[string]*time.Timer
+    Mutex       sync.Mutex
 )
 
 func init() {
@@ -40,12 +40,12 @@ type App struct {
     http.Handler // http.ServeMux
     routes       []*routes.Route
     staticRoutes []*routes.StaticRoute
-    db           *database.DB
+    DB           *database.DB
 }
 
 // AddDB is use for add a db
 func (a *App) AddDB(db *database.DB) {
-    a.db = db
+    a.DB = db
 }
 
 // DelTasker is the function for delete tasker
@@ -226,7 +226,7 @@ func (a *App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
         }
 
         var ok bool
-        var m  string    
+        var m string
         // Request callback
         if m, ok = route.Methods[r.Method]; !ok {
             http.NotFound(w, r)
@@ -252,7 +252,7 @@ func (a *App) controllerMethodCall(controllerType reflect.Type, m string, w http
         ResponseWriter: w,
         Request:        r,
         Params:         params,
-        DB:             a.db,
+        DB:             a.DB,
     }
     args := make([]reflect.Value, 2)
     args[0] = reflect.ValueOf(contex)
@@ -302,4 +302,3 @@ func Run(app *App, port string) {
         log.Fatal("ListenAndServe: ", err)
     }
 }
-
