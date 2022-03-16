@@ -15,8 +15,15 @@ func New(driver string) Cache {
 	if driver == "memcache" {
 		return NewMemcache("")
 	} else if driver == "redis" {
-		return NewRedis(&RedisOpts{})
-	} else {
-		return NewMemory()
+		return NewRedis(&RedisOpts{
+            Host        : "127.0.0.1",
+            Password    : "",
+            Database    : 0,
+            MaxIdle     : 1,
+            MaxActive   : 1,
+            IdleTimeout : 1,
+        })
+    } else {
+        return NewMemory()
 	}
 }
