@@ -1,9 +1,10 @@
 package cache
 
 import (
-    "log"
     "testing"
     "time"
+
+    "github.com/stretchr/testify/assert"
 )
 
 func TestMemoryCache(t *testing.T) {
@@ -16,9 +17,7 @@ func TestMemoryCache(t *testing.T) {
 func TestCache(t *testing.T) {
     cache := New("memory")
     cache.Set("name", "kaka", time.Millisecond)
-    name := cache.Get("name")
-    log.Printf("name: [ %v ]", name)
+    assert.Equal(t, "kaka", cache.Get("name"))
     time.Sleep(time.Millisecond * 2)
-    name = cache.Get("name")
-    log.Printf("name: [ %v ]", name)
+    assert.Nil(t, cache.Get("name"))
 }
