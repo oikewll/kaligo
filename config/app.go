@@ -6,7 +6,7 @@ package config
 //
 // func init() {
 //     config.Add("app", config.StrMap{
-//         "server": map[string]interface{}{
+//         "server": map[string]any{
 //             // 监听地址
 //             "port": ":9090",
 //             // 非TLS 下面两个留空即可

@@ -1,9 +1,9 @@
 package logger
 
 import (
-    "errors"
-    "time"
-    //"context"
+	"errors"
+	"time"
+	//"context"
 )
 
 // ErrRecordNotFound record not found error
@@ -29,54 +29,53 @@ const (
 type LogLevel int
 
 const (
-    // Silent is the default log level
-    Silent LogLevel = iota + 1
-    // Error is the error log level
-    Error
-    // Warn is the warn log level
-    Warn
-    // Info is the lower log level
-    Info
+	// Silent is the default log level
+	Silent LogLevel = iota + 1
+	// Error is the error log level
+	Error
+	// Warn is the warn log level
+	Warn
+	// Info is the lower log level
+	Info
 )
 
 // Writer log writer interface
 type Writer interface {
-	Printf(string, ...interface{})
+	Printf(string, ...any)
 }
 
 // Interface logger interface
 type Interface interface {
-    LogMode(LogLevel) Interface
-    //Info(context.Context, string, ...interface{})
-    Info(string, ...interface{})
-    Warn(string, ...interface{})
-    Error(string, ...interface{})
-    Trace(begin time.Time, fc func() (sql string, rowsAffected int64), err error)
+	LogMode(LogLevel) Interface
+	//Info(context.Context, string, ...any)
+	Info(string, ...any)
+	Warn(string, ...any)
+	Error(string, ...any)
+	Trace(begin time.Time, fc func() (sql string, rowsAffected int64), err error)
 }
 
 type logger struct {
-    Writer
-    //Config
-    LogLevel LogLevel
-    infoStr, warnStr, errStr            string
-    traceStr, traceErrStr, traceWarnStr string
+	Writer
+	//Config
+	LogLevel                            LogLevel
+	infoStr, warnStr, errStr            string
+	traceStr, traceErrStr, traceWarnStr string
 }
 
-func (l logger) Info(msg string, data ...interface{}) {
-    if l.LogLevel >= Info {
-        //l.Printf(l.warnStr+msg, append([]interface{}{utils.FileWithLineNum()}, data...)...)
-    }
+func (l logger) Info(msg string, data ...any) {
+	if l.LogLevel >= Info {
+		//l.Printf(l.warnStr+msg, append([]any{utils.FileWithLineNum()}, data...)...)
+	}
 }
 
-func (l logger) Warn(msg string, data ...interface{}) {
-    if l.LogLevel >= Warn {
-        //l.Printf(l.warnStr+msg, append([]interface{}{utils.FileWithLineNum()}, data...)...)
-    }
+func (l logger) Warn(msg string, data ...any) {
+	if l.LogLevel >= Warn {
+		//l.Printf(l.warnStr+msg, append([]any{utils.FileWithLineNum()}, data...)...)
+	}
 }
 
-func (l logger) Error(msg string, data ...interface{}) {
-    if l.LogLevel >= Error {
-        //l.Printf(l.warnStr+msg, append([]interface{}{utils.FileWithLineNum()}, data...)...)
-    }
+func (l logger) Error(msg string, data ...any) {
+	if l.LogLevel >= Error {
+		//l.Printf(l.warnStr+msg, append([]any{utils.FileWithLineNum()}, data...)...)
+	}
 }
-

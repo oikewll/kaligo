@@ -68,7 +68,7 @@ import (
 
 func init() {
     config.Add("database", config.StrMap{
-        "mysql": map[string]interface{}{
+        "mysql": map[string]any{
             "host":     "127.0.0.1",
             "port":     "3306",
             "name":     "test",
@@ -146,8 +146,8 @@ type Get struct {
     controller.Controller
 }
 
-// H is a shortcut for map[string]interface{}
-type H map[string]interface{}
+// H is a shortcut for map[string]any
+type H map[string]any
 
 // Index is a Get Index method
 func (c *Get) Index() {
@@ -217,7 +217,7 @@ func (c *Get) Index() {
 
     func (this *Demo) Index(w http.ResponseWriter, r *http.Request) {
 
-        args := map[string]interface{}{
+        args := map[string]any{
             "username":"yangzetao",
             "data":[]map[string]string{
                 map[string]string{

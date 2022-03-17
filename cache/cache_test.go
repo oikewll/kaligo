@@ -7,12 +7,16 @@ import (
 )
 
 func TestCache(t *testing.T) {
-	cache := New("redis")
+	cache, err := New("redis")
 	assert.IsType(t, &Redis{}, cache)
-	cache = New("memcache")
+	cache, _ = New("memcache")
 	assert.IsType(t, &Memcache{}, cache)
-	cache = New("memory")
+	cache, _ = New("memory")
 	assert.IsType(t, &Memory{}, cache)
-	cache = New("")
-	assert.IsType(t, &Memory{}, cache)
+	cache, err = New("")
+	assert.Error(t, err)
+	assert.Nil(t, cache)
+	cache, err = New()
+	assert.Error(t, err)
+	assert.Nil(t, cache)
 }

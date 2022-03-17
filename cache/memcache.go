@@ -19,13 +19,13 @@ func NewMemcache(server ...string) *Memcache {
 }
 
 // Get return cached value
-func (mem *Memcache) Get(key string) interface{} {
+func (mem *Memcache) Get(key string) any {
 	var err error
 	var item *memcache.Item
 	if item, err = mem.conn.Get(key); err != nil {
 		return nil
 	}
-	var result interface{}
+	var result any
 	if err = json.Unmarshal(item.Value, &result); err != nil {
 		return nil
 	}
@@ -41,7 +41,7 @@ func (mem *Memcache) IsExist(key string) bool {
 }
 
 // Set cached value with key and expire time.
-func (mem *Memcache) Set(key string, val interface{}, timeout time.Duration) (err error) {
+func (mem *Memcache) Set(key string, val any, timeout time.Duration) (err error) {
 	var data []byte
 	if data, err = json.Marshal(val); err != nil {
 		return err

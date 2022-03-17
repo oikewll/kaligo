@@ -29,16 +29,16 @@ func NewRedis(opts *RedisOpts) *Redis {
 		MaxIdle:     opts.MaxIdle,                                  // 最大空闲连接数
 		MaxActive:   opts.MaxActive,                                // 最大连接数
 		IdleTimeout: time.Second * time.Duration(opts.IdleTimeout), // 空闲连接超时时间(单位: 秒)
-        Wait:        opts.Wait,                                     // 超过最大连接数的操作:等待
+		Wait:        opts.Wait,                                     // 超过最大连接数的操作:等待
 		Dial: func() (redis.Conn, error) {
-            c, err := redis.Dial("tcp", opts.Host,
+			c, err := redis.Dial("tcp", opts.Host,
 				redis.DialDatabase(opts.Database),
 				redis.DialPassword(opts.Password),
 			)
-            if err != nil {
-                return nil, err
-            }
-            return c, nil
+			if err != nil {
+				return nil, err
+			}
+			return c, nil
 		},
 		TestOnBorrow: func(conn redis.Conn, t time.Time) error {
 			if time.Since(t) < time.Minute {
@@ -52,8 +52,8 @@ func NewRedis(opts *RedisOpts) *Redis {
 }
 
 // Get 获取一个值
-func (r *Redis) Get(key string) interface{} {
-	conn := r.conn.Get()    // 从连接池中获取一个链接
+func (r *Redis) Get(key string) any {
+	conn := r.conn.Get() // 从连接池中获取一个链接
 	defer conn.Close()
 
 	var data []byte
@@ -61,7 +61,7 @@ func (r *Redis) Get(key string) interface{} {
 	if data, err = redis.Bytes(conn.Do("GET", key)); err != nil {
 		return nil
 	}
-	var reply interface{}
+	var reply any
 	if err = json.Unmarshal(data, &reply); err != nil {
 		return nil
 	}
@@ -70,7 +70,7 @@ func (r *Redis) Get(key string) interface{} {
 }
 
 // Set 设置一个值
-func (r *Redis) Set(key string, val interface{}, timeout time.Duration) (err error) {
+func (r *Redis) Set(key string, val any, timeout time.Duration) (err error) {
 	conn := r.conn.Get()
 	defer conn.Close()
 

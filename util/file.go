@@ -6,10 +6,10 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
-    "runtime"
-    "syscall"
 	"path/filepath"
 	"regexp"
+	"runtime"
+	"syscall"
 )
 
 // FileInit 初始化文件目录
@@ -76,44 +76,44 @@ func FileExists(name string) bool {
 // if ok, err := util.PutFile("/data/golang/log/go.txt", "Just a test\n", 1); !ok {
 //     log.Print(err)
 // }
-func PutFile(file string, format string, args ...interface{}) (bool, error) {
+func PutFile(file string, format string, args ...any) (bool, error) {
 
-    f, err := os.OpenFile(file, os.O_RDWR | os.O_APPEND |  os.O_CREATE, 0777)
-    // 上面的0777并不起作用
-    os.Chmod(file, 0777)
-    // 如果没有传参数，重新新建文件
-    if args == nil {
-        f, err = os.Create(file)
-    }
-    for _, arg := range args {
-        // 参数为0，也重新创建文件
-        if arg == 0 {
-            f, err = os.Create(file)
-        }
-    }
+	f, err := os.OpenFile(file, os.O_RDWR|os.O_APPEND|os.O_CREATE, 0777)
+	// 上面的0777并不起作用
+	os.Chmod(file, 0777)
+	// 如果没有传参数，重新新建文件
+	if args == nil {
+		f, err = os.Create(file)
+	}
+	for _, arg := range args {
+		// 参数为0，也重新创建文件
+		if arg == 0 {
+			f, err = os.Create(file)
+		}
+	}
 
-    // f的类型是*os.File，所以即使上面因为权限问题等问题导致f为nil了，一样可以Close()，因为*os.File是有Close()方法的，可以Close()多少次都行
-    // 如果err不为空，说明f本来就是Close()的，虽然Close()也不会报错，但是直接返回还是省点资源的，所以这里直接就return吧
-    // 如果是http抓取网页的 res.Body.Close() 就不同了，res.Body为空是不能Close()的，会报空指针异常，因为本来就是空指针
-    // http://stackoverflow.com/questions/16280176/go-panic-runtime-error-invalid-memory-address-or-nil-pointer-dereference
-    if err != nil {
-        return false, err
-    }
-    defer f.Close()
+	// f的类型是*os.File，所以即使上面因为权限问题等问题导致f为nil了，一样可以Close()，因为*os.File是有Close()方法的，可以Close()多少次都行
+	// 如果err不为空，说明f本来就是Close()的，虽然Close()也不会报错，但是直接返回还是省点资源的，所以这里直接就return吧
+	// 如果是http抓取网页的 res.Body.Close() 就不同了，res.Body为空是不能Close()的，会报空指针异常，因为本来就是空指针
+	// http://stackoverflow.com/questions/16280176/go-panic-runtime-error-invalid-memory-address-or-nil-pointer-dereference
+	if err != nil {
+		return false, err
+	}
+	defer f.Close()
 
-    f.WriteString(format)
-    return true, err
+	f.WriteString(format)
+	return true, err
 }
 
 // GetFile is use for get file content
 func GetFile(file string) (string, error) {
-    f, err := os.Open(file)
-    if err != nil {
-        return "", err
-    }
-    defer f.Close() 
-    fd, _ := ioutil.ReadAll(f)
-    return string(fd), err
+	f, err := os.Open(file)
+	if err != nil {
+		return "", err
+	}
+	defer f.Close()
+	fd, _ := ioutil.ReadAll(f)
+	return string(fd), err
 }
 
 // SearchFile is use for Search a file in paths.

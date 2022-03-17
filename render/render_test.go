@@ -1,7 +1,7 @@
 package render
 
 import (
-    "log"
+	"log"
 	// "encoding/xml"
 	// "errors"
 	// "html/template"
@@ -12,7 +12,7 @@ import (
 	"testing"
 
 	// testdata "github.com/gin-gonic/gin/testdata/protoexample"
-    "github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/assert"
 	// "google.golang.org/protobuf/proto"
 )
 
@@ -20,10 +20,10 @@ import (
 // test errors
 
 func TestRenderJSON(t *testing.T) {
-    log.Printf("%v", "TestRenderJSON")
+	log.Printf("%v", "TestRenderJSON")
 
 	w := httptest.NewRecorder()
-	data := map[string]interface{}{
+	data := map[string]any{
 		"foo":  "bar",
 		"html": "<b>",
 	}
@@ -37,4 +37,3 @@ func TestRenderJSON(t *testing.T) {
 	assert.Equal(t, "{\"foo\":\"bar\",\"html\":\"\\u003cb\\u003e\"}", w.Body.String())
 	assert.Equal(t, "application/json; charset=utf-8", w.Header().Get("Content-Type"))
 }
-

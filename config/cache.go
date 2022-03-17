@@ -6,7 +6,7 @@ package config
 //
 // func init() {
 //     config.Add("cache", config.StrMap{
-//         "redis": map[string]interface{}{
+//         "redis": map[string]any{
 //             "host"          : "127.0.0.1",
 //             "port"          : 6379,
 //             "password"      : "",
@@ -16,7 +16,7 @@ package config
 //             "idle_timeout"  : 180,       // 空闲连接超时时间(单位: 秒)
 //             "wait"          : true,      // 超过最大连接数的操作:等待
 //         },
-//         "memcache": map[string]interface{}{
+//         "memcache": map[string]any{
 //             "host": []string{"10.0.0.1:11211", "10.0.0.2:11211", "10.0.0.3:11211"},
 //         },
 //     })

@@ -14,7 +14,7 @@ import (
 	"net/http"
 	"os"
 
-    "golang.org/x/crypto/pkcs12"
+	"golang.org/x/crypto/pkcs12"
 )
 
 //HTTPGet get 请求
@@ -47,7 +47,7 @@ func HTTPPost(uri string, data string) ([]byte, error) {
 }
 
 //PostJSON post json 数据请求
-func PostJSON(uri string, obj interface{}) ([]byte, error) {
+func PostJSON(uri string, obj any) ([]byte, error) {
 	jsonBuf := new(bytes.Buffer)
 	enc := json.NewEncoder(jsonBuf)
 	enc.SetEscapeHTML(false)
@@ -68,7 +68,7 @@ func PostJSON(uri string, obj interface{}) ([]byte, error) {
 }
 
 // PostJSONWithRespContentType post json数据请求，且返回数据类型
-func PostJSONWithRespContentType(uri string, obj interface{}) ([]byte, string, error) {
+func PostJSONWithRespContentType(uri string, obj any) ([]byte, string, error) {
 	jsonBuf := new(bytes.Buffer)
 	enc := json.NewEncoder(jsonBuf)
 	enc.SetEscapeHTML(false)
@@ -164,7 +164,7 @@ func PostMultipartForm(fields []MultipartFormField, uri string) (respBody []byte
 }
 
 //PostXML perform a HTTP/POST request with XML body
-func PostXML(uri string, obj interface{}) ([]byte, error) {
+func PostXML(uri string, obj any) ([]byte, error) {
 	xmlData, err := xml.Marshal(obj)
 	if err != nil {
 		return nil, err
@@ -225,7 +225,7 @@ func pkcs12ToPem(p12 []byte, password string) tls.Certificate {
 }
 
 //PostXMLWithTLS perform a HTTP/POST request with XML body and TLS
-func PostXMLWithTLS(uri string, obj interface{}, ca, key string) ([]byte, error) {
+func PostXMLWithTLS(uri string, obj any, ca, key string) ([]byte, error) {
 	xmlData, err := xml.Marshal(obj)
 	if err != nil {
 		return nil, err

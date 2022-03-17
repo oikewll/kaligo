@@ -7,7 +7,7 @@ package config
 //
 // func init() {
 //     config.Add("database", config.StrMap{
-//         "mysql": map[string]interface{}{
+//         "mysql": map[string]any{
 //             // 数据库连接信息
 //             "open"   : true,
 //             "host"   : "127.0.0.1",

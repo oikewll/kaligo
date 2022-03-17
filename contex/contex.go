@@ -1,35 +1,36 @@
 package contex
 
 import (
+	"io/ioutil"
 	"net/http"
-    "net/url"
-    "sync"
-    "io/ioutil"
-    "github.com/owner888/kaligo/cache"
-    "github.com/owner888/kaligo/database"
-    "github.com/owner888/kaligo/render"
+	"net/url"
+	"sync"
+
+	"github.com/owner888/kaligo/cache"
+	"github.com/owner888/kaligo/database"
+	"github.com/owner888/kaligo/render"
 )
 
 // Context is use for ServeHTTP goroutine
 type Context struct {
-    ResponseWriter http.ResponseWriter
-    Request        *http.Request
+	ResponseWriter http.ResponseWriter
+	Request        *http.Request
 
-    Params         map[string]string
-    fullPath       string
+	Params   map[string]string
+	fullPath string
 
-    DB             *database.DB 
+	DB *database.DB
 
-    // Cache is a key/value pair exclusively for the context of all request.
-    Cache          cache.Cache
+	// Cache is a key/value pair exclusively for the context of all request.
+	Cache cache.Cache
 
-    // Keys is a key/value pair exclusively for the context of each request.
-    // Keys map[string]interface{}
-    Keys sync.Map
+	// Keys is a key/value pair exclusively for the context of each request.
+	// Keys map[string]any
+	Keys sync.Map
 
-    // SameSite allows a server to define a cookie attribute making it impossible for
-    // the browser to send this cookie along with cross-site requests.
-    sameSite http.SameSite
+	// SameSite allows a server to define a cookie attribute making it impossible for
+	// the browser to send this cookie along with cross-site requests.
+	sameSite http.SameSite
 }
 
 // FullPath returns a matched route full path. For not found routes
@@ -38,35 +39,35 @@ type Context struct {
 //         c.FullPath() == "/user/:id" // true
 //     })
 func (c *Context) FullPath() string {
-    return c.fullPath
+	return c.fullPath
 }
 
 // Set is used to store a new key/value pair exclusively for this context.
 // It also lazy initializes  c.Keys if it was not used previously.
-func (c *Context) Set(key string, value interface{}) {
-    c.Keys.Store(key, value)
+func (c *Context) Set(key string, value any) {
+	c.Keys.Store(key, value)
 }
 
 // Get returns the value for the given key, ie: (value, true).
 // If the value does not exist it returns (nil, false)
-// func (c *Context) Get(key string) (value interface{}, exists bool) {
-func (c *Context) Get(key string) interface{} {
-    val, ok := c.Keys.Load(key)
-    if ok {
-        // return (interface{})(val).(T)
-        return val
-    }
-    return nil
+// func (c *Context) Get(key string) (value any, exists bool) {
+func (c *Context) Get(key string) any {
+	val, ok := c.Keys.Load(key)
+	if ok {
+		// return (any)(val).(T)
+		return val
+	}
+	return nil
 }
 
 // Del is used to delete value from store with a key.
 func (c *Context) Del(key string) {
-    c.Keys.Delete(key)
+	c.Keys.Delete(key)
 }
 
 // Clear is used to Clear map.
 func (c *Context) Clear(key string) {
-    c.Keys = sync.Map{}
+	c.Keys = sync.Map{}
 }
 
 // Redirect returns an HTTP redirect to the specific location.
@@ -76,13 +77,13 @@ func (c *Context) Redirect(code int, location string) {
 
 // JSON serializes the given struct as JSON into the response body.
 // It also sets the Content-Type as "application/json".
-func (c *Context) JSON(code int, obj interface{}) {
-    c.Render(code, render.JSON{Data: obj})
+func (c *Context) JSON(code int, obj any) {
+	c.Render(code, render.JSON{Data: obj})
 }
 
 // String writes the given string into the response body.
-func (c *Context) String(code int, format string, values ...interface{}) {
-    // c.Render(code, render.String{Format: format, Data: values})
+func (c *Context) String(code int, format string, values ...any) {
+	// c.Render(code, render.String{Format: format, Data: values})
 }
 
 // Data writes some data into the body stream and updates the HTTP code.
@@ -177,14 +178,13 @@ func (c *Context) Cookie(name string) (string, error) {
 	return val, nil
 }
 
-
 // Render writes the response headers and calls render.Render to render data.
 func (c *Context) Render(code int, r render.Render) {
 	c.Status(code)
 
 	if !bodyAllowedForStatus(code) {
 		r.WriteContentType(c.ResponseWriter)
-        // c.ResponseWriter.WriteHeader()
+		// c.ResponseWriter.WriteHeader()
 		// c.ResponseWriter.WriteHeaderNow()
 		return
 	}

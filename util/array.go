@@ -1,13 +1,12 @@
 package util
 
 import (
-    "fmt"
-    "reflect"
+	"fmt"
+	"reflect"
 )
 
 // Arr 数组（array）、可变长数组（slice）、map 操作类
 type Arr struct {
-
 }
 
 // MapKeys 用于获取 map 所有key
@@ -17,20 +16,20 @@ func (a *Arr) MapKeys(m map[string]string) []string {
 	for k := range m {
 		keys = append(keys, k)
 	}
-    return keys
+	return keys
 }
 
 // SliceRemoveDuplicate 函数用于在slice中去除重复的元素，其中a必须是已经排序的序列。
 // params:
 //   a: slice对象，如[]string, []int, []float64, ...
 // return:
-//   []interface{}: 已经去除重复元素的新的slice对象
-func (a *Arr) SliceRemoveDuplicate(sli interface{}) (ret []interface{}) {
+//   []any: 已经去除重复元素的新的slice对象
+func (a *Arr) SliceRemoveDuplicate(sli any) (ret []any) {
 	if reflect.TypeOf(sli).Kind() != reflect.Slice {
 		fmt.Printf("<SliceRemoveDuplicate> <a> is not slice but %T\n", sli)
 		return ret
 	}
- 
+
 	va := reflect.ValueOf(sli)
 	for i := 0; i < va.Len(); i++ {
 		if i > 0 && reflect.DeepEqual(va.Index(i-1).Interface(), va.Index(i).Interface()) {
@@ -38,6 +37,6 @@ func (a *Arr) SliceRemoveDuplicate(sli interface{}) (ret []interface{}) {
 		}
 		ret = append(ret, va.Index(i).Interface())
 	}
- 
+
 	return ret
 }
