@@ -5,6 +5,8 @@ import (
     "time"
 )
 
+var _ Cache = &Redis{}
+
 func TestRedis(t *testing.T) {
     opts := &RedisOpts{
         Host: "127.0.0.1:6379",

@@ -8,6 +8,8 @@ import (
     "github.com/stretchr/testify/assert"
 )
 
+var _ Cache = &Memory{}
+
 var cache Memory
 
 func TestMain(m *testing.M) {
