@@ -4,6 +4,7 @@ package cache
 import (
     "errors"
     "fmt"
+    "log"
     "strings"
     "time"
 
@@ -26,6 +27,7 @@ func New(param ...string) (Cache, error) {
         driver = config.Get[string]("cache.config.driver")
     }
 
+    log.Printf("%v", config.Get[string]("cache.config.driver"))
     if driver == "memory" {
         return NewMemory(), nil
     } else if driver == "redis" {
