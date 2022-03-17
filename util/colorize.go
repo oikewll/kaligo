@@ -18,6 +18,6 @@ func Colorize(text string, status string) string {
         default:
             out = "\033[0m"    // Default
     }
-	return out+text+"\033[0m"
+    return out+text+"\033[0m"
 }
 

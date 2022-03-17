@@ -2,5 +2,5 @@ package database
 
 // MySQL error codes.
 const (
-	ErrAlredyConn2 = 100
+    ErrAlredyConn2 = 100
 )

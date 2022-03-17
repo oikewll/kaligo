@@ -4,42 +4,42 @@
 package learning
 
 import (
-	"fmt"
-	"io"
-	"regexp"
-	"runtime"
-	"strings"
-	"testing"
-	//"sync"
+    "fmt"
+    "io"
+    "regexp"
+    "runtime"
+    "strings"
+    "testing"
+    //"sync"
 )
 
 //const LENGTH int = 10
 const (
-	LENGTH int64 = 10
-	WIDTH        = 20
+    LENGTH int64 = 10
+    WIDTH        = 20
 )
 
 var arrDetails [][]string
 
 type Singleton struct {
-	Name      string
-	instances map[string]*Singleton
+    Name      string
+    instances map[string]*Singleton
 }
 
 func GetInstance(name string) *Singleton {
-	instance := &Singleton{
-		Name: name,
-	}
-	if instance.instances == nil {
-		instance.instances = make(map[string]*Singleton)
-	}
-	//return instance
-	instance.instances[name] = instance
-	return instance.instances[name]
+    instance := &Singleton{
+        Name: name,
+    }
+    if instance.instances == nil {
+        instance.instances = make(map[string]*Singleton)
+    }
+    //return instance
+    instance.instances[name] = instance
+    return instance.instances[name]
 }
 
 func (g *Singleton) GetName() string {
-	return g.Name
+    return g.Name
 }
 
 //var instance *singleton
@@ -53,20 +53,20 @@ func (g *Singleton) GetName() string {
 
 // CatchError is...
 func catchError(err *error) {
-	if pv := recover(); pv != nil {
-		switch e := pv.(type) {
-		case runtime.Error:
-			panic(pv)
-		case error:
-			if e == io.EOF {
-				*err = io.ErrUnexpectedEOF
-			} else {
-				*err = e
-			}
-		default:
-			panic(pv)
-		}
-	}
+    if pv := recover(); pv != nil {
+        switch e := pv.(type) {
+        case runtime.Error:
+            panic(pv)
+        case error:
+            if e == io.EOF {
+                *err = io.ErrUnexpectedEOF
+            } else {
+                *err = e
+            }
+        default:
+            panic(pv)
+        }
+    }
 }
 
 //func TryFuncError() (err error) {
@@ -81,116 +81,116 @@ func catchError(err *error) {
 
 func TryFuncArgsInterface(args any) bool {
 
-	index := strings.Index("chicken", "cjj")
-	fmt.Printf("TryFuncArgsInterface Index: %T=[%v]\n", index, index)
+    index := strings.Index("chicken", "cjj")
+    fmt.Printf("TryFuncArgsInterface Index: %T=[%v]\n", index, index)
 
-	//sqlStr := "hypertext, language, programming"
-	sqlStr := "Select * From user where id = 10"
-	a := regexp.MustCompile(`[\s]+`).Split(strings.TrimLeft(sqlStr[0:11], "("), 2)
-	fmt.Printf("TryFuncArgsInterface sqlStr: %T=[%v]\n", a[0], a[0])
-	parts := regexp.MustCompile(`\.`).Split("tablecolumn", 2)
-	fmt.Printf("TryFuncArgsInterface sqlStr: %T=[%v]\n", parts, parts)
+    //sqlStr := "hypertext, language, programming"
+    sqlStr := "Select * From user where id = 10"
+    a := regexp.MustCompile(`[\s]+`).Split(strings.TrimLeft(sqlStr[0:11], "("), 2)
+    fmt.Printf("TryFuncArgsInterface sqlStr: %T=[%v]\n", a[0], a[0])
+    parts := regexp.MustCompile(`\.`).Split("tablecolumn", 2)
+    fmt.Printf("TryFuncArgsInterface sqlStr: %T=[%v]\n", parts, parts)
 
-	//sqlStr := "Select * From user where id = 10"
-	//sqlStr = sqlStr[0:11]
-	//sqlStr = strings.TrimLeft(sqlStr[0:11], "(")
-	//a := regexp.MustCompile(`[\s]+`)
-	//sqlArr := a.Split(sqlStr, -1)
-	//fmt.Printf("TryFuncArgsInterface sqlStr: %T=[%v]\n", sqlStr, sqlStr)
-	//fmt.Printf("TryFuncArgsInterface sqlArr: %T=[%v]\n", sqlArr, sqlArr)
+    //sqlStr := "Select * From user where id = 10"
+    //sqlStr = sqlStr[0:11]
+    //sqlStr = strings.TrimLeft(sqlStr[0:11], "(")
+    //a := regexp.MustCompile(`[\s]+`)
+    //sqlArr := a.Split(sqlStr, -1)
+    //fmt.Printf("TryFuncArgsInterface sqlStr: %T=[%v]\n", sqlStr, sqlStr)
+    //fmt.Printf("TryFuncArgsInterface sqlArr: %T=[%v]\n", sqlArr, sqlArr)
 
-	g := GetInstance("111")
-	name := g.GetName()
-	fmt.Printf("TryFuncArgsInterface Name: %T=%v\n", name, name)
+    g := GetInstance("111")
+    name := g.GetName()
+    fmt.Printf("TryFuncArgsInterface Name: %T=%v\n", name, name)
 
-	g2 := GetInstance("222")
-	name2 := g2.GetName()
-	fmt.Printf("TryFuncArgsInterface Name: %T=%v\n", name2, name2)
+    g2 := GetInstance("222")
+    name2 := g2.GetName()
+    fmt.Printf("TryFuncArgsInterface Name: %T=%v\n", name2, name2)
 
-	g3 := GetInstance("333")
-	name3 := g3.GetName()
+    g3 := GetInstance("333")
+    name3 := g3.GetName()
 
-	fmt.Printf("TryFuncArgsInterface Name: %T=%v\n", name3, name3)
+    fmt.Printf("TryFuncArgsInterface Name: %T=%v\n", name3, name3)
 
-	switch vals := args.(type) {
-	case []string:
-		fmt.Println("[]string Type", vals)
-		arrDetails = append(arrDetails, vals)
-	case [][]string:
-		fmt.Println("[][]string Type", vals)
-		for _, v := range vals {
-			arrDetails = append(arrDetails, v)
-		}
-	default:
-		fmt.Println("Unknow Type")
-	}
+    switch vals := args.(type) {
+    case []string:
+        fmt.Println("[]string Type", vals)
+        arrDetails = append(arrDetails, vals)
+    case [][]string:
+        fmt.Println("[][]string Type", vals)
+        for _, v := range vals {
+            arrDetails = append(arrDetails, v)
+        }
+    default:
+        fmt.Println("Unknow Type")
+    }
 
-	fmt.Printf("TryFuncArgsInterface: %T=%v\n", arrDetails, arrDetails)
-	arrDetails = nil
-	fmt.Printf("TryFuncArgsInterface: %T=%v\n", arrDetails, arrDetails)
-	return true
+    fmt.Printf("TryFuncArgsInterface: %T=%v\n", arrDetails, arrDetails)
+    arrDetails = nil
+    fmt.Printf("TryFuncArgsInterface: %T=%v\n", arrDetails, arrDetails)
+    return true
 }
 
 func TryFuncGetArgs(args ...[]string) bool {
-	for k, v := range args {
-		fmt.Printf("%d=%v\n", k, v)
-	}
-	return true
+    for k, v := range args {
+        fmt.Printf("%d=%v\n", k, v)
+    }
+    return true
 }
 
 // 多维array、slice
 func TestSliceMulti(t *testing.T) {
 
-	value := "1, 2"
-	valueArr := strings.Split(value, ",")
-	min := strings.Trim(valueArr[0], " ")
-	max := strings.Trim(valueArr[1], " ")
-	fmt.Printf("TestSliceMulti min: %T=%v\n", min, min)
-	fmt.Printf("TestSliceMulti max: %T=%v\n", max, max)
+    value := "1, 2"
+    valueArr := strings.Split(value, ",")
+    min := strings.Trim(valueArr[0], " ")
+    max := strings.Trim(valueArr[1], " ")
+    fmt.Printf("TestSliceMulti min: %T=%v\n", min, min)
+    fmt.Printf("TestSliceMulti max: %T=%v\n", max, max)
 
-	var i int
-	fmt.Printf("TestSliceMulti: %T=%v\n", i, i)
-	//if WIDTH == 20 {
-	//fmt.Printf("yes... const Test %T = %v\n", LENGTH, LENGTH)
-	//} else {
-	//fmt.Printf("no... const Test %T = %v\n", LENGTH, LENGTH)
-	//}
-	//fmt.Printf("const Test %T = %v\n", LENGTH, LENGTH)
-	//fmt.Printf("const Test %T = %v\n", WIDTH, WIDTH)
+    var i int
+    fmt.Printf("TestSliceMulti: %T=%v\n", i, i)
+    //if WIDTH == 20 {
+    //fmt.Printf("yes... const Test %T = %v\n", LENGTH, LENGTH)
+    //} else {
+    //fmt.Printf("no... const Test %T = %v\n", LENGTH, LENGTH)
+    //}
+    //fmt.Printf("const Test %T = %v\n", LENGTH, LENGTH)
+    //fmt.Printf("const Test %T = %v\n", WIDTH, WIDTH)
 
-	//var s1 []string
-	//s1 = append(s1, "aaa", "bbb")
-	//fmt.Printf("%T = %v\n", s1, s1)
+    //var s1 []string
+    //s1 = append(s1, "aaa", "bbb")
+    //fmt.Printf("%T = %v\n", s1, s1)
 
-	//var arrDetails [][3]string
-	//a := [3]string{"111", "222", "333"}
-	//arrDetails = append(arrDetails, a)
+    //var arrDetails [][3]string
+    //a := [3]string{"111", "222", "333"}
+    //arrDetails = append(arrDetails, a)
 
-	//var s []string
-	//s = []string{"111", "222", "333"}
-	//arrDetails = append(arrDetails, s)
-	//s = []string{"444", "555", "666"}
-	//arrDetails = append(arrDetails, s)
-	//s = []string{"777", "888", "999"}
-	//arrDetails = append(arrDetails, s)
+    //var s []string
+    //s = []string{"111", "222", "333"}
+    //arrDetails = append(arrDetails, s)
+    //s = []string{"444", "555", "666"}
+    //arrDetails = append(arrDetails, s)
+    //s = []string{"777", "888", "999"}
+    //arrDetails = append(arrDetails, s)
 
-	TryFuncArgsInterface(arrDetails)
-	//TryFuncArgsInterface(s)
-	//fmt.Printf("%T = %v\n", arrDetails, arrDetails)
+    TryFuncArgsInterface(arrDetails)
+    //TryFuncArgsInterface(s)
+    //fmt.Printf("%T = %v\n", arrDetails, arrDetails)
 
-	//TryFuncGetArgs(s1, s2, s3)
+    //TryFuncGetArgs(s1, s2, s3)
 }
 
 // 数组无法Join，slice才可以，所以要用Join，要先把array转化为slice
 func TestSliceStringJoin(t *testing.T) {
-	// 不写死长度的定义，实际上还是3，因为后面就3个元素，相当于 [3]string{}
-	arr := [...]string{"a", "b", "c"}
-	// 数组无法append
-	//arr = append(arr, "d")
-	// 下面这样会报错，因为数组无法Join，slice才可以
-	//t.Log(strings.Join(arr, ","))
-	// arr[:] 相当于把 array 拷贝成 slice
-	t.Log(strings.Join(arr[:], ","))
+    // 不写死长度的定义，实际上还是3，因为后面就3个元素，相当于 [3]string{}
+    arr := [...]string{"a", "b", "c"}
+    // 数组无法append
+    //arr = append(arr, "d")
+    // 下面这样会报错，因为数组无法Join，slice才可以
+    //t.Log(strings.Join(arr, ","))
+    // arr[:] 相当于把 array 拷贝成 slice
+    t.Log(strings.Join(arr[:], ","))
 }
 
 // 数组需要初始化长度，并且长度不可变
@@ -273,35 +273,35 @@ func TestSliceStringJoin(t *testing.T) {
 
 // 数组支持比较，那么切片是否支持比较？
 func TestSliceComparing(t *testing.T) {
-	//a := []int{1, 2, 3, 4}
-	//b := []int{1, 2, 3, 4}
-	//// 下面会报错，slice只能和nil比较
-	//if a == b {
-	//t.Log("equal")
-	//}
+    //a := []int{1, 2, 3, 4}
+    //b := []int{1, 2, 3, 4}
+    //// 下面会报错，slice只能和nil比较
+    //if a == b {
+    //t.Log("equal")
+    //}
 }
 
 // 切片容量可伸缩，每次超出长度增加为原来的2倍，比如初始化为2，当超出2个时变成4，超出4时变成8
 func TestSlice(t *testing.T) {
-	//s1 := []string{}
-	//s1 = append(s1, "s1")
-	//s1 = append(s1, "s2")
-	//s1 = append(s1, "s3")
-	//s1 = append(s1, "s4")
-	//s1 = append(s1, "s5")
-	//s1 = append(s1, "s6")
-	//s1 = append(s1, "s7")
-	//s1 = append(s1, "s8")
-	//t.Log(s1)
-	//t.Log(len(s1), cap(s1))
+    //s1 := []string{}
+    //s1 = append(s1, "s1")
+    //s1 = append(s1, "s2")
+    //s1 = append(s1, "s3")
+    //s1 = append(s1, "s4")
+    //s1 = append(s1, "s5")
+    //s1 = append(s1, "s6")
+    //s1 = append(s1, "s7")
+    //s1 = append(s1, "s8")
+    //t.Log(s1)
+    //t.Log(len(s1), cap(s1))
 
-	//s2 := s1[2:4]
-	//t.Log(s2)
-	//t.Log(len(s2), cap(s2))
-	//s2 = append(s2, "s9")
+    //s2 := s1[2:4]
+    //t.Log(s2)
+    //t.Log(len(s2), cap(s2))
+    //s2 = append(s2, "s9")
 
-	//t.Log(s1)
-	//t.Log(len(s1), cap(s1))
-	//t.Log(s2)
-	//t.Log(len(s2), cap(s2))
+    //t.Log(s1)
+    //t.Log(len(s1), cap(s1))
+    //t.Log(s2)
+    //t.Log(len(s2), cap(s2))
 }
