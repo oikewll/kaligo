@@ -2,25 +2,27 @@
 package cache
 
 import (
-	"time"
+    "fmt"
+    "time"
+    "strings"
 
-	"github.com/owner888/kaligo/config"
+    "github.com/owner888/kaligo/config"
 )
 
 // Cache interface
 type Cache interface {
-	Get(key string) interface{}
-	Set(key string, val interface{}, timeout time.Duration) error
-	IsExist(key string) bool
-	Delete(key string) error
+    Get(key string) interface{}
+    Set(key string, val interface{}, timeout time.Duration) error
+    IsExist(key string) bool
+    Delete(key string) error
 }
 
 func New(driver string) Cache {
-	if driver == "memcache" {
-		return NewMemcache("")
-	} else if driver == "redis" {
-		return NewRedis(&RedisOpts{
-            Host        : config.Get[string]("host"),
+    if driver == "memcache" {
+        return NewMemcache(strings.Join(config.Get[[]string]("host"), ","))
+    } else if driver == "redis" {
+        return NewRedis(&RedisOpts{
+            Host        : fmt.Sprintf("%s:%d", config.Get[string]("host"), config.Get[int]("port")),
             Password    : config.Get[string]("password"),
             Database    : config.Get[int]("database"),
             MaxIdle     : config.Get[int]("max_idle"),
@@ -30,5 +32,5 @@ func New(driver string) Cache {
         })
     } else {
         return NewMemory()
-	}
+    }
 }
