@@ -2,6 +2,7 @@
 package cache
 
 import (
+    "errors"
     "fmt"
     "time"
     "strings"
@@ -17,20 +18,28 @@ type Cache interface {
     Delete(key string) error
 }
 
-func New(driver string) Cache {
-    if driver == "memcache" {
-        return NewMemcache(strings.Join(config.Get[[]string]("host"), ","))
+func New(param... string) (Cache, error) {
+    var driver string    
+    if len(param) != 0 {
+        driver = param[0]
+    } else {
+        driver = config.Get[string]("cache.config.driver")
+    }
+
+    if driver == "memory" {
+        return NewMemory(), nil
     } else if driver == "redis" {
         return NewRedis(&RedisOpts{
             Host        : fmt.Sprintf("%s:%d", config.Get[string]("host"), config.Get[int]("port")),
-            Password    : config.Get[string]("password"),
-            Database    : config.Get[int]("database"),
-            MaxIdle     : config.Get[int]("max_idle"),
-            MaxActive   : config.Get[int]("max_active"),
-            IdleTimeout : config.Get[int]("idle_timeout"),
-            Wait        : config.Get[bool]("wait"),
-        })
-    } else {
-        return NewMemory()
+            Password    : config.Get[string]("cache.redis.password"),
+            Database    : config.Get[int]("cache.redis.database"),
+            MaxIdle     : config.Get[int]("cache.redis.max_idle"),
+            MaxActive   : config.Get[int]("cache.redis.max_active"),
+            IdleTimeout : config.Get[int]("cache.redis.idle_timeout"),
+            Wait        : config.Get[bool]("cache.redis.wait"),
+        }), nil
+    }  else if driver == "memcache" {
+        return NewMemcache(strings.Join(config.Get[[]string]("host"), ",")), nil
     }
+    return nil, errors.New("driver does not exist")
 }

@@ -13,6 +13,7 @@ import (
     "sync"
     "time"
 
+    "github.com/owner888/kaligo/cache"
     "github.com/owner888/kaligo/contex"
     "github.com/owner888/kaligo/controller"
     "github.com/owner888/kaligo/database"
@@ -24,15 +25,32 @@ import (
 
 // 定义当前package中使用的全局变量
 var (
-    storeTimers sync.Map
+    err error
+    che         cache.Cache // interface 本身是指针，不需要用 *cache.Cache，struct 才需要
+    storeTimers sync.Map     
     Timer       map[string]*time.Ticker
     Tasker      map[string]*time.Timer
     Mutex       sync.Mutex
 )
 
+// var db *database.DB
+//
+// func init() {
+//     var err error
+//     // db, err = database.Open(sqlite.Open(config.Get[string]("database.sqlite.file")))
+//     db, err = database.Open(mysql.Open(config.Get[string]("database.mysql.dsn")))
+//     if err != nil {
+//         panic(err)
+//     }
+// }
+
 func init() {
     logs.SetLogFuncCall(true)
     logs.SetLogFuncCallDepth(3)
+    che, err = cache.New()
+    if err != nil {
+        panic(err)
+    }
 }
 
 // App is use for add Route struct and StaticRoute struct
@@ -41,9 +59,10 @@ type App struct {
     routes       []*routes.Route
     staticRoutes []*routes.StaticRoute
     DB           *database.DB
+    cache        cache.Cache
 }
 
-// AddDB is use for add a db
+// AddDB is use for add a db struct
 func (a *App) AddDB(db *database.DB) {
     a.DB = db
 }
@@ -253,6 +272,7 @@ func (a *App) controllerMethodCall(controllerType reflect.Type, m string, w http
         Request:        r,
         Params:         params,
         DB:             a.DB,
+        Cache:          che,
     }
     args := make([]reflect.Value, 2)
     args[0] = reflect.ValueOf(contex)

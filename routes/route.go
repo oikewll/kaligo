@@ -3,6 +3,7 @@ package routes
 import (
     "reflect"
     "regexp"
+    // "net/http"
 
     "github.com/owner888/kaligo/controller"
     "github.com/owner888/kaligo/database"
@@ -21,6 +22,8 @@ type Route struct {
     Methods        map[string]string
     Params         map[int]string
     ControllerType reflect.Type
+    // Middlewares returns the list of middlewares in use by the router.
+    // Middlewares() Middlewares
 }
 
 // StaticRoute is a app route
@@ -28,3 +31,7 @@ type StaticRoute struct {
     Prefix    string
     StaticDir string
 }
+
+// Middlewares type is a slice of standard middleware handlers with methods
+// to compose middleware chains and http.Handler's.
+// type Middlewares []func(http.Handler) http.Handler
