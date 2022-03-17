@@ -47,10 +47,6 @@ var (
 func init() {
     logs.SetLogFuncCall(true)
     logs.SetLogFuncCallDepth(3)
-    che, err = cache.New()
-    if err != nil {
-        panic(err)
-    }
 }
 
 // App is use for add Route struct and StaticRoute struct
@@ -60,6 +56,16 @@ type App struct {
     staticRoutes []*routes.StaticRoute
     DB           *database.DB
     cache        cache.Cache
+}
+
+func NewApp() *App {
+    app := &App{}
+    cache, err := cache.New()
+    if err != nil {
+        panic(err)
+    }
+    app.cache = cache
+    return app
 }
 
 // AddDB is use for add a db struct
