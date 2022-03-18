@@ -8,12 +8,12 @@ import (
     "github.com/stretchr/testify/assert"
 )
 
-var _ routes.Router = &KaliGo{}
-var _ http.Handler = &KaliGo{}
+var _ routes.Router = &Mux{}
+var _ http.Handler = &Mux{}
 
 func TestNew(t *testing.T) {
-    kali := New()
-    assert.NotNil(t, kali)
+    mux := NewRouter()
+    assert.NotNil(t, mux)
 }
 
 // 1、其他编程语言不常看到的：把map的value设置成函数，可以实现工厂模式
