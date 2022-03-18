@@ -57,7 +57,7 @@ type KaliGo struct {
     pool         sync.Pool   // Context 复用
 }
 
-func New() *KaliGo {
+func NewRouter() *KaliGo {
     kali := &KaliGo{}
     cache, err := cache.New()
     if err != nil {
