@@ -24,13 +24,13 @@ func TestMemcache(t *testing.T) {
     exists := mem.IsExist("unknown-key")
     assert.Equal(t, false, exists)
 
-    name := mem.Get("username").(string)
+    name, err := mem.Get("username")
     if name != "" {
         if name != "silenceper" {
             t.Error("get Error")
         }
     }
-    data := mem.Get("unknown-key")
+    data, err := mem.Get("unknown-key")
     assert.Nil(t, data)
 
     if err = mem.Delete("username"); err != nil {

@@ -19,26 +19,37 @@ func TestMain(m *testing.M) {
 
 func TestMemoryCache(t *testing.T) {
     assert.NotNil(t, cache)
-    assert.Nil(t, cache.Get("unknown_key"))
+    v, err := cache.Get("unknown_key")
+    assert.Nil(t, v)
+    assert.Error(t, err)
 
     key := "any_key"
     value := "any value"
     cache.Set(key, value, time.Millisecond)
-    assert.Equal(t, value, cache.Get(key))
+    v, err = cache.Get(key)
+    assert.Equal(t, value, v)
+    assert.NoError(t, err)
 
     cache.Delete(key)
-    assert.Nil(t, cache.Get(key))
+
+    v, err = cache.Get(key)
+    assert.Nil(t, v)
+    assert.Error(t, err)
 
     cache.Set(key, value, time.Millisecond)
-    assert.Equal(t, value, cache.Get(key))
+    v, err = cache.Get(key)
+    assert.Equal(t, value, v)
+    assert.NoError(t, err)
     time.Sleep(time.Millisecond * 2)
-    assert.Nil(t, cache.Get(key))
+    v, err = cache.Get(key)
+    assert.Nil(t, v)
+    assert.Error(t, err)
 }
 
 func BenchmarkMemoryGet(b *testing.B) {
     cache.Set("key", time.Now(), time.Minute)
     for i := 0; i < b.N; i++ {
-        _ = cache.Get("key")
+        _, _ = cache.Get("key")
     }
 }
 
