@@ -47,6 +47,8 @@ func init() {
     logs.SetLogFuncCallDepth(3)
 }
 
+var _ Router = &Mux{}
+
 // Mux is use for add Route struct and StaticRoute struct
 type Mux struct {
     Handler      http.Handler // http.ServeMux
@@ -310,6 +312,14 @@ func (a *Mux) controllerMethodCall(controllerType reflect.Type, m string, w http
     method.Call(args)
 
     return err
+}
+func (a *Mux) Use(middlewares ...func(http.Handler) http.Handler) {
+
+}
+
+// With adds inline middlewares for an endpoint handler.
+func (a *Mux) With(middlewares ...func(http.Handler) http.Handler) Router {
+    return a
 }
 
 // RunTLS is to run a tls server
