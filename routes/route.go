@@ -7,14 +7,12 @@ import (
     // "net/http"
 
     "github.com/owner888/kaligo/controller"
-    "github.com/owner888/kaligo/database"
 )
 
 // Router is use for add Route struct and StaticRoute struct
 type Router interface {
     AddRoute(pattern string, m map[string]string, c controller.Interface)
     AddStaticRoute(prefix, staticDir string)
-    AddDB(db *database.DB)
 }
 
 // Route is a Router's route

@@ -26,7 +26,6 @@ import (
 // 定义当前package中使用的全局变量
 var (
     err         error
-    che         cache.Cache // interface 本身是指针，不需要用 *cache.Cache，struct 才需要
     storeTimers sync.Map
     Timer       map[string]*time.Ticker
     Tasker      map[string]*time.Timer
@@ -49,27 +48,27 @@ func init() {
     logs.SetLogFuncCallDepth(3)
 }
 
-// Router is use for add Route struct and StaticRoute struct
-type Router struct {
-    http.Handler // http.ServeMux
+// KaliGo is use for add Route struct and StaticRoute struct
+type KaliGo struct {
     routes       []*routes.Route
     staticRoutes []*routes.StaticRoute
     DB           *database.DB
-    cache        cache.Cache
+    cache        cache.Cache // interface 本身是指针，不需要用 *cache.Cache，struct 才需要
+    pool         sync.Pool   // Context 复用
 }
 
-func NewRouter() *Router {
-    router := &Router{}
+func New() *KaliGo {
+    kali := &KaliGo{}
     cache, err := cache.New()
     if err != nil {
         panic(err)
     }
-    router.cache = cache
-    return router
+    kali.cache = cache
+    return kali
 }
 
 // AddDB is use for add a db struct
-func (a *Router) AddDB(db *database.DB) {
+func (a *KaliGo) AddDB(db *database.DB) {
     a.DB = db
 }
 
@@ -96,7 +95,7 @@ func DelTimer(name string) bool {
 // AddTasker is the function for add tasker
 // AddTasker("default", &control.Task{}, "import_database", "2014-10-15 15:33:00")
 // func AddTasker(name string, control any, action string, taskTime string) {
-func (a *Router) AddTasker(name, taskTime, m string, c controller.Interface) {
+func (a *KaliGo) AddTasker(name, taskTime, m string, c controller.Interface) {
     go func() {
         then, _ := time.ParseInLocation("2006-01-02 15:04:05", taskTime, time.Local)
         dura := then.Sub(time.Now())
@@ -114,7 +113,7 @@ func (a *Router) AddTasker(name, taskTime, m string, c controller.Interface) {
 
 // AddTimer is the function for add timer, The interval is in microseconds
 // router.AddTimer("import_database", 3000, "ImportDatabase", &controller.Get{})
-func (a *Router) AddTimer(name string, duration time.Duration, m string, c controller.Interface) {
+func (a *KaliGo) AddTimer(name string, duration time.Duration, m string, c controller.Interface) {
     go func() {
         timeTicker := time.NewTicker(duration * time.Millisecond)
         storeTimers.Store(name, timeTicker)
@@ -128,7 +127,7 @@ func (a *Router) AddTimer(name string, duration time.Duration, m string, c contr
 }
 
 // AddStaticRoute is use for add a static file route
-func (a *Router) AddStaticRoute(prefix, staticDir string) {
+func (a *KaliGo) AddStaticRoute(prefix, staticDir string) {
     route := &routes.StaticRoute{}
     route.Prefix = prefix
     route.StaticDir = staticDir
@@ -138,7 +137,7 @@ func (a *Router) AddStaticRoute(prefix, staticDir string) {
 
 // AddRoute is use for add a http route
 // https://expressjs.com/en/5x/api.html
-func (a *Router) AddRoute(pattern string, m map[string]string, c controller.Interface) {
+func (a *KaliGo) AddRoute(pattern string, m map[string]string, c controller.Interface) {
     parts := strings.Split(pattern, "/")
 
     j := 0
@@ -189,7 +188,7 @@ func (a *Router) AddRoute(pattern string, m map[string]string, c controller.Inte
 // type Handler interface {
 //     ServeHTTP(ResponseWriter, *Request)
 // }
-func (a *Router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (a *KaliGo) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
     matchRouted := false
     requestPath := r.URL.RawPath
@@ -267,7 +266,7 @@ func (a *Router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
     }
 }
 
-func (a *Router) controllerMethodCall(controllerType reflect.Type, m string, w http.ResponseWriter, r *http.Request, params map[string]string) (err error) {
+func (a *KaliGo) controllerMethodCall(controllerType reflect.Type, m string, w http.ResponseWriter, r *http.Request, params map[string]string) (err error) {
     // Invoke the request handler
     vc := reflect.New(controllerType)
 
@@ -278,7 +277,7 @@ func (a *Router) controllerMethodCall(controllerType reflect.Type, m string, w h
         Request:        r,
         Params:         params,
         DB:             a.DB,
-        Cache:          che,
+        Cache:          a.cache,
     }
     args := make([]reflect.Value, 2)
     args[0] = reflect.ValueOf(contex)
@@ -310,20 +309,20 @@ func (a *Router) controllerMethodCall(controllerType reflect.Type, m string, w h
 }
 
 // RunTLS is to run a tls server
-func RunTLS(router *Router, port, crtFile, keyFile string) {
+func RunTLS(kali *KaliGo, port, crtFile, keyFile string) {
     log.Printf("ListenAndServe: %s - %s - %s", port, crtFile, keyFile)
 
-    err := http.ListenAndServeTLS(port, crtFile, keyFile, router)
+    err := http.ListenAndServeTLS(port, crtFile, keyFile, kali)
     if err != nil {
         log.Fatal("ListenAndServe: ", err)
     }
 }
 
 // Run is to run a router
-func Run(router *Router, port string) {
+func Run(kali *KaliGo, port string) {
     log.Printf("ListenAndServe: %s", port)
 
-    err := http.ListenAndServe(port, router)
+    err := http.ListenAndServe(port, kali)
     if err != nil {
         log.Fatal("ListenAndServe: ", err)
     }

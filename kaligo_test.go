@@ -1,17 +1,19 @@
 package kaligo
 
 import (
+    "net/http"
     "testing"
 
     "github.com/owner888/kaligo/routes"
     "github.com/stretchr/testify/assert"
 )
 
-var _ routes.Router = &Router{}
+var _ routes.Router = &KaliGo{}
+var _ http.Handler = &KaliGo{}
 
-func TestRouter(t *testing.T) {
-    router := NewRouter()
-    assert.NotNil(t, router)
+func TestNew(t *testing.T) {
+    kali := New()
+    assert.NotNil(t, kali)
 }
 
 // 1、其他编程语言不常看到的：把map的value设置成函数，可以实现工厂模式
