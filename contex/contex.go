@@ -12,6 +12,17 @@ import (
     "github.com/owner888/kaligo/render"
 )
 
+type SuccJSON struct {
+    Code int    `json:"code"`
+    Msg  string `json:"msg"`
+    Data any    `json:"data"`
+}
+
+type FailJSON struct {
+    Code int    `json:"code"`
+    Msg  string `json:"msg"`
+}
+
 // Context is use for ServeHTTP goroutine
 type Context struct {
     ResponseWriter http.ResponseWriter
@@ -74,6 +85,24 @@ func (c *Context) Clear(key string) {
 // Redirect returns an HTTP redirect to the specific location.
 func (c *Context) Redirect(code int, location string) {
     http.Redirect(c.ResponseWriter, c.Request, location, code)
+}
+
+func (c *Context) ApiJSON(code int, msg string, param ... any) {
+    if len(param) == 0 {
+        obj := &FailJSON{
+            Code: code,
+            Msg:  msg,
+        }
+        c.Render(http.StatusOK, render.JSON{Data: obj})
+    } else {
+        data := param[0]
+        obj := &SuccJSON{
+            Code: code,
+            Msg:  msg,
+            Data: data,
+        }
+        c.Render(http.StatusOK, render.JSON{Data: obj})
+    }
 }
 
 // JSON serializes the given struct as JSON into the response body.
