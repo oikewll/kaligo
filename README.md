@@ -112,9 +112,9 @@ import (
 )
 
 func main() {
-    kali := kaligo.New()
-    AddRoutes(kali)
-    kaligo.Run(kali)
+    mux := kaligo.New()
+    AddRoutes(mux)
+    kaligo.Run(mux)
 }
 
 // AddRoutes is use for add route to Router struct
@@ -346,13 +346,13 @@ if sql, err := db.UpdateBatch("user", rows, "name"); err != nil {
 
 ```go
 // 增加定时任务，设置时间小于当前时间则不执行，大于当前时间则当到达时间时执行
-kali.AddTasker("import_database", "2021-03-05 20:08:00", "ImportDatabase", &controller.Get{})
+mux.AddTasker("import_database", "2021-03-05 20:08:00", "ImportDatabase", &controller.Get{})
 // 删除定时任务
-kali.DelTasker("import_database")
+mux.DelTasker("import_database")
 // 增加定时器，每5秒运行一次
 routkalier.AddTimer("import_database", 5000, "ImportDatabaseLoginV2", &controller.Get{})
 // 删除定时器
-kali.DelTimer("import_database")
+mux.DelTimer("import_database")
 ```
 
 ## To do

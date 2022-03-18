@@ -47,8 +47,8 @@ func init() {
     logs.SetLogFuncCallDepth(3)
 }
 
-// KaliGo is use for add Route struct and StaticRoute struct
-type KaliGo struct {
+// Mux is use for add Route struct and StaticRoute struct
+type Mux struct {
     Handler      http.Handler // http.ServeMux
     routes       []*routes.Route
     staticRoutes []*routes.StaticRoute
@@ -57,18 +57,18 @@ type KaliGo struct {
     pool         sync.Pool   // Context 复用
 }
 
-func NewRouter() *KaliGo {
-    kali := &KaliGo{}
+func NewRouter() *Mux {
+    mux := &Mux{}
     cache, err := cache.New()
     if err != nil {
         panic(err)
     }
-    kali.cache = cache
-    return kali
+    mux.cache = cache
+    return mux
 }
 
 // AddDB is use for add a db struct
-func (a *KaliGo) AddDB(db *database.DB) {
+func (a *Mux) AddDB(db *database.DB) {
     a.DB = db
 }
 
@@ -95,7 +95,7 @@ func DelTimer(name string) bool {
 // AddTasker is the function for add tasker
 // AddTasker("default", &control.Task{}, "import_database", "2014-10-15 15:33:00")
 // func AddTasker(name string, control any, action string, taskTime string) {
-func (a *KaliGo) AddTasker(name, taskTime, m string, c controller.Interface) {
+func (a *Mux) AddTasker(name, taskTime, m string, c controller.Interface) {
     go func() {
         then, _ := time.ParseInLocation("2006-01-02 15:04:05", taskTime, time.Local)
         dura := then.Sub(time.Now())
@@ -113,7 +113,7 @@ func (a *KaliGo) AddTasker(name, taskTime, m string, c controller.Interface) {
 
 // AddTimer is the function for add timer, The interval is in microseconds
 // router.AddTimer("import_database", 3000, "ImportDatabase", &controller.Get{})
-func (a *KaliGo) AddTimer(name string, duration time.Duration, m string, c controller.Interface) {
+func (a *Mux) AddTimer(name string, duration time.Duration, m string, c controller.Interface) {
     go func() {
         timeTicker := time.NewTicker(duration * time.Millisecond)
         storeTimers.Store(name, timeTicker)
@@ -127,7 +127,7 @@ func (a *KaliGo) AddTimer(name string, duration time.Duration, m string, c contr
 }
 
 // AddStaticRoute is use for add a static file route
-func (a *KaliGo) AddStaticRoute(prefix, staticDir string) {
+func (a *Mux) AddStaticRoute(prefix, staticDir string) {
     route := &routes.StaticRoute{}
     route.Prefix = prefix
     route.StaticDir = staticDir
@@ -137,7 +137,7 @@ func (a *KaliGo) AddStaticRoute(prefix, staticDir string) {
 
 // AddRoute is use for add a http route
 // https://expressjs.com/en/5x/api.html
-func (a *KaliGo) AddRoute(pattern string, m map[string]string, c controller.Interface) {
+func (a *Mux) AddRoute(pattern string, m map[string]string, c controller.Interface) {
     parts := strings.Split(pattern, "/")
 
     j := 0
@@ -188,8 +188,8 @@ func (a *KaliGo) AddRoute(pattern string, m map[string]string, c controller.Inte
 // type Handler interface {
 //     ServeHTTP(ResponseWriter, *Request)
 // }
-func (a *KaliGo) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-    if a.Handler != nil { // 有注入 Handler 是只使用注入的 Handler，不走默认逻辑
+func (a *Mux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+    if a.Handler != nil { // 有注入 Handler 时只使用注入的 Handler，不走默认逻辑
         a.Handler.ServeHTTP(w, r)
         return
     }
@@ -270,7 +270,7 @@ func (a *KaliGo) ServeHTTP(w http.ResponseWriter, r *http.Request) {
     }
 }
 
-func (a *KaliGo) controllerMethodCall(controllerType reflect.Type, m string, w http.ResponseWriter, r *http.Request, params map[string]string) (err error) {
+func (a *Mux) controllerMethodCall(controllerType reflect.Type, m string, w http.ResponseWriter, r *http.Request, params map[string]string) (err error) {
     // Invoke the request handler
     vc := reflect.New(controllerType)
 
@@ -313,20 +313,20 @@ func (a *KaliGo) controllerMethodCall(controllerType reflect.Type, m string, w h
 }
 
 // RunTLS is to run a tls server
-func RunTLS(kali *KaliGo, port, crtFile, keyFile string) {
+func RunTLS(mux *Mux, port, crtFile, keyFile string) {
     log.Printf("ListenAndServe: %s - %s - %s", port, crtFile, keyFile)
 
-    err := http.ListenAndServeTLS(port, crtFile, keyFile, kali)
+    err := http.ListenAndServeTLS(port, crtFile, keyFile, mux)
     if err != nil {
         log.Fatal("ListenAndServe: ", err)
     }
 }
 
 // Run is to run a router
-func Run(kali *KaliGo, port string) {
+func Run(mux *Mux, port string) {
     log.Printf("ListenAndServe: %s", port)
 
-    err := http.ListenAndServe(port, kali)
+    err := http.ListenAndServe(port, mux)
     if err != nil {
         log.Fatal("ListenAndServe: ", err)
     }
