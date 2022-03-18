@@ -52,21 +52,19 @@ func NewRedis(opts *RedisOpts) *Redis {
 }
 
 // Get 获取一个值
-func (r *Redis) Get(key string) any {
+func (r *Redis) Get(key string) (reply any, err error) {
     conn := r.conn.Get() // 从连接池中获取一个链接
     defer conn.Close()
 
     var data []byte
-    var err error
     if data, err = redis.Bytes(conn.Do("GET", key)); err != nil {
-        return nil
+        return nil, err
     }
-    var reply any
     if err = json.Unmarshal(data, &reply); err != nil {
-        return nil
+        return nil, err
     }
 
-    return reply
+    return reply, nil
 }
 
 // Set 设置一个值

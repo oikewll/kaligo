@@ -1,6 +1,7 @@
 package cache
 
 import (
+    "errors"
     "sync"
     "time"
 )
@@ -23,24 +24,29 @@ func NewMemory() *Memory {
 }
 
 // Get return cached value
-func (mem *Memory) Get(key string) any {
+func (mem *Memory) Get(key string) (reply any, err error) {
     val, ok := mem.data.Load(key)
     if !ok {
-        return nil
+        return nil, errors.New("sync.Map load error.")
     }
 
     ret := val.(*data)
     if ret.Expired.Before(time.Now()) {
         mem.data.Delete(key)
-        return nil
+        return nil, errors.New("key expired.")
     }
 
-    return ret.Data
+    reply = ret.Data
+    return reply, nil
 }
 
 // IsExist check value exists in memcache.
 func (mem *Memory) IsExist(key string) bool {
-    return mem.Get(key) == nil
+    _, err := mem.Get(key)
+    if err != nil {
+        return false
+    }
+    return true
 }
 
 // Set cached value with key and expire time.

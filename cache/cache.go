@@ -13,7 +13,7 @@ import (
 
 // Cache interface
 type Cache interface {
-    Get(key string) any
+    Get(key string) (any, error)
     Set(key string, val any, timeout time.Duration) error
     IsExist(key string) bool
     Delete(key string) error

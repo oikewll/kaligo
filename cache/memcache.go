@@ -19,17 +19,17 @@ func NewMemcache(server ...string) *Memcache {
 }
 
 // Get return cached value
-func (mem *Memcache) Get(key string) any {
-    var err error
+func (mem *Memcache) Get(key string) (reply any, err error) {
     var item *memcache.Item
+
     if item, err = mem.conn.Get(key); err != nil {
-        return nil
+        return nil, err
     }
-    var result any
-    if err = json.Unmarshal(item.Value, &result); err != nil {
-        return nil
+    if err = json.Unmarshal(item.Value, &reply); err != nil {
+        return nil, err
     }
-    return result
+
+    return reply, nil
 }
 
 // IsExist check value exists in memcache.
