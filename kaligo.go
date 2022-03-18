@@ -29,7 +29,6 @@ var (
     storeTimers sync.Map
     Timer       map[string]*time.Ticker
     Tasker      map[string]*time.Timer
-    Mutex       sync.Mutex
 )
 
 // var db *database.DB

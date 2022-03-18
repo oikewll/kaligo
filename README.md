@@ -125,9 +125,25 @@ func AddRoutes(router *routes.Router) {
         "GET": "Index",
     }, &controller.Get{})
 
+    // Regexp url parameters:
     router.AddRoute("/posts/:post_id([0-9]+)", map[string]string{
         "POST": "Show",
     }, &controller.Post{})
+
+    // RESTy routes for "articles" resource
+    router.AddRoute("/article", map[string]string{
+        "POST": "CreateArticle",
+    }, &controller.Article{})
+    router.AddRoute("/article/search", map[string]string{
+        "GET": "searchArticles",
+    }, &controller.Article{})
+
+    // Subrouters:
+    router.AddRoute("/article/:article_id([0-9]+)", map[string]string{
+        "GET": "GetArticle",
+        "PUT": "UpdateArticle",
+        "DELETE": "DeleteArticle",
+    }, &controller.Article{})
 }
 ```
 
