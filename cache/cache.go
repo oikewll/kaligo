@@ -32,7 +32,7 @@ func New(param ...string) (Cache, error) {
         return NewMemory(), nil
     } else if driver == "redis" {
         return NewRedis(&RedisOpts{
-            Host:        fmt.Sprintf("%s:%d", config.Get[string]("host"), config.Get[int]("port")),
+            Host:        fmt.Sprintf("%s:%d", config.Get[string]("cache.redis.host"), config.Get[int]("cache.redis.port")),
             Password:    config.Get[string]("cache.redis.password"),
             Database:    config.Get[int]("cache.redis.database"),
             MaxIdle:     config.Get[int]("cache.redis.max_idle"),
