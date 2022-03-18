@@ -3,33 +3,32 @@ package cache
 import (
     "testing"
     "time"
+
+    "github.com/stretchr/testify/assert"
 )
 
 var _ Cache = &Redis{}
 
 func TestRedis(t *testing.T) {
-    opts := &RedisOpts{
-        Host: "127.0.0.1:6379",
-    }
-    redis := NewRedis(opts)
-    // redis.SetConn(redis.conn)
-    var err error
-    timeoutDuration := 1 * time.Second
+    redis := NewRedis(&RedisOpts{Host: "127.0.0.1:6379"})
 
-    if err = redis.Set("username", "silenceper", timeoutDuration); err != nil {
-        t.Error("set Error", err)
-    }
+    key := "any_key"
+    value := "any value"
+    assert.NoError(t, redis.Set(key, value, time.Second))
+    assert.True(t, redis.IsExist(key))
+    assert.Equal(t, value, redis.Get(key))
+    assert.NoError(t, redis.Delete(key))
+    assert.Nil(t, redis.Get(key))
 
-    if !redis.IsExist("username") {
-        t.Error("IsExist Error")
-    }
+    // 测试 timeout
+    assert.NoError(t, redis.Set(key, value, time.Second))
+    assert.Equal(t, value, redis.Get(key))
+    time.Sleep(time.Second)
+    assert.Nil(t, redis.Get(key))
 
-    name := redis.Get("username").(string)
-    if name != "silenceper" {
-        t.Error("get Error")
-    }
-
-    if err = redis.Delete("username"); err != nil {
-        t.Errorf("delete Error , err=%v", err)
-    }
+    // 测试不存在的 key
+    key = "unknown_key"
+    assert.False(t, redis.IsExist(key))
+    assert.Nil(t, redis.Get(key))
+    assert.NoError(t, redis.Delete(key))
 }
