@@ -49,6 +49,7 @@ func init() {
 
 // KaliGo is use for add Route struct and StaticRoute struct
 type KaliGo struct {
+    Handler      http.Handler // http.ServeMux
     routes       []*routes.Route
     staticRoutes []*routes.StaticRoute
     DB           *database.DB
@@ -188,6 +189,10 @@ func (a *KaliGo) AddRoute(pattern string, m map[string]string, c controller.Inte
 //     ServeHTTP(ResponseWriter, *Request)
 // }
 func (a *KaliGo) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+    if a.Handler != nil { // 有注入 Handler 是只使用注入的 Handler，不走默认逻辑
+        a.Handler.ServeHTTP(w, r)
+        return
+    }
 
     matchRouted := false
     requestPath := r.URL.RawPath
