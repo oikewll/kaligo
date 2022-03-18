@@ -5,6 +5,7 @@ import (
     "net/http"
     "net/url"
     "sync"
+    "time"
 
     "github.com/owner888/kaligo/cache"
     "github.com/owner888/kaligo/database"
@@ -192,4 +193,50 @@ func (c *Context) Render(code int, r render.Render) {
     if err := r.Render(c.ResponseWriter); err != nil {
         panic(err)
     }
+}
+
+/************************************/
+/***** GOLANG.ORG/X/NET/CONTEXT *****/
+/************************************/
+
+// Deadline returns that there is no deadline (ok==false) when c.Request has no Context.
+func (c *Context) Deadline() (deadline time.Time, ok bool) {
+    if c.Request == nil || c.Request.Context() == nil {
+        return
+    }
+    return c.Request.Context().Deadline()
+}
+
+// Done returns nil (chan which will wait forever) when c.Request has no Context.
+func (c *Context) Done() <-chan struct{} {
+    if c.Request == nil || c.Request.Context() == nil {
+        return nil
+    }
+    return c.Request.Context().Done()
+}
+
+// Err returns nil when c.Request has no Context.
+func (c *Context) Err() error {
+    if c.Request == nil || c.Request.Context() == nil {
+        return nil
+    }
+    return c.Request.Context().Err()
+}
+
+// Value returns the value associated with this context for key, or nil
+// if no value is associated with key. Successive calls to Value with
+// the same key returns the same result.
+func (c *Context) Value(key interface{}) interface{} {
+    if key == 0 {
+        return c.Request
+    }
+    if keyAsString, ok := key.(string); ok {
+        if val := c.Get(keyAsString); val != nil {
+            return val
+        }
+    }
+    if c.Request == nil || c.Request.Context() == nil {
+        return nil
+    }
+    return c.Request.Context().Value(key)
 }
