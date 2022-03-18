@@ -49,8 +49,8 @@ func init() {
     logs.SetLogFuncCallDepth(3)
 }
 
-// App is use for add Route struct and StaticRoute struct
-type App struct {
+// Router is use for add Route struct and StaticRoute struct
+type Router struct {
     http.Handler // http.ServeMux
     routes       []*routes.Route
     staticRoutes []*routes.StaticRoute
@@ -58,18 +58,18 @@ type App struct {
     cache        cache.Cache
 }
 
-func NewApp() *App {
-    app := &App{}
+func NewRouter() *Router {
+    router := &Router{}
     cache, err := cache.New()
     if err != nil {
         panic(err)
     }
-    app.cache = cache
-    return app
+    router.cache = cache
+    return router
 }
 
 // AddDB is use for add a db struct
-func (a *App) AddDB(db *database.DB) {
+func (a *Router) AddDB(db *database.DB) {
     a.DB = db
 }
 
@@ -96,7 +96,7 @@ func DelTimer(name string) bool {
 // AddTasker is the function for add tasker
 // AddTasker("default", &control.Task{}, "import_database", "2014-10-15 15:33:00")
 // func AddTasker(name string, control any, action string, taskTime string) {
-func (a *App) AddTasker(name, taskTime, m string, c controller.Interface) {
+func (a *Router) AddTasker(name, taskTime, m string, c controller.Interface) {
     go func() {
         then, _ := time.ParseInLocation("2006-01-02 15:04:05", taskTime, time.Local)
         dura := then.Sub(time.Now())
@@ -113,8 +113,8 @@ func (a *App) AddTasker(name, taskTime, m string, c controller.Interface) {
 }
 
 // AddTimer is the function for add timer, The interval is in microseconds
-// app.AddTimer("import_database", 3000, "ImportDatabase", &controller.Get{})
-func (a *App) AddTimer(name string, duration time.Duration, m string, c controller.Interface) {
+// router.AddTimer("import_database", 3000, "ImportDatabase", &controller.Get{})
+func (a *Router) AddTimer(name string, duration time.Duration, m string, c controller.Interface) {
     go func() {
         timeTicker := time.NewTicker(duration * time.Millisecond)
         storeTimers.Store(name, timeTicker)
@@ -128,7 +128,7 @@ func (a *App) AddTimer(name string, duration time.Duration, m string, c controll
 }
 
 // AddStaticRoute is use for add a static file route
-func (a *App) AddStaticRoute(prefix, staticDir string) {
+func (a *Router) AddStaticRoute(prefix, staticDir string) {
     route := &routes.StaticRoute{}
     route.Prefix = prefix
     route.StaticDir = staticDir
@@ -138,7 +138,7 @@ func (a *App) AddStaticRoute(prefix, staticDir string) {
 
 // AddRoute is use for add a http route
 // https://expressjs.com/en/5x/api.html
-func (a *App) AddRoute(pattern string, m map[string]string, c controller.Interface) {
+func (a *Router) AddRoute(pattern string, m map[string]string, c controller.Interface) {
     parts := strings.Split(pattern, "/")
 
     j := 0
@@ -189,7 +189,7 @@ func (a *App) AddRoute(pattern string, m map[string]string, c controller.Interfa
 // type Handler interface {
 //     ServeHTTP(ResponseWriter, *Request)
 // }
-func (a *App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (a *Router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
     matchRouted := false
     requestPath := r.URL.RawPath
@@ -267,7 +267,7 @@ func (a *App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
     }
 }
 
-func (a *App) controllerMethodCall(controllerType reflect.Type, m string, w http.ResponseWriter, r *http.Request, params map[string]string) (err error) {
+func (a *Router) controllerMethodCall(controllerType reflect.Type, m string, w http.ResponseWriter, r *http.Request, params map[string]string) (err error) {
     // Invoke the request handler
     vc := reflect.New(controllerType)
 
@@ -310,20 +310,20 @@ func (a *App) controllerMethodCall(controllerType reflect.Type, m string, w http
 }
 
 // RunTLS is to run a tls server
-func RunTLS(app *App, port, crtFile, keyFile string) {
+func RunTLS(router *Router, port, crtFile, keyFile string) {
     log.Printf("ListenAndServe: %s - %s - %s", port, crtFile, keyFile)
 
-    err := http.ListenAndServeTLS(port, crtFile, keyFile, app)
+    err := http.ListenAndServeTLS(port, crtFile, keyFile, router)
     if err != nil {
         log.Fatal("ListenAndServe: ", err)
     }
 }
 
-// Run is to run a app
-func Run(app *App, port string) {
+// Run is to run a router
+func Run(router *Router, port string) {
     log.Printf("ListenAndServe: %s", port)
 
-    err := http.ListenAndServe(port, app)
+    err := http.ListenAndServe(port, router)
     if err != nil {
         log.Fatal("ListenAndServe: ", err)
     }

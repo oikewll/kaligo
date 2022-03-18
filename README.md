@@ -112,20 +112,20 @@ import (
 )
 
 func main() {
-    app := &kaligo.App{}
-    AddRoutes(app)
-    kaligo.Run(app)
+    router := kaligo.NewRouter()
+    AddRoutes(router)
+    kaligo.Run(router)
 }
 
-// AddRoutes is use for add route to App struct
-func AddRoutes(app *kaligo.App) {
-    app.AddStaticRoute("/static", "static")
+// AddRoutes is use for add route to Router struct
+func AddRoutes(router *kaligo.Router) {
+    router.AddStaticRoute("/static", "static")
 
-    app.AddRoute("/", map[string]string{
+    router.AddRoute("/", map[string]string{
         "GET": "Index",
     }, &controller.Get{})
 
-    app.AddRoute("/posts/:post_id([0-9]+)", map[string]string{
+    router.AddRoute("/posts/:post_id([0-9]+)", map[string]string{
         "POST": "Show",
     }, &controller.Post{})
 }
@@ -330,13 +330,13 @@ if sql, err := db.UpdateBatch("user", rows, "name"); err != nil {
 
 ```go
 // 增加定时任务，设置时间小于当前时间则不执行，大于当前时间则当到达时间时执行
-app.AddTasker("import_database", "2021-03-05 20:08:00", "ImportDatabase", &controller.Get{})
+router.AddTasker("import_database", "2021-03-05 20:08:00", "ImportDatabase", &controller.Get{})
 // 删除定时任务
-app.DelTasker("import_database")
+router.DelTasker("import_database")
 // 增加定时器，每5秒运行一次
-app.AddTimer("import_database", 5000, "ImportDatabaseLoginV2", &controller.Get{})
+router.AddTimer("import_database", 5000, "ImportDatabaseLoginV2", &controller.Get{})
 // 删除定时器
-app.DelTimer("import_database")
+router.DelTimer("import_database")
 ```
 
 ## To do
