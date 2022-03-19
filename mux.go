@@ -15,7 +15,6 @@ import (
     "github.com/owner888/kaligo/contex"
     "github.com/owner888/kaligo/controller"
     "github.com/owner888/kaligo/database"
-    "github.com/owner888/kaligo/routes"
     "github.com/owner888/kaligo/timer"
     "github.com/owner888/kaligo/util"
 
@@ -50,8 +49,8 @@ var _ Router = &Mux{}
 // Mux is use for add Route struct and StaticRoute struct
 type Mux struct {
     Handler      http.Handler // http.ServeMux
-    routes       []*routes.Route
-    staticRoutes []*routes.StaticRoute
+    routes       []*Route
+    staticRoutes []*StaticRoute
     DB           *database.DB
     cache        cache.Cache // interface 本身是指针，不需要用 *cache.Cache，struct 才需要
     pool         sync.Pool   // Context 复用
@@ -76,7 +75,7 @@ func (a *Mux) AddDB(db *database.DB) {
 
 // AddStaticRoute is use for add a static file route
 func (a *Mux) AddStaticRoute(prefix, staticDir string) {
-    route := &routes.StaticRoute{}
+    route := &StaticRoute{}
     route.Prefix = prefix
     route.StaticDir = staticDir
 
@@ -123,7 +122,7 @@ func (a *Mux) AddRoute(pattern string, m map[string]string, c controller.Interfa
     }
 
     // now create the Route
-    route := &routes.Route{}
+    route := &Route{}
     route.Regex = regex
     route.Methods = m
     route.Params = params

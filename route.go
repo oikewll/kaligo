@@ -1,19 +1,10 @@
-package routes
+package kaligo
 
 import (
     "reflect"
     "regexp"
-
     // "net/http"
-
-    "github.com/owner888/kaligo/controller"
 )
-
-// Router is use for add Route struct and StaticRoute struct
-type Router interface {
-    AddRoute(pattern string, m map[string]string, c controller.Interface)
-    AddStaticRoute(prefix, staticDir string)
-}
 
 // Route is a Router's route
 type Route struct {

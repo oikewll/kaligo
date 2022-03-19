@@ -2,14 +2,19 @@ package kaligo
 
 import (
     "net/http"
+    "os"
     "testing"
 
-    "github.com/owner888/kaligo/routes"
+    "github.com/owner888/kaligo/config"
     "github.com/stretchr/testify/assert"
 )
 
-var _ routes.Router = &Mux{}
 var _ http.Handler = &Mux{}
+
+func TestMain(m *testing.M) {
+    config.Set("cache.config.driver", "memory")
+    os.Exit(m.Run())
+}
 
 func TestNew(t *testing.T) {
     mux := NewRouter()
