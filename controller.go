@@ -5,21 +5,18 @@ import (
 
     "fmt"
     "reflect"
-
-    "github.com/owner888/kaligo/contex"
 )
 
 // Interface is use for
 type Interface interface {
-    Init(contex *contex.Context, childName string)
+    Init(contex *Context, childName string)
     Prepare()
     Finish()
 }
 
 // Controller is a base controller struct
 type Controller struct {
-    // Context   *contex.Context
-    *contex.Context
+    *Context
     ChildName string
 }
 
@@ -29,7 +26,7 @@ func New() *Controller {
     return &Controller{}
 }
 
-func runController(controllerType reflect.Type, m string, ctx *contex.Context, params map[string]string) (err error) {
+func runController(controllerType reflect.Type, m string, ctx *Context, params map[string]string) (err error) {
     // Invoke the request handler
     vc := reflect.New(controllerType)
 
@@ -62,7 +59,7 @@ func runController(controllerType reflect.Type, m string, ctx *contex.Context, p
 }
 
 // Init returns a new initialized Controller.
-func (c *Controller) Init(contex *contex.Context, childName string) {
+func (c *Controller) Init(contex *Context, childName string) {
     c.Context = contex
     c.ChildName = childName
     // fmt.Println("\n---------")

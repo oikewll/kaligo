@@ -1,4 +1,4 @@
-package contex
+package kaligo
 
 import "context"
 

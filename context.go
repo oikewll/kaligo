@@ -1,4 +1,4 @@
-package contex
+package kaligo
 
 import (
     // "log"
@@ -110,7 +110,7 @@ func (c *Context) Redirect(code int, location string) {
     http.Redirect(c.ResponseWriter, c.Request, location, code)
 }
 
-func (c *Context) ApiJSON(code int, msg string, param ... any) {
+func (c *Context) ApiJSON(code int, msg string, param ...any) {
     // c.Header("Access-Control-Allow-Origin", "*")             //允许访问所有域
     // c.Header("Access-Control-Allow-Headers", "Content-Type") //header的类型
     // c.Header("content-type", "application/json")             //返回数据格式是json

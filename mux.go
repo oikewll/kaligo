@@ -12,7 +12,6 @@ import (
     "sync"
 
     "github.com/owner888/kaligo/cache"
-    "github.com/owner888/kaligo/contex"
     "github.com/owner888/kaligo/database"
     "github.com/owner888/kaligo/timer"
     "github.com/owner888/kaligo/util"
@@ -217,7 +216,7 @@ func (a *Mux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *Mux) controllerMethodCall(controllerType reflect.Type, m string, w http.ResponseWriter, r *http.Request, params map[string]string) (err error) {
-    contex := &contex.Context{
+    contex := &Context{
         ResponseWriter: w,
         Request:        r,
         Params:         params,
