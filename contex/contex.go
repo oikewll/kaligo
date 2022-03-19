@@ -60,6 +60,23 @@ func (c *Context) FullPath() string {
     return c.fullPath
 }
 
+// ClientIP returns a client ip. returns 127.0.0.1 if request from local machine
+func (c *Context) ClientIP() (ip string) {
+    remoteAddr := c.requestHeader("Remote_addr")
+    if remoteAddr == "" {
+        remoteAddr = c.Request.RemoteAddr
+    }
+
+    if remoteAddr != "" {
+        remoteAddrArr := strings.Split(remoteAddr, ":")
+        ip = remoteAddrArr[0]
+    }
+    if ip == "" || ip == "[" {
+        ip = "127.0.0.1"
+    }
+    return
+}
+
 // Set is used to store a new key/value pair exclusively for this context.
 // It also lazy initializes  c.Keys if it was not used previously.
 func (c *Context) Set(key string, value any) {
@@ -135,23 +152,6 @@ func (c *Context) Data(code int, contentType string, data []byte) {
 
 func (c *Context) requestHeader(key string) string {
     return c.Request.Header.Get(key)
-}
-
-func (c *Context) ClientIP() (ip string) {
-    ip = "127.0.0.1"
-    remoteAddr := c.requestHeader("Remote_addr")
-    if remoteAddr == "" {
-        remoteAddr = c.Request.RemoteAddr
-    }
-
-    if remoteAddr != "" {
-        remoteAddrArr := strings.Split(remoteAddr, ":")
-        ip = remoteAddrArr[0]
-    }
-    if ip == "" || ip == "[" {
-        ip = "127.0.0.1"
-    }
-    return
 }
 
 /************************************/
