@@ -1,4 +1,4 @@
-package controller
+package kaligo
 
 import (
     // "fmt"
@@ -8,6 +8,13 @@ import (
 
     "github.com/owner888/kaligo/contex"
 )
+
+// Interface is use for
+type Interface interface {
+    Init(contex *contex.Context, childName string)
+    Prepare()
+    Finish()
+}
 
 // Controller is a base controller struct
 type Controller struct {
@@ -22,7 +29,7 @@ func New() *Controller {
     return &Controller{}
 }
 
-func Run(controllerType reflect.Type, m string, ctx *contex.Context, params map[string]string) (err error) {
+func runController(controllerType reflect.Type, m string, ctx *contex.Context, params map[string]string) (err error) {
     // Invoke the request handler
     vc := reflect.New(controllerType)
 

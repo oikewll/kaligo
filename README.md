@@ -154,12 +154,12 @@ func AddRoutes(router *routes.Router) {
 package control
 
 import (
-    "github.com/owner888/kaligo/controller"
+    "github.com/owner888/kaligo"
 )
 
 // Get is use for
 type Get struct {
-    controller.Controller
+    kaligo.Controller
 }
 
 // H is a shortcut for map[string]any

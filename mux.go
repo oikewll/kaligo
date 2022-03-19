@@ -13,7 +13,6 @@ import (
 
     "github.com/owner888/kaligo/cache"
     "github.com/owner888/kaligo/contex"
-    "github.com/owner888/kaligo/controller"
     "github.com/owner888/kaligo/database"
     "github.com/owner888/kaligo/timer"
     "github.com/owner888/kaligo/util"
@@ -84,7 +83,7 @@ func (a *Mux) AddStaticRoute(prefix, staticDir string) {
 
 // AddRoute is use for add a http route
 // https://expressjs.com/en/5x/api.html
-func (a *Mux) AddRoute(pattern string, m map[string]string, c controller.Interface) {
+func (a *Mux) AddRoute(pattern string, m map[string]string, c Interface) {
     parts := strings.Split(pattern, "/")
 
     j := 0
@@ -226,7 +225,7 @@ func (a *Mux) controllerMethodCall(controllerType reflect.Type, m string, w http
         Cache:          a.cache,
         Timer:          a.Timer,
     }
-    if err = controller.Run(controllerType, m, contex, params); err != nil {
+    if err = runController(controllerType, m, contex, params); err != nil {
         http.NotFound(w, r)
     }
     return err
