@@ -9,7 +9,18 @@ import (
     "time"
 
     "github.com/owner888/kaligo/config"
+    "golang.org/x/exp/constraints"
 )
+
+var (
+    // defaultCache 默认的全局缓存，全局的 Get Set 使用此缓存
+    defaultCache Cache
+)
+
+// 支持存取到 Cache 的类型
+type CacheValue interface {
+    constraints.Integer | constraints.Float | ~bool | ~string
+}
 
 // Cache interface
 type Cache interface {
@@ -44,4 +55,36 @@ func New(param ...string) (Cache, error) {
         return NewMemcache(strings.Join(config.Get[[]string]("host"), ",")), nil
     }
     return nil, errors.New("driver does not exist")
+}
+
+// SetDefaultCache 设置默认的全局缓存，全局的 Get Set 使用此缓存
+func SetDefaultCache(cache Cache) {
+    defaultCache = cache
+}
+
+// Get 从默认的 Cache 获取 T 类型 value
+func Get[T CacheValue](key string) T {
+    return GetCache[T](defaultCache, key)
+}
+
+// GetCache 从 cache 获取 T 类型 value
+func GetCache[T CacheValue](cache Cache, key string) (value T) {
+    v, err := cache.Get(key)
+    if err != nil {
+        return
+    }
+    if v, ok := v.(T); ok {
+        return v
+    }
+    return
+}
+
+// Set 设置 value 到默认 Cache
+func Set[T CacheValue](key string, value T, timeout time.Duration) {
+    SetCache(defaultCache, key, value, timeout)
+}
+
+// Set 设置 value 到 cache
+func SetCache[T CacheValue](cache Cache, key string, value T, timeout time.Duration) {
+    cache.Set(key, value, timeout)
 }
