@@ -13,7 +13,6 @@ import (
 
     "github.com/owner888/kaligo/cache"
     "github.com/owner888/kaligo/database"
-    "github.com/owner888/kaligo/timer"
     "github.com/owner888/kaligo/util"
 
     "github.com/astaxie/beego/logs"
@@ -52,7 +51,7 @@ type Mux struct {
     DB           *database.DB
     cache        cache.Cache // interface 本身是指针，不需要用 *cache.Cache，struct 才需要
     pool         sync.Pool   // Context 复用
-    Timer        *timer.Timer
+    Timer        *Timer
 }
 
 func NewRouter() *Mux {
@@ -62,7 +61,7 @@ func NewRouter() *Mux {
         panic(err)
     }
     mux.cache = cache
-    mux.Timer = timer.New()
+    mux.Timer = NewTimer()
     return mux
 }
 

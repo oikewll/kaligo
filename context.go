@@ -12,7 +12,6 @@ import (
     "github.com/owner888/kaligo/cache"
     "github.com/owner888/kaligo/database"
     "github.com/owner888/kaligo/render"
-    "github.com/owner888/kaligo/timer"
 )
 
 type SuccJSON struct {
@@ -40,7 +39,7 @@ type Context struct {
     Cache cache.Cache
 
     // Timer 定时任务
-    Timer *timer.Timer
+    Timer *Timer
 
     // Keys is a key/value pair exclusively for the context of each request.
     // Keys map[string]any

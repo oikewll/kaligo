@@ -1,4 +1,4 @@
-package timer
+package kaligo
 
 import (
     "fmt"
@@ -15,7 +15,7 @@ type Timer struct {
 }
 
 // New 新建 Timer，不要重复创建
-func New() *Timer {
+func NewTimer() *Timer {
     return &Timer{}
 }
 
@@ -42,7 +42,7 @@ func (t *Timer) DelTimer(name string) bool {
 // AddTasker is the function for add tasker
 // AddTasker("default", &control.Task{}, "import_database", "2014-10-15 15:33:00")
 // func AddTasker(name string, control any, action string, taskTime string) {
-func (t *Timer) AddTasker(name, taskTime, method string, runner any, params any) {
+func (t *Timer) AddTasker(name, taskTime, method string, runner Interface, params any) {
     go func() {
         then, _ := time.ParseInLocation("2006-01-02 15:04:05", taskTime, time.Local)
         dura := then.Sub(time.Now())
@@ -60,7 +60,7 @@ func (t *Timer) AddTasker(name, taskTime, method string, runner any, params any)
 
 // AddTimer is the function for add timer, The interval is in microseconds
 // router.AddTimer("import_database", 3000, "ImportDatabase", &controller.Get{})
-func (t *Timer) AddTimer(name string, duration time.Duration, method string, runner any, params any) {
+func (t *Timer) AddTimer(name string, duration time.Duration, method string, runner Interface, params any) {
     go func() {
         timeTicker := time.NewTicker(duration * time.Millisecond)
         t.storeTimers.Store(name, timeTicker)

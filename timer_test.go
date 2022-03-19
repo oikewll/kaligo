@@ -1,4 +1,4 @@
-package timer
+package kaligo
 
 import (
     "testing"
@@ -7,6 +7,6 @@ import (
 )
 
 func TestTimer(t *testing.T) {
-    timer := New()
+    timer := NewTimer()
     assert.NotNil(t, timer)
 }
