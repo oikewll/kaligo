@@ -1,9 +1,11 @@
 package contex
 
 import (
+    // "log"
     "io/ioutil"
     "net/http"
     "net/url"
+    "strings"
     "sync"
     "time"
 
@@ -129,6 +131,23 @@ func (c *Context) Data(code int, contentType string, data []byte) {
 
 func (c *Context) requestHeader(key string) string {
     return c.Request.Header.Get(key)
+}
+
+func (c *Context) ClientIP() (ip string) {
+    ip = "127.0.0.1"
+    remoteAddr := c.requestHeader("Remote_addr")
+    if remoteAddr == "" {
+        remoteAddr = c.Request.RemoteAddr
+    }
+
+    if remoteAddr != "" {
+        remoteAddrArr := strings.Split(remoteAddr, ":")
+        ip = remoteAddrArr[0]
+    }
+    if ip == "" || ip == "[" {
+        ip = "127.0.0.1"
+    }
+    return
 }
 
 /************************************/
@@ -258,7 +277,7 @@ func (c *Context) Err() error {
 // Value returns the value associated with this context for key, or nil
 // if no value is associated with key. Successive calls to Value with
 // the same key returns the same result.
-func (c *Context) Value(key interface{}) interface{} {
+func (c *Context) Value(key any) any {
     if key == 0 {
         return c.Request
     }
