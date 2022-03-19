@@ -9,12 +9,12 @@ import (
     "github.com/astaxie/beego/logs"
 )
 
+// Timer 是所有定时任务管理中心
 type Timer struct {
     storeTimers sync.Map
-    Timer       map[string]*time.Ticker
-    Tasker      map[string]*time.Timer
 }
 
+// New 新建 Timer，不要重复创建
 func New() *Timer {
     return &Timer{}
 }
