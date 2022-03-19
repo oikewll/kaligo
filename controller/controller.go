@@ -2,6 +2,10 @@ package controller
 
 import (
     // "fmt"
+
+    "fmt"
+    "reflect"
+
     "github.com/owner888/kaligo/contex"
 )
 
@@ -16,6 +20,38 @@ type Controller struct {
 func New() *Controller {
     // fmt.Printf("init Controller\n")
     return &Controller{}
+}
+
+func Run(controllerType reflect.Type, m string, ctx *contex.Context, params map[string]string) (err error) {
+    // Invoke the request handler
+    vc := reflect.New(controllerType)
+
+    // Init callback
+    method := vc.MethodByName("Init")
+
+    args := make([]reflect.Value, 2)
+    args[0] = reflect.ValueOf(ctx)
+    args[1] = reflect.ValueOf(controllerType.Name())
+    method.Call(args)
+
+    args = make([]reflect.Value, 0)
+
+    // Prepare callback
+    method = vc.MethodByName("Prepare")
+    method.Call(args)
+
+    // Request callback
+    method = vc.MethodByName(m)
+    if !method.IsValid() {
+        return fmt.Errorf("Controller Method not exist")
+    }
+    method.Call(args)
+
+    // Finish callback
+    method = vc.MethodByName("Finish")
+    method.Call(args)
+
+    return err
 }
 
 // Init returns a new initialized Controller.
@@ -36,4 +72,3 @@ func (c *Controller) Finish() {
     // fmt.Println("\nhello Finish")
     // fmt.Println("\n---------")
 }
-

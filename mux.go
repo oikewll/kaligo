@@ -1,7 +1,6 @@
 package kaligo
 
 import (
-    "fmt"
     "log"
     "net/http"
     "path"
@@ -11,13 +10,13 @@ import (
     // "runtime"
     "strings"
     "sync"
-    "time"
 
     "github.com/owner888/kaligo/cache"
     "github.com/owner888/kaligo/contex"
     "github.com/owner888/kaligo/controller"
     "github.com/owner888/kaligo/database"
     "github.com/owner888/kaligo/routes"
+    "github.com/owner888/kaligo/timer"
     "github.com/owner888/kaligo/util"
 
     "github.com/astaxie/beego/logs"
@@ -25,10 +24,7 @@ import (
 
 // 定义当前package中使用的全局变量
 var (
-    err         error
-    storeTimers sync.Map
-    Timer       map[string]*time.Ticker
-    Tasker      map[string]*time.Timer
+    err error
 )
 
 // var db *database.DB
@@ -59,6 +55,7 @@ type Mux struct {
     DB           *database.DB
     cache        cache.Cache // interface 本身是指针，不需要用 *cache.Cache，struct 才需要
     pool         sync.Pool   // Context 复用
+    Timer        *timer.Timer
 }
 
 func NewRouter() *Mux {
@@ -68,66 +65,13 @@ func NewRouter() *Mux {
         panic(err)
     }
     mux.cache = cache
+    mux.Timer = timer.New()
     return mux
 }
 
 // AddDB is use for add a db struct
 func (a *Mux) AddDB(db *database.DB) {
     a.DB = db
-}
-
-// DelTasker is the function for delete tasker
-func DelTasker(name string) bool {
-    tasker, ok := storeTimers.Load(name)
-    if ok {
-        tasker.(*time.Ticker).Stop()
-        return true
-    }
-    return false
-}
-
-// DelTimer is the function for delete timer
-func DelTimer(name string) bool {
-    tasker, ok := storeTimers.Load(name)
-    if ok {
-        tasker.(*time.Timer).Stop()
-        return true
-    }
-    return false
-}
-
-// AddTasker is the function for add tasker
-// AddTasker("default", &control.Task{}, "import_database", "2014-10-15 15:33:00")
-// func AddTasker(name string, control any, action string, taskTime string) {
-func (a *Mux) AddTasker(name, taskTime, m string, c controller.Interface) {
-    go func() {
-        then, _ := time.ParseInLocation("2006-01-02 15:04:05", taskTime, time.Local)
-        dura := then.Sub(time.Now())
-        //fmt.Println(dura)
-        if dura > 0 {
-            timeTasker := time.AfterFunc(dura, func() {
-                a.controllerMethodCall(reflect.Indirect(reflect.ValueOf(c)).Type(), m, nil, nil, nil)
-            })
-            storeTimers.Store(name, timeTasker)
-        } else {
-            logs.Error("定时任务 --- [ " + name + " ] --- 小于当前时间，将不会被执行")
-        }
-    }()
-}
-
-// AddTimer is the function for add timer, The interval is in microseconds
-// router.AddTimer("import_database", 3000, "ImportDatabase", &controller.Get{})
-func (a *Mux) AddTimer(name string, duration time.Duration, m string, c controller.Interface) {
-    go func() {
-        timeTicker := time.NewTicker(duration * time.Millisecond)
-        storeTimers.Store(name, timeTicker)
-        for {
-            select {
-            case <-timeTicker.C:
-                a.controllerMethodCall(reflect.Indirect(reflect.ValueOf(c)).Type(), m, nil, nil, nil)
-            }
-        }
-    }()
 }
 
 // AddStaticRoute is use for add a static file route
@@ -275,46 +219,23 @@ func (a *Mux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *Mux) controllerMethodCall(controllerType reflect.Type, m string, w http.ResponseWriter, r *http.Request, params map[string]string) (err error) {
-    // Invoke the request handler
-    vc := reflect.New(controllerType)
-
-    // Init callback
-    method := vc.MethodByName("Init")
     contex := &contex.Context{
         ResponseWriter: w,
         Request:        r,
         Params:         params,
         DB:             a.DB,
         Cache:          a.cache,
+        Timer:          a.Timer,
     }
-    args := make([]reflect.Value, 2)
-    args[0] = reflect.ValueOf(contex)
-    args[1] = reflect.ValueOf(controllerType.Name())
-    method.Call(args)
-
-    args = make([]reflect.Value, 0)
-
-    // Prepare callback
-    method = vc.MethodByName("Prepare")
-    method.Call(args)
-
-    // Request callback
-    method = vc.MethodByName(m)
-    if !method.IsValid() {
-        // if is HTTP callback
-        if w != nil {
-            http.NotFound(w, r)
-        }
-        return fmt.Errorf("Controller Method not exist")
+    if err = controller.Run(controllerType, m, contex, params); err != nil {
+        http.NotFound(w, r)
     }
-    method.Call(args)
-
-    // Finish callback
-    method = vc.MethodByName("Finish")
-    method.Call(args)
-
     return err
 }
+
+// Router 接口实现
+
+// Use 添加一个中间件
 func (a *Mux) Use(middlewares ...func(http.Handler) http.Handler) {
 
 }
