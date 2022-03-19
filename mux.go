@@ -47,6 +47,8 @@ func init() {
     logs.SetLogFuncCallDepth(3)
 }
 
+// 强制要求 Mux 实现 Router
+// 假如 Router 是一个第三方库接口，如果第三方库新版动了这个接口，我们发现不了，编译也不报错，只有用的时候才报错，但写了这句，就编译不过了
 var _ Router = &Mux{}
 
 // Mux is use for add Route struct and StaticRoute struct
