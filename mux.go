@@ -49,7 +49,7 @@ type Mux struct {
     routes       []*Route
     staticRoutes []*StaticRoute
     DB           *database.DB
-    cache        cache.Cache // interface 本身是指针，不需要用 *cache.Cache，struct 才需要
+    Cache        cache.Cache // interface 本身是指针，不需要用 *cache.Cache，struct 才需要
     pool         sync.Pool   // Context 复用
     Timer        *Timer
 }
@@ -60,8 +60,11 @@ func NewRouter() *Mux {
     if err != nil {
         panic(err)
     }
-    mux.cache = cache
+    mux.Cache = cache
     mux.Timer = NewTimer()
+    mux.pool.New = func() any {
+        return &Context{DB: mux.DB, Cache: mux.Cache, Timer: mux.Timer}
+    }
     return mux
 }
 
@@ -215,17 +218,14 @@ func (a *Mux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *Mux) controllerMethodCall(controllerType reflect.Type, m string, w http.ResponseWriter, r *http.Request, params map[string]string) (err error) {
-    contex := &Context{
-        ResponseWriter: w,
-        Request:        r,
-        Params:         params,
-        DB:             a.DB,
-        Cache:          a.cache,
-        Timer:          a.Timer,
-    }
-    if err = runController(controllerType, m, contex, params); err != nil {
+    ctx := a.pool.Get().(*Context)
+    ctx.ResponseWriter = w
+    ctx.Request = r
+    ctx.Params = params
+    if err = runController(controllerType, m, ctx, params); err != nil {
         http.NotFound(w, r)
     }
+    a.pool.Put(ctx)
     return err
 }
 
