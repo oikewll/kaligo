@@ -30,7 +30,7 @@ type Context struct {
     ResponseWriter http.ResponseWriter
     Request        *http.Request
 
-    Params   map[string]string
+    Params   Params
     fullPath string
 
     DB *database.DB
@@ -51,7 +51,7 @@ type Context struct {
 }
 
 func (c *Context) Reset() {
-    c.Params = map[string]string{}
+    c.Params = c.Params[:0]
     c.fullPath = ""
     c.Keys = sync.Map{}
     c.sameSite = 0

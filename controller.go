@@ -26,7 +26,7 @@ func New() *Controller {
     return &Controller{}
 }
 
-func runController(controllerType reflect.Type, m string, ctx *Context, params map[string]string) (err error) {
+func runController(controllerType reflect.Type, m string, ctx *Context, params Params) (err error) {
     // Invoke the request handler
     vc := reflect.New(controllerType)
 
