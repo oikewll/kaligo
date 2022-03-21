@@ -219,6 +219,7 @@ func (a *Mux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func (a *Mux) controllerMethodCall(controllerType reflect.Type, m string, w http.ResponseWriter, r *http.Request, params map[string]string) (err error) {
     ctx := a.pool.Get().(*Context)
+    ctx.Reset()
     ctx.ResponseWriter = w
     ctx.Request = r
     ctx.Params = params

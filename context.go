@@ -50,6 +50,13 @@ type Context struct {
     sameSite http.SameSite
 }
 
+func (c *Context) Reset() {
+    c.Params = map[string]string{}
+    c.fullPath = ""
+    c.Keys = sync.Map{}
+    c.sameSite = 0
+}
+
 // FullPath returns a matched route full path. For not found routes
 // returns an empty string.
 //     router.GET("/user/:id", func(c *gin.Context) {
