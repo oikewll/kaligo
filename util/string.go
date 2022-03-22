@@ -4,6 +4,7 @@ import (
     "math/rand"
     "strconv"
     "time"
+    "html"
 )
 
 // Substr 返回一个字符串中从指定位置开始到指定字符数的字符
@@ -94,22 +95,23 @@ func FilterInjections(str string) string {
     }
 
     str = FilterInjectionsWords(str)
+    str = html.EscapeString(str)
     str = Addslashes(str)
     return str
 }
 
 // FilterInjectionsWords include SQL and XSS words
 func FilterInjectionsWords(str string) string {
-    arr := [3]string{
-        "/<(\\/?)(script|i?frame|style|html|body|title|link|meta|object|\\?|\\%)([^>]*?)>/isU",
-        "/(<[^>]*)on[a-zA-Z]+\s*=([^>]*>)/isU",
-        "/select|insert|update|delete|\'|\/\*|\*|\.\.\/|\.\/|union|into|load_file|outfile|dump/is"
-    }
-
-    for _, value := range arr {
-        re := regexp.MustCompile(value)
-        re.ReplaceAllString(str, "")
-    }
+    // arr := [3]string{
+    //     "/<(\\/?)(script|i?frame|style|html|body|title|link|meta|object|\\?|\\%)([^>]*?)>/isU",
+    //     "/(<[^>]*)on[a-zA-Z]+\s*=([^>]*>)/isU",
+    //     "/select|insert|update|delete|\'|\/\*|\*|\.\.\/|\.\/|union|into|load_file|outfile|dump/is"
+    // }
+    //
+    // for _, value := range arr {
+    //     re := regexp.MustCompile(value)
+    //     re.ReplaceAllString(str, "")
+    // }
 
     return str
 }
