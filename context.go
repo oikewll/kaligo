@@ -2,6 +2,9 @@ package kaligo
 
 import (
     // "log"
+
+    "errors"
+    "fmt"
     "io/ioutil"
     "net/http"
     "net/url"
@@ -12,6 +15,7 @@ import (
     "github.com/owner888/kaligo/cache"
     "github.com/owner888/kaligo/database"
     "github.com/owner888/kaligo/render"
+    "github.com/owner888/kaligo/util"
 )
 
 type SuccJSON struct {
@@ -45,6 +49,13 @@ type Context struct {
     // Keys map[string]any
     Keys sync.Map
 
+    // queryCache caches the query result from c.Request.URL.Query().
+    queryCache util.UrlValues
+
+    // formCache caches c.Request.PostForm, which contains the parsed form data from POST, PATCH,
+    // or PUT body parameters.
+    formCache util.UrlValues
+
     // SameSite allows a server to define a cookie attribute making it impossible for
     // the browser to send this cookie along with cross-site requests.
     sameSite http.SameSite
@@ -55,6 +66,7 @@ func (c *Context) Reset() {
     c.fullPath = ""
     c.Keys = sync.Map{}
     c.sameSite = 0
+    fmt.Print()
 }
 
 // FullPath returns a matched route full path. For not found routes
@@ -203,6 +215,54 @@ func (c *Context) GetRawData() ([]byte, error) {
     return ioutil.ReadAll(c.Request.Body)
 }
 
+func (c *Context) initQueryCache() {
+    if c.queryCache == nil {
+        if c.Request != nil {
+            c.queryCache = util.UrlValues(c.Request.URL.Query())
+        } else {
+            c.queryCache = util.UrlValues{}
+        }
+    }
+}
+
+func (c *Context) QueryValue(key string, defaultValue ...string) string {
+    c.initQueryCache()
+    ret, ok := c.queryCache.Get(key)
+    if !ok {
+        if len(defaultValue) > 0 {
+            return defaultValue[0]
+        }
+        return ""
+    }
+    return ret
+}
+
+func (c *Context) initFormCache() {
+    if c.formCache == nil {
+        c.formCache = util.UrlValues{}
+        req := c.Request
+        maxMultipartMemory := int64(8 << 20) // 8 MiB
+        if err := req.ParseMultipartForm(maxMultipartMemory); err != nil {
+            if !errors.Is(err, http.ErrNotMultipart) {
+                // debugPrint("error on parse multipart form array: %v", err)
+            }
+        }
+        c.formCache = util.UrlValues(req.PostForm)
+    }
+}
+
+func (c *Context) FormValue(key string, defaultValue ...string) string {
+    c.initFormCache()
+    ret, ok := c.formCache.Get(key)
+    if !ok {
+        if len(defaultValue) > 0 {
+            return defaultValue[0]
+        }
+        return ""
+    }
+    return ret
+}
+
 // SetSameSite with cookie
 func (c *Context) SetSameSite(samesite http.SameSite) {
     c.sameSite = samesite
@@ -225,6 +285,17 @@ func (c *Context) SetCookie(name, value string, maxAge int, path, domain string,
         Secure:   secure,
         HttpOnly: httpOnly,
     })
+}
+
+func (c *Context) CookieValue(key string, defaultValue ...string) string {
+    ret, err := c.Cookie(key)
+    if err != nil {
+        if len(defaultValue) > 0 {
+            return defaultValue[0]
+        }
+        return ""
+    }
+    return ret
 }
 
 // Cookie returns the named cookie provided in the request or
