@@ -1,14 +1,15 @@
 package util
 
 import (
+    "html"
     "math/rand"
+    "regexp"
     "strconv"
     "time"
-    "html"
 )
 
 // Substr 返回一个字符串中从指定位置开始到指定字符数的字符
-// ep: 
+// ep:
 //   sql = util.Substr(sql, 0, len(sql)-2)
 func Substr(str string, start, length int) string {
     rs := []rune(str)
@@ -41,9 +42,9 @@ func Substr(str string, start, length int) string {
 }
 
 // RandNum 生成随机数
-func RandNum() int{
+func RandNum() int {
     r := rand.New(rand.NewSource(time.Now().UnixNano()))
-    return r.Intn(100) 
+    return r.Intn(100)
 }
 
 // RandomStr 生成随机字符串
@@ -59,31 +60,31 @@ func RandomStr(length int) string {
 }
 
 // StrToInt is the...
-func StrToInt(str string) int{
+func StrToInt(str string) int {
     var int, _ = strconv.Atoi(str)
     return int
 }
 
 // StrToInt64 is the...
-func StrToInt64(str string) int64{
+func StrToInt64(str string) int64 {
     var int64, _ = strconv.ParseInt(str, 10, 64)
     return int64
 }
 
 // IntToStr is the...
-func IntToStr(val int) string{
+func IntToStr(val int) string {
     str := strconv.Itoa(val)
     return str
 }
 
 // Int64ToStr is the...
-func Int64ToStr(val int64) string{
+func Int64ToStr(val int64) string {
     str := strconv.FormatInt(val, 10)
     return str
 }
 
 // StrToBool is the...
-func StrToBool(val string) bool{
+func StrToBool(val string) bool {
     str, _ := strconv.ParseBool(val)
     return str
 }
@@ -100,19 +101,18 @@ func FilterInjections(str string) string {
     return str
 }
 
+// injectionRegexp 注入匹配规则
+var injectionRegexp = [3]*regexp.Regexp{
+    regexp.MustCompile(`(?isU)<(\\/?)(script|i?frame|style|html|body|title|link|meta|object|\\?|\\%)([^>]*?)>`),
+    regexp.MustCompile(`(?isU)(<[^>]*)on[a-zA-Z]+\s*=([^>]*>)`),
+    regexp.MustCompile(`(?is)select|insert|update|delete|\'|\/\*|\*|\.\.\/|\.\/|union|into|load_file|outfile|dump`),
+}
+
 // FilterInjectionsWords include SQL and XSS words
 func FilterInjectionsWords(str string) string {
-    // arr := [3]string{
-    //     "/<(\\/?)(script|i?frame|style|html|body|title|link|meta|object|\\?|\\%)([^>]*?)>/isU",
-    //     "/(<[^>]*)on[a-zA-Z]+\s*=([^>]*>)/isU",
-    //     "/select|insert|update|delete|\'|\/\*|\*|\.\.\/|\.\/|union|into|load_file|outfile|dump/is"
-    // }
-    //
-    // for _, value := range arr {
-    //     re := regexp.MustCompile(value)
-    //     re.ReplaceAllString(str, "")
-    // }
-
+    for _, re := range injectionRegexp {
+        str = re.ReplaceAllString(str, "")
+    }
     return str
 }
 
