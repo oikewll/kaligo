@@ -97,11 +97,12 @@ func (a *Mux) AddRoute(pattern string, m map[string]string, c Interface) {
             // https://expressjs.com/en/5x/api.html
             // similar to expressjs: ‘/user/:id([0-9]+)’
             // This will match paths starting with /abc and /xyz: /\/abc|\/xyz/
-
             if index := strings.Index(part, "("); index != -1 {
+                // 正则匹配：/user/:id([0-9]+)
                 expr = part[index:]
                 part = part[1:index]
             } else {
+                // 参数注册：/:param
                 part = part[1:]
             }
 
@@ -113,7 +114,6 @@ func (a *Mux) AddRoute(pattern string, m map[string]string, c Interface) {
 
     // recreate the url pattern, with parameters replaced
     // by regular expressions. then compile the regex
-
     pattern = strings.Join(parts, "/")
     regex, regexErr := regexp.Compile(pattern)
     if regexErr != nil {
@@ -141,7 +141,6 @@ func (a *Mux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    matchRouted := false
     requestPath := r.URL.RawPath
     if requestPath == "" {
         requestPath = r.URL.Path // 会自动 unescape, 先用 RawPath ,不行才用这个
@@ -165,9 +164,10 @@ func (a *Mux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
         }
     }
 
+    var matchRouted bool    
+
     // find a matching Route
     for _, route := range a.routes {
-
         // check if Route pattern matches url
         if !route.Regex.MatchString(requestPath) {
             continue
