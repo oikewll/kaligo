@@ -86,3 +86,39 @@ func StrToBool(val string) bool{
     str, _ := strconv.ParseBool(val)
     return str
 }
+
+// 在防止被注入攻击时，常会用到两个函数：htmlspecialchars()和addslashes() 、trim() 函数
+// addslashes() 函数返回在预定义字符之前添加反斜杠的字符串
+// 配合 html.EscapeString(hstr) 可以防止 XSS，XSS 实际上是往数据库添加 <script></script> 内容，利用当前用户cookie权限去调用接口做坏事
+// 预定义字符是：
+// 单引号（'）
+// 双引号（"）
+// 反斜杠（\）
+func Addslashes(str string) string {
+    tmpRune := []rune{}
+    strRune := []rune(str)
+    for _, ch := range strRune {
+        switch ch {
+        case []rune{'\\'}[0], []rune{'"'}[0], []rune{'\''}[0]:
+            tmpRune = append(tmpRune, []rune{'\\'}[0])
+            tmpRune = append(tmpRune, ch)
+        default:
+            tmpRune = append(tmpRune, ch)
+        }
+    }
+    return string(tmpRune)
+}
+
+// stripslashes() 函数删除由 addslashes() 函数添加的反斜杠
+func Stripslashes(str string) string {
+    dstRune := []rune{}
+    strRune := []rune(str)
+    strLenth := len(strRune)
+    for i := 0; i < strLenth; i++ {
+        if strRune[i] == []rune{'\\'}[0] {
+            i++
+        }
+        dstRune = append(dstRune, strRune[i])
+    }
+    return string(dstRune)
+}
