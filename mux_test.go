@@ -1,11 +1,15 @@
 package kaligo
 
 import (
+    "bytes"
+    "encoding/json"
     "net/http"
+    "net/http/httptest"
     "os"
     "testing"
 
     "github.com/owner888/kaligo/config"
+    "github.com/owner888/kaligo/util"
     "github.com/stretchr/testify/assert"
 )
 
@@ -19,6 +23,30 @@ func TestMain(m *testing.M) {
 func TestNew(t *testing.T) {
     mux := NewRouter()
     assert.NotNil(t, mux)
+}
+
+var testHandlder func(*TestController)
+
+type TestController struct {
+    Controller
+}
+
+func (c *TestController) Index() {
+    testHandlder(c)
+}
+
+func TestRequest(t *testing.T) {
+    mux := NewRouter()
+    mux.AddRoute("/", map[string]string{http.MethodPost: "Index", http.MethodGet: "Index"}, &TestController{})
+    w := httptest.NewRecorder()
+    buf := new(bytes.Buffer)
+    json.NewEncoder(buf).Encode(map[string]string{"user": "name"})
+    r := httptest.NewRequest(http.MethodPost, "/", buf)
+    r.Header.Set("Content-Type", string(util.MIMEJson))
+    testHandlder = func(c *TestController) {
+        assert.Equal(t, "name", c.FormValue("user"))
+    }
+    mux.ServeHTTP(w, r)
 }
 
 // 1、其他编程语言不常看到的：把map的value设置成函数，可以实现工厂模式

@@ -3,6 +3,7 @@ package kaligo
 import (
     // "log"
 
+    "encoding/json"
     "errors"
     "fmt"
     "io/ioutil"
@@ -241,13 +242,23 @@ func (c *Context) initFormCache() {
     if c.formCache == nil {
         c.formCache = util.UrlValues{}
         req := c.Request
-        maxMultipartMemory := int64(8 << 20) // 8 MiB
-        if err := req.ParseMultipartForm(maxMultipartMemory); err != nil {
-            if !errors.Is(err, http.ErrNotMultipart) {
-                // debugPrint("error on parse multipart form array: %v", err)
+        contentType := util.MIME(req.Header.Get("Content-Type"))
+        if contentType == util.MIMEPostForm {
+            maxMultipartMemory := int64(8 << 20) // 8 MiB
+            if err := req.ParseMultipartForm(maxMultipartMemory); err != nil {
+                if !errors.Is(err, http.ErrNotMultipart) {
+                    // debugPrint("error on parse multipart form array: %v", err)
+                }
+            }
+            c.formCache = util.UrlValues(req.PostForm)
+        } else if contentType == util.MIMEJson {
+            var form map[string]any
+            json.NewDecoder(c.Request.Body).Decode(&form)
+            fmt.Print(form)
+            for k, v := range form {
+                c.formCache[k] = []string{fmt.Sprint(v)}
             }
         }
-        c.formCache = util.UrlValues(req.PostForm)
     }
 }
 
