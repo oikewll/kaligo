@@ -87,8 +87,35 @@ func StrToBool(val string) bool{
     return str
 }
 
+// FilterInjections include SQL and XSS injections
+func FilterInjections(str string) string {
+    if str == "" {
+        return str
+    }
+
+    str = FilterInjectionsWords(str)
+    str = Addslashes(str)
+    return str
+}
+
+// FilterInjectionsWords include SQL and XSS words
+func FilterInjectionsWords(str string) string {
+    arr := [3]string{
+        "/<(\\/?)(script|i?frame|style|html|body|title|link|meta|object|\\?|\\%)([^>]*?)>/isU",
+        "/(<[^>]*)on[a-zA-Z]+\s*=([^>]*>)/isU",
+        "/select|insert|update|delete|\'|\/\*|\*|\.\.\/|\.\/|union|into|load_file|outfile|dump/is"
+    }
+
+    for _, value := range arr {
+        re := regexp.MustCompile(value)
+        re.ReplaceAllString(str, "")
+    }
+
+    return str
+}
+
+// Addslashes 函数返回在预定义字符之前添加反斜杠的字符串
 // 在防止被注入攻击时，常会用到两个函数：htmlspecialchars()和addslashes() 、trim() 函数
-// addslashes() 函数返回在预定义字符之前添加反斜杠的字符串
 // 配合 html.EscapeString(hstr) 可以防止 XSS，XSS 实际上是往数据库添加 <script></script> 内容，利用当前用户cookie权限去调用接口做坏事
 // 预定义字符是：
 // 单引号（'）
@@ -109,7 +136,7 @@ func Addslashes(str string) string {
     return string(tmpRune)
 }
 
-// stripslashes() 函数删除由 addslashes() 函数添加的反斜杠
+// Stripslashes 函数删除由 Addslashes 函数添加的反斜杠
 func Stripslashes(str string) string {
     dstRune := []rune{}
     strRune := []rune(str)
