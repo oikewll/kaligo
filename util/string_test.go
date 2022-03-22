@@ -8,7 +8,7 @@ import (
 
 func TestFilterInjectionsWords(t *testing.T) {
     testCases := []struct{ original, flitered string }{
-        {"select * from x", "  from x"},
+        {"SELECT * from x", "  from x"},
     }
     for _, tC := range testCases {
         t.Run(tC.original, func(t *testing.T) {

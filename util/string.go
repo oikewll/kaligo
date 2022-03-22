@@ -95,7 +95,7 @@ func FilterInjections(str string) string {
         return str
     }
 
-    str = FilterInjectionsWords(str)
+    //str = FilterInjectionsWords(str)
     str = html.EscapeString(str)
     str = Addslashes(str)
     return str
