@@ -35,16 +35,23 @@ func (c *TestController) Index() {
     testHandlder(c)
 }
 
+type TestModel struct {
+    Name string
+}
+
 func TestRequest(t *testing.T) {
     mux := NewRouter()
     mux.AddRoute("/", map[string]string{http.MethodPost: "Index", http.MethodGet: "Index"}, &TestController{})
     w := httptest.NewRecorder()
     buf := new(bytes.Buffer)
-    json.NewEncoder(buf).Encode(map[string]string{"user": "name"})
+    json.NewEncoder(buf).Encode(map[string]string{"name": "username"})
     r := httptest.NewRequest(http.MethodPost, "/", buf)
     r.Header.Set("Content-Type", string(util.MIMEJson))
     testHandlder = func(c *TestController) {
-        assert.Equal(t, "name", c.FormValue("user"))
+        assert.Equal(t, "username", c.FormValue("name"))
+        var model TestModel
+        assert.NoError(t, c.JsonBodyValue(&model))
+        assert.Equal(t, "username", model.Name)
     }
     mux.ServeHTTP(w, r)
 }

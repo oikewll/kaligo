@@ -66,6 +66,8 @@ func (c *Context) Reset() {
     c.Params = c.Params[:0]
     c.fullPath = ""
     c.Keys = sync.Map{}
+    c.queryCache = nil
+    c.formCache = nil
     c.sameSite = 0
     fmt.Print()
 }
@@ -253,8 +255,7 @@ func (c *Context) initFormCache() {
             c.formCache = util.UrlValues(req.PostForm)
         } else if contentType == util.MIMEJson {
             var form map[string]any
-            json.NewDecoder(c.Request.Body).Decode(&form)
-            fmt.Print(form)
+            c.JsonBodyValue(&form)
             for k, v := range form {
                 c.formCache[k] = []string{fmt.Sprint(v)}
             }
@@ -272,6 +273,13 @@ func (c *Context) FormValue(key string, defaultValue ...string) string {
         return ""
     }
     return ret
+}
+
+// JsonBodyValue 解析 application/json 数据
+//    var user User
+//    c.JsonBodyValue(&user)
+func (c *Context) JsonBodyValue(obj any) error {
+    return json.NewDecoder(c.Request.Body).Decode(obj)
 }
 
 // SetSameSite with cookie
