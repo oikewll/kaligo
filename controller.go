@@ -71,3 +71,5 @@ func (c *Controller) Prepare() {
 // Finish is use for processing after execution is complete.
 func (c *Controller) Finish() {
 }
+
+/* vim: set expandtab: */

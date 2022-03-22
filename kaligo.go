@@ -16,3 +16,5 @@ type Router interface {
 
     With(middlewares ...func(http.Handler) http.Handler) Router
 }
+
+/* vim: set expandtab: */

@@ -261,3 +261,5 @@ func Run(mux *Mux, port string) {
         log.Fatal("ListenAndServe: ", err)
     }
 }
+
+/* vim: set expandtab: */

@@ -151,3 +151,5 @@ func Stripslashes(str string) string {
     }
     return string(dstRune)
 }
+
+/* vim: set expandtab: */
