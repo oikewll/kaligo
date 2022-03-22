@@ -62,17 +62,12 @@ func runController(controllerType reflect.Type, m string, ctx *Context, params P
 func (c *Controller) Init(contex *Context, childName string) {
     c.Context = contex
     c.ChildName = childName
-    // fmt.Println("\n---------")
-    // fmt.Println("\nhello Init")
 }
 
 // Prepare is use for some processing before starting to execute.
 func (c *Controller) Prepare() {
-    // fmt.Println("\nhello Prepare")
 }
 
 // Finish is use for processing after execution is complete.
 func (c *Controller) Finish() {
-    // fmt.Println("\nhello Finish")
-    // fmt.Println("\n---------")
 }
