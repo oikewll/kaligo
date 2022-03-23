@@ -97,7 +97,7 @@ func Set(key string, value any) {
 // Get 获取配置项，允许使用点式获取，如：core.name
 func Get[T any](key string, defaultValue ...T) (t T) {
     var value any
-    anyDefaultValue := cast[T, any](defaultValue)
+    anyDefaultValue := util.CastArray[T, any](defaultValue)
     switch any(t).(type) {
     case string:
         value = GetString(key, anyDefaultValue...)
@@ -160,14 +160,6 @@ func getConfigMap(config ConfigMap, key string) ConfigMap {
         }
     }
     return nil
-}
-
-func cast[T any, B any](in []T) []B {
-    var interfaceSlice []B = make([]B, len(in))
-    for i, d := range in {
-        interfaceSlice[i] = any(d).(B)
-    }
-    return interfaceSlice
 }
 
 // toSyncMap 转换为 sync.Map 以支持并发安全

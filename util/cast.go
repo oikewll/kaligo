@@ -234,3 +234,11 @@ func ToDurationSlice(i any) []time.Duration {
     v, _ := ToDurationSliceE(i)
     return v
 }
+
+func CastArray[T any, B any](in []T) []B {
+    var interfaceSlice []B = make([]B, len(in))
+    for i, d := range in {
+        interfaceSlice[i] = any(d).(B)
+    }
+    return interfaceSlice
+}
