@@ -121,29 +121,20 @@ func main() {
 func AddRoutes(router *routes.Router) {
     router.AddStaticRoute("/static", "static")
 
-    router.AddRoute("/", map[string]string{
-        "GET": "Index",
-    }, &controller.Get{})
-
-    // Regexp url parameters:
-    router.AddRoute("/posts/:post_id([0-9]+)", map[string]string{
-        "POST": "Show",
-    }, &controller.Post{})
-
     // RESTy routes for "articles" resource
     router.AddRoute("/article", map[string]string{
         "POST": "CreateArticle",
-    }, &controller.Article{})
+    }, &controller.ArticleController{})
     router.AddRoute("/article/search", map[string]string{
         "GET": "searchArticles",
-    }, &controller.Article{})
+    }, &controller.ArticleController{})
 
     // Subrouters:
     router.AddRoute("/article/:article_id([0-9]+)", map[string]string{
         "GET": "GetArticle",
         "PUT": "UpdateArticle",
         "DELETE": "DeleteArticle",
-    }, &controller.Article{})
+    }, &controller.ArticleController{})
 }
 ```
 
@@ -158,15 +149,15 @@ import (
 )
 
 // Get is use for
-type Get struct {
+type ArticleController struct {
     kaligo.Controller
 }
 
-// H is a shortcut for map[string]any
 type H map[string]any
 
-// Index is a Get Index method
-func (c *Get) Index() {
+func (c *ArticleController) Index() {
+    // 通过范型获取路由数据
+    articleID := Get[int](c.Params, "article_id", 20)
     c.JSON(200, H{"message": "hello world"})
 }
 ```
