@@ -3,6 +3,7 @@ package kaligo
 import (
     "bytes"
     "encoding/json"
+    "mime/multipart"
     "net/http"
     "net/http/httptest"
     "os"
@@ -52,6 +53,22 @@ func TestRequest(t *testing.T) {
         var model TestModel
         assert.NoError(t, c.JsonBodyValue(&model))
         assert.Equal(t, "username", model.Name)
+    }
+    mux.ServeHTTP(w, r)
+}
+
+func TestMultipart(t *testing.T) {
+    mux := NewRouter()
+    mux.AddRoute("/", map[string]string{http.MethodPost: "Index", http.MethodGet: "Index"}, &TestController{})
+    w := httptest.NewRecorder()
+    buf := new(bytes.Buffer)
+    mw := multipart.NewWriter(buf)
+    mw.WriteField("name", "username")
+    mw.Close()
+    r := httptest.NewRequest(http.MethodPost, "/", buf)
+    r.Header.Set("Content-Type", mw.FormDataContentType())
+    testHandlder = func(c *TestController) {
+        assert.Equal(t, "username", c.FormValue("name"))
     }
     mux.ServeHTTP(w, r)
 }

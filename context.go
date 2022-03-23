@@ -244,8 +244,13 @@ func (c *Context) initFormCache() {
     if c.formCache == nil {
         c.formCache = util.UrlValues{}
         req := c.Request
-        contentType := util.MIME(req.Header.Get("Content-Type"))
-        if contentType == util.MIMEPostForm {
+        contentType := req.Header.Get("Content-Type")
+        if strings.Contains(contentType, string(util.MIMEPostForm)) {
+            if err := req.ParseForm(); err != nil {
+
+            }
+            c.formCache = util.UrlValues(req.Form)
+        } else if strings.Contains(contentType, string(util.MIMEMultipartPOSTForm)) {
             maxMultipartMemory := int64(8 << 20) // 8 MiB
             if err := req.ParseMultipartForm(maxMultipartMemory); err != nil {
                 if !errors.Is(err, http.ErrNotMultipart) {
@@ -253,7 +258,7 @@ func (c *Context) initFormCache() {
                 }
             }
             c.formCache = util.UrlValues(req.PostForm)
-        } else if contentType == util.MIMEJson {
+        } else if strings.Contains(contentType, string(util.MIMEJson)) {
             var form map[string]any
             c.JsonBodyValue(&form)
             for k, v := range form {
