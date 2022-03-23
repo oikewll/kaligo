@@ -351,6 +351,28 @@ func (c *Context) Render(code int, r render.Render) {
     }
 }
 
+/***** 当前时间 *****/
+// NowFunc 当前时间获取函数类型
+type NowFunc func() time.Time
+
+// 当前时间获取函数，默认获取当前时区
+//  kaligo.Now = func() time.Time {
+//      return time.Now().UTC()
+//  }
+var Now NowFunc = func() time.Time {
+    return time.Now().Local()
+}
+
+// Now 获取当前时间（默认当前时区）
+func (c *Context) Now() time.Time {
+    return Now()
+}
+
+// NowTimestamp 获取当前时间戳，统一时间戳格式（默认当前时区秒数）
+func (c *Context) NowTimestamp() int64 {
+    return Now().Unix()
+}
+
 /************************************/
 /***** GOLANG.ORG/X/NET/CONTEXT *****/
 /************************************/
