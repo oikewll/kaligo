@@ -5,6 +5,7 @@ import (
     "math/rand"
     "regexp"
     "strconv"
+    "strings"
     "time"
 )
 
@@ -95,6 +96,7 @@ func FilterInjections(str string) string {
         return str
     }
 
+    str = strings.TrimSpace(str)
     //str = FilterInjectionsWords(str)
     str = html.EscapeString(str)
     str = Addslashes(str)
