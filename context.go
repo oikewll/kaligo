@@ -21,13 +21,13 @@ import (
     "github.com/owner888/kaligo/util"
 )
 
-type SuccJSON struct {
+type SuccessJSON struct {
     Code int    `json:"code"`
     Msg  string `json:"msg"`
     Data any    `json:"data"`
 }
 
-type FailJSON struct {
+type ErrorJSON struct {
     Code int    `json:"code"`
     Msg  string `json:"msg"`
 }
@@ -135,19 +135,19 @@ func (c *Context) Redirect(code int, location string) {
     http.Redirect(c.ResponseWriter, c.Request, location, code)
 }
 
-func (c *Context) ApiJSON(code int, msg string, param ...any) {
+func (c *Context) API(code int, msg string, param ...any) {
     // c.Header("Access-Control-Allow-Origin", "*")             //允许访问所有域
     // c.Header("Access-Control-Allow-Headers", "Content-Type") //header的类型
     // c.Header("content-type", "application/json")             //返回数据格式是json
     if len(param) == 0 {
-        obj := &FailJSON{
+        obj := &ErrorJSON{
             Code: code,
             Msg:  msg,
         }
         c.Render(http.StatusOK, render.JSON{Data: obj})
     } else {
         data := param[0]
-        obj := &SuccJSON{
+        obj := &SuccessJSON{
             Code: code,
             Msg:  msg,
             Data: data,
