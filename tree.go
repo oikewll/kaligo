@@ -61,5 +61,5 @@ func Get[T any](kv AnyKeyValueGetter, key string, defaultValue ...T) T {
 func GetValue[T any](kv AnyKeyValueGetter, key string, defaultValue ...T) (T, bool) {
     anyDefaultValue := util.CastArray[T, any](defaultValue)
     v, ok := kv.GetAnyKeyValue(key, anyDefaultValue...)
-    return v.(T), ok
+    return util.To[T](v), ok
 }
