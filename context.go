@@ -6,9 +6,12 @@ import (
     "encoding/json"
     "errors"
     "fmt"
+    "io"
     "io/ioutil"
+    "mime/multipart"
     "net/http"
     "net/url"
+    "os"
     "strings"
     "sync"
     "time"
@@ -61,6 +64,8 @@ type Context struct {
     // the browser to send this cookie along with cross-site requests.
     sameSite http.SameSite
 }
+
+var MaxMultipartMemory int64 = 8 << 20 // 8 MiB
 
 func (c *Context) Reset() {
     c.Params = c.Params[:0]
@@ -251,8 +256,7 @@ func (c *Context) initFormCache() {
             }
             c.formCache = util.UrlValues(req.Form)
         } else if strings.Contains(contentType, string(util.MIMEMultipartPOSTForm)) {
-            maxMultipartMemory := int64(8 << 20) // 8 MiB
-            if err := req.ParseMultipartForm(maxMultipartMemory); err != nil {
+            if err := req.ParseMultipartForm(MaxMultipartMemory); err != nil {
                 if !errors.Is(err, http.ErrNotMultipart) {
                     // debugPrint("error on parse multipart form array: %v", err)
                 }
@@ -285,6 +289,45 @@ func (c *Context) FormValue(key string, defaultValue ...string) string {
 //    c.JsonBodyValue(&user)
 func (c *Context) JsonBodyValue(obj any) error {
     return json.NewDecoder(c.Request.Body).Decode(obj)
+}
+
+// FormFile returns the first file for the provided form key.
+func (c *Context) FormFile(name string) (*multipart.FileHeader, error) {
+    if c.Request.MultipartForm == nil {
+        if err := c.Request.ParseMultipartForm(MaxMultipartMemory); err != nil {
+            return nil, err
+        }
+    }
+    f, fh, err := c.Request.FormFile(name)
+    if err != nil {
+        return nil, err
+    }
+    f.Close()
+    return fh, err
+}
+
+// MultipartForm is the parsed multipart form, including file uploads.
+func (c *Context) MultipartForm() (*multipart.Form, error) {
+    err := c.Request.ParseMultipartForm(MaxMultipartMemory)
+    return c.Request.MultipartForm, err
+}
+
+// SaveUploadedFile uploads the form file to specific dst.
+func (c *Context) SaveUploadedFile(file *multipart.FileHeader, dst string) error {
+    src, err := file.Open()
+    if err != nil {
+        return err
+    }
+    defer src.Close()
+
+    out, err := os.Create(dst)
+    if err != nil {
+        return err
+    }
+    defer out.Close()
+
+    _, err = io.Copy(out, src)
+    return err
 }
 
 // SetSameSite with cookie
