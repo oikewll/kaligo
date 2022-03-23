@@ -71,7 +71,7 @@ type Column struct {
 
 // Field is ...
 type Field struct {
-    *Column
+    Column
 
     FieldType         reflect.Type
     IndirectFieldType reflect.Type
