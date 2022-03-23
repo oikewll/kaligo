@@ -1,15 +1,15 @@
 package kaligo
 
 // Param is a single URL parameter, consisting of a key and a value.
-type Param struct {
+type Param[T any] struct {
     Key   string
-    Value string
+    Value T
 }
 
 // Params is a Param-slice, as returned by the router.
 // The slice is ordered, the first URL parameter is also the first slice value.
 // It is therefore safe to read values by the index.
-type Params []Param
+type Params []Param[string]
 
 // ?name=test&age=10
 // ?age=10

@@ -164,7 +164,7 @@ func (a *Mux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
         }
     }
 
-    var matchRouted bool    
+    var matchRouted bool
 
     // find a matching Route
     for _, route := range a.routes {
@@ -181,7 +181,7 @@ func (a *Mux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
             continue
         }
 
-        params := make([]Param, len(route.Params))
+        params := make(Params, len(route.Params))
 
         if len(route.Params) > 0 {
             // add url parameters to the query param map
@@ -190,7 +190,7 @@ func (a *Mux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
             for i, match := range matches[1:] {
                 values.Add(route.Params[i], match)
-                params[i] = Param{route.Params[i], match}
+                params[i] = Param[string]{route.Params[i], match}
                 // fmt.Println(route.Params[i])
                 // fmt.Println(match)
             }

@@ -8,9 +8,9 @@ import (
 
 func TestParams(t *testing.T) {
     params := Params{
-        Param{"key1", "value1"},
-        Param{"key2", "value2"},
-        Param{"key3", ""},
+        Param[string]{"key1", "value1"},
+        Param[string]{"key2", "value2"},
+        Param[string]{"key3", ""},
     }
     assert.Equal(t, "value1", params.ByName("key1"))
     assert.Equal(t, "", params.ByName("key3", "defaultValue"))
