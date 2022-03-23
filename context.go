@@ -4,7 +4,6 @@ import (
     // "log"
 
     "encoding/json"
-    "errors"
     "fmt"
     "io"
     "io/ioutil"
@@ -65,7 +64,7 @@ type Context struct {
     sameSite http.SameSite
 }
 
-var MaxMultipartMemory int64 = 8 << 20 // 8 MiB
+var MaxMultipartMemory int64 = 32 << 20 // 32 MiB
 
 func (c *Context) Reset() {
     c.Params = c.Params[:0]
@@ -247,28 +246,7 @@ func (c *Context) QueryValue(key string, defaultValue ...string) string {
 
 func (c *Context) initFormCache() {
     if c.formCache == nil {
-        c.formCache = util.UrlValues{}
-        req := c.Request
-        contentType := req.Header.Get("Content-Type")
-        if strings.Contains(contentType, string(util.MIMEPostForm)) {
-            if err := req.ParseForm(); err != nil {
-
-            }
-            c.formCache = util.UrlValues(req.Form)
-        } else if strings.Contains(contentType, string(util.MIMEMultipartPOSTForm)) {
-            if err := req.ParseMultipartForm(MaxMultipartMemory); err != nil {
-                if !errors.Is(err, http.ErrNotMultipart) {
-                    // debugPrint("error on parse multipart form array: %v", err)
-                }
-            }
-            c.formCache = util.UrlValues(req.PostForm)
-        } else if strings.Contains(contentType, string(util.MIMEJson)) {
-            var form map[string]any
-            c.JsonBodyValue(&form)
-            for k, v := range form {
-                c.formCache[k] = []string{fmt.Sprint(v)}
-            }
-        }
+        c.formCache = util.DefaultMIMEParsers.ParseValues(c.Request)
     }
 }
 
