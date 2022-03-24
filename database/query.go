@@ -17,6 +17,9 @@ type Query struct {
     StdDB   *sql.DB // MySQL connection
     StdTx   *sql.Tx // MySQL connection for Transaction
 
+    RowsAffected int64 // For select、update、insert
+    LastInsertId int64 // Only for insert
+
     S *Select
     W *Where
     J *Join

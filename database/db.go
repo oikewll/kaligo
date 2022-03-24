@@ -53,12 +53,9 @@ const (
 )
 
 type Config struct {
-    schema *Schema
-
     Name      string   // Instance name
     Dialector          // Dialector database dialector
     StdDB     *sql.DB  // Connection
-    StdTx     *sql.Tx  // Connection for Transaction
     initCmds  []string // SQL commands/queries executed after connect
 
     timeout time.Duration // Timeout for connect SetConnMaxLifetime(timeout)
@@ -82,11 +79,11 @@ type Config struct {
 // DB is the struct for MySQL connection handler
 type DB struct {
     *Config
-    Error         error // Global error
-    RowsAffected  int64 // For select、update、insert
-    LastInsertId  int64 // Only for insert
-    InTransaction bool  // 是否正在事务执行中
+    Error         error   // Global error
+    StdTx         *sql.Tx // Connection for Transaction
+    InTransaction bool    // 是否正在事务执行中
     query         *Query
+    schema        *Schema
 }
 
 // Open initialize db session based on dialector
@@ -362,6 +359,12 @@ func (db *DB) Delete(table string) *Query {
 // CREATE DATABASE database CHARACTER SET utf-8 DEFAULT utf-8
 // Schema.CreateDatabase(/*database*/ database, /*charset*/ 'utf-8', /*ifNotExists*/ true)
 func (db *DB) Schema() *Schema {
+    if db.schema == nil {
+        db.schema = &Schema{
+            Name:  db.Name,
+            Query: db.query,
+        }
+    }
     return db.schema
 
     //db.query = &Query{
