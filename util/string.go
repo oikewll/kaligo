@@ -7,6 +7,7 @@ import (
     "strconv"
     "strings"
     "time"
+    "unicode"
 )
 
 // Substr 返回一个字符串中从指定位置开始到指定字符数的字符
@@ -152,6 +153,16 @@ func Stripslashes(str string) string {
         dstRune = append(dstRune, strRune[i])
     }
     return string(dstRune)
+}
+
+// https://stackoverflow.com/questions/53069040/checking-a-string-contains-only-ascii-characters
+func isASCII(s string) bool {
+    for i := 0; i < len(s); i++ {
+        if s[i] > unicode.MaxASCII {
+            return false
+        }
+    }
+    return true
 }
 
 /* vim: set expandtab: */

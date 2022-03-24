@@ -263,9 +263,11 @@ func (c *Context) FormValue(key string, defaultValue ...string) string {
     return ret
 }
 
-// JsonBodyValue 解析 application/json 数据
+// JsonBodyValue 解析 application/json、XML、ymal 等数据到 struct
 //    var user User
 //    c.JsonBodyValue(&user)
+//    var users []User
+//    c.JsonBodyValue(&users)
 func (c *Context) JsonBodyValue(obj any) error {
     return json.NewDecoder(c.Request.Body).Decode(obj)
 }
