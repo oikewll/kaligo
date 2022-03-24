@@ -103,3 +103,14 @@ func (r *Redis) Delete(key string) error {
 
     return nil
 }
+
+func (r *Redis) GetAnyKeyValue(key string, defaultValue ...any) (v any, ok bool) {
+    v, err := r.Get(key)
+    ok = err == nil
+    if !ok {
+        if len(defaultValue) != 0 {
+            v = defaultValue[0]
+        }
+    }
+    return
+}

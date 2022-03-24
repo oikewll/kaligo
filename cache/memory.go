@@ -63,3 +63,14 @@ func (mem *Memory) Delete(key string) error {
     mem.data.Delete(key)
     return nil
 }
+
+func (mem *Memory) GetAnyKeyValue(key string, defaultValue ...any) (v any, ok bool) {
+    v, err := mem.Get(key)
+    ok = err == nil
+    if !ok {
+        if len(defaultValue) != 0 {
+            v = defaultValue[0]
+        }
+    }
+    return
+}

@@ -55,3 +55,14 @@ func (mem *Memcache) Set(key string, val any, timeout time.Duration) (err error)
 func (mem *Memcache) Delete(key string) error {
     return mem.conn.Delete(key)
 }
+
+func (mem *Memcache) GetAnyKeyValue(key string, defaultValue ...any) (v any, ok bool) {
+    v, err := mem.Get(key)
+    ok = err == nil
+    if !ok {
+        if len(defaultValue) != 0 {
+            v = defaultValue[0]
+        }
+    }
+    return
+}

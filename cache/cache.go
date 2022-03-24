@@ -24,6 +24,7 @@ type CacheValue interface {
 
 // Cache interface
 type Cache interface {
+    // kaligo.AnyKeyValueGetter // TODO: import cycle
     Get(key string) (any, error)
     Set(key string, val any, timeout time.Duration) error
     IsExist(key string) bool
