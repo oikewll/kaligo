@@ -52,14 +52,8 @@ const (
     DELETE QueryType = 4
 )
 
-// DB is the struct for MySQL connection handler
-type DB struct {
-    Error         error // Global error
-    RowsAffected  int64 // For select、update、insert
-    LastInsertId  int64 // Only for insert
-    InTransaction bool  // 是否正在事务执行中
-    query         *Query
-    schema        *Schema
+type Config struct {
+    schema *Schema
 
     Name      string   // Instance name
     Dialector          // Dialector database dialector
@@ -85,11 +79,21 @@ type DB struct {
     cacheStore *sync.Map
 }
 
+// DB is the struct for MySQL connection handler
+type DB struct {
+    *Config
+    Error         error // Global error
+    RowsAffected  int64 // For select、update、insert
+    LastInsertId  int64 // Only for insert
+    InTransaction bool  // 是否正在事务执行中
+    query         *Query
+}
+
 // Open initialize db session based on dialector
 // (读+写)连接数据库+选择数据库
 func Open(dialector Dialector) (db *DB, err error) {
-
-    db = &DB{InTransaction: false}
+    cfg := &Config{}
+    db = &DB{Config: cfg, InTransaction: false}
 
     //if db.Logger == nil {
     //db.Logger = logger.Default

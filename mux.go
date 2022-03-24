@@ -220,6 +220,7 @@ func (a *Mux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func (a *Mux) controllerMethodCall(controllerType reflect.Type, m string, w http.ResponseWriter, r *http.Request, params Params) (err error) {
     ctx := a.pool.Get().(*Context)
     ctx.Reset()
+    ctx.DB = &database.DB{Config: a.DB.Config}
     ctx.ResponseWriter = w
     ctx.Request = r
     ctx.Params = params
