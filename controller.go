@@ -7,6 +7,9 @@ import (
     "reflect"
 )
 
+// H is a shortcut for map[string]any
+type H map[string]any
+
 // Interface is use for
 type Interface interface {
     Init(contex *Context, childName string)
