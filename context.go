@@ -73,7 +73,6 @@ func (c *Context) Reset() {
     c.queryCache = nil
     c.formCache = nil
     c.sameSite = 0
-    c.DB.Error = nil
     fmt.Print()
 }
 
