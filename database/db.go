@@ -53,7 +53,11 @@ const (
 )
 
 type Config struct {
-    Name      string   // Instance name
+    Name        string // Instance name
+    tablePrefix string
+    cryptKey    string
+    cryptFields map[string][]string
+
     Dialector          // Dialector database dialector
     StdDB     *sql.DB  // Connection
     initCmds  []string // SQL commands/queries executed after connect
@@ -92,6 +96,10 @@ func Open(dialector Dialector) (db *DB, err error) {
     cfg := &Config{}
     db = &DB{Config: cfg, InTransaction: false}
 
+    cfg.tablePrefix = config.Get[string]("database.mysql.table_prefix")
+    cfg.cryptKey = config.Get[string]("database.mysql.crypt_key")
+    cfg.cryptFields = config.Get[map[string][]string]("database.mysql.crypt_fields")
+
     //if db.Logger == nil {
     //db.Logger = logger.Default
     //}
@@ -113,10 +121,9 @@ func Open(dialector Dialector) (db *DB, err error) {
     }
 
     db.query = &Query{
-        DB:          db,
-        StdDB:       db.StdDB, // 因为返回的是指针*sql.DB，所以 db.StdDB 和 db.conn.StdDB 是同一个，一个Close()，另一个也会Close()
-        tablePrefix: config.Get[string]("database.mysql.table_prefix"),
-        Context:     context.Background(),
+        DB:      db,
+        StdDB:   db.StdDB, // 因为返回的是指针*sql.DB，所以 db.StdDB 和 db.conn.StdDB 是同一个，一个Close()，另一个也会Close()
+        Context: context.Background(),
     }
 
     // 设置最大初始连接数
@@ -265,14 +272,12 @@ func (db *DB) Select(columns ...string) *Query {
             distinct: false,
             offset:   0,
         },
-        W:           &Where{},
-        B:           &Builder{},
-        sqlStr:      "",
-        queryType:   SELECT,
-        cryptKey:    config.Get[string]("database.mysql.crypt_key"),
-        cryptFields: config.Get[map[string][]string]("database.mysql.crypt_fields"),
-        DB:          db,
-        StdDB:       db.StdDB,
+        W:         &Where{},
+        B:         &Builder{},
+        sqlStr:    "",
+        queryType: SELECT,
+        DB:        db,
+        StdDB:     db.StdDB,
     }
     return db.query
 }
@@ -297,13 +302,11 @@ func (db *DB) Insert(table string, args ...[]string) *Query {
             columns: columns,
         },
         //W: &Where{}, // Insert 暂时没有支持 Where 写法
-        B:           &Builder{},
-        sqlStr:      "",
-        queryType:   INSERT,
-        cryptKey:    config.Get[string]("database.mysql.crypt_key"),
-        cryptFields: config.Get[map[string][]string]("database.mysql.crypt_fields"),
-        DB:          db,
-        StdDB:       db.StdDB,
+        B:         &Builder{},
+        sqlStr:    "",
+        queryType: INSERT,
+        DB:        db,
+        StdDB:     db.StdDB,
     }
     return db.query
 }
@@ -321,14 +324,12 @@ func (db *DB) Update(table string) *Query {
         U: &Update{
             table: table,
         },
-        W:           &Where{},
-        B:           &Builder{},
-        sqlStr:      "",
-        queryType:   UPDATE,
-        cryptKey:    config.Get[string]("database.mysql.crypt_key"),
-        cryptFields: config.Get[map[string][]string]("database.mysql.crypt_fields"),
-        DB:          db,
-        StdDB:       db.StdDB,
+        W:         &Where{},
+        B:         &Builder{},
+        sqlStr:    "",
+        queryType: UPDATE,
+        DB:        db,
+        StdDB:     db.StdDB,
     }
     return db.query
 }
