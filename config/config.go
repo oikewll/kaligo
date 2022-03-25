@@ -100,17 +100,17 @@ func Get[T any](key string, defaultValue ...T) (t T) {
     anyDefaultValue := util.CastArray[T, any](defaultValue)
     switch any(t).(type) {
     case string:
-        value = GetString(key, anyDefaultValue...)
+        value = String(key, anyDefaultValue...)
     case int:
-        value = GetInt(key, anyDefaultValue...)
+        value = Int(key, anyDefaultValue...)
     case int64:
-        value = GetInt64(key, anyDefaultValue...)
+        value = Int64(key, anyDefaultValue...)
     case int32:
-        value = GetInt32(key, anyDefaultValue...)
+        value = Int32(key, anyDefaultValue...)
     case uint:
-        value = GetUint(key, anyDefaultValue...)
+        value = Uint(key, anyDefaultValue...)
     case bool:
-        value = GetBool(key, anyDefaultValue...)
+        value = Bool(key, anyDefaultValue...)
     default:
         value = Env(key, anyDefaultValue...)
     }
@@ -120,34 +120,34 @@ func Get[T any](key string, defaultValue ...T) (t T) {
     return
 }
 
-// GetString 获取 String 类型的配置信息
-func GetString(path string, defaultValue ...any) string {
-    return util.ToString(Env(path, defaultValue...))
+// String 获取 String 类型的配置信息
+func String(key string, defaultValue ...any) string {
+    return util.ToString(Env(key, defaultValue...))
 }
 
-// GetInt 获取 Int 类型的配置信息
-func GetInt(path string, defaultValue ...any) int {
-    return util.ToInt(Env(path, defaultValue...))
+// Int 获取 Int 类型的配置信息
+func Int(key string, defaultValue ...any) int {
+    return util.ToInt(Env(key, defaultValue...))
 }
 
-// GetInt64 获取 Int64 类型的配置信息
-func GetInt64(path string, defaultValue ...any) int64 {
-    return util.ToInt64(Env(path, defaultValue...))
+// Int64 获取 Int64 类型的配置信息
+func Int64(key string, defaultValue ...any) int64 {
+    return util.ToInt64(Env(key, defaultValue...))
 }
 
-// GetInt32 获取 Int64 类型的配置信息
-func GetInt32(path string, defaultValue ...any) int32 {
-    return util.ToInt32(Env(path, defaultValue...))
+// Int32 获取 Int64 类型的配置信息
+func Int32(key string, defaultValue ...any) int32 {
+    return util.ToInt32(Env(key, defaultValue...))
 }
 
-// GetUint 获取 Uint 类型的配置信息
-func GetUint(path string, defaultValue ...any) uint {
-    return util.ToUint(Env(path, defaultValue...))
+// Uint 获取 Uint 类型的配置信息
+func Uint(key string, defaultValue ...any) uint {
+    return util.ToUint(Env(key, defaultValue...))
 }
 
-// GetBool 获取 Bool 类型的配置信息
-func GetBool(path string, defaultValue ...any) bool {
-    return util.ToBool(Env(path, defaultValue...))
+// Bool 获取 Bool 类型的配置信息
+func Bool(key string, defaultValue ...any) bool {
+    return util.ToBool(Env(key, defaultValue...))
 }
 
 // 获取下一级设置的 map，key 不存在或 value 不是 ConfigMap 则返回 nil
