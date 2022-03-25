@@ -167,7 +167,7 @@ func (s *Schema) CurrentDatabase() (name string) {
 
 // ListDatabases If a database name is given it will return the database name with the configured
 // prefix. If not, then just the prefix is returnd
-func (s *Schema) ListDatabases(args ...string) []string {
+func (s *Schema) ListDatabases(args ...string) ([]string, error) {
     like := ""
     if len(args) > 0 {
         like = args[0]
@@ -177,7 +177,7 @@ func (s *Schema) ListDatabases(args ...string) []string {
 
 // ListTables If a table name is given it will return the table name with the configured
 // prefix. If not, then just the prefix is returnd
-func (s *Schema) ListTables(args ...string) []string {
+func (s *Schema) ListTables(args ...string) ([]string, error) {
     like := ""
     if len(args) > 0 {
         like = args[0]
@@ -187,7 +187,7 @@ func (s *Schema) ListTables(args ...string) []string {
 
 // ListColumns Lists all of the columns in a table. Optionally, a LIKE string can be
 // used to search for specific fields.
-func (s *Schema) ListColumns(table string, args ...string) []Column {
+func (s *Schema) ListColumns(table string, args ...string) ([]Column, error) {
     like := ""
     if len(args) > 0 {
         like = args[0]
@@ -197,7 +197,7 @@ func (s *Schema) ListColumns(table string, args ...string) []Column {
 
 // ListIndexes Lists all of the idexes in a table. Optionally, a LIKE string can be
 // used to search for specific indexes by name.
-func (s *Schema) ListIndexes(table string, args ...string) []Indexes {
+func (s *Schema) ListIndexes(table string, args ...string) ([]Indexes, error) {
     like := ""
     if len(args) > 0 {
         like = args[0]
@@ -261,7 +261,9 @@ func (s *Schema) CreateTable(table string, fields []map[string]any, args ...any)
     default:
     }
 
-    return s.Dialector.CreateTable(table, fields, primaryKeys, ifNotExists, engine, charset, foreignKeys, s.DB)
+    err = s.Dialector.CreateTable(table, fields, primaryKeys, ifNotExists, engine, charset, foreignKeys, s.DB)
+    s.AddError(err)
+    return
 }
 
 // DropTable Drops a table. Will throw a Database Exception if it cannot.
@@ -337,12 +339,12 @@ func (s *Schema) tableMaintenance(operation string, table string) bool {
 }
 
 // TableExists Generic check if a given table exists.
-func (s *Schema) TableExists(table string) bool {
+func (s *Schema) TableExists(table string) (bool, error) {
     return s.Dialector.TableExists(table, s.DB)
 }
 
 // FieldExists Checks if given field(s) in a given table exists.
-func (s *Schema) FieldExists(table string, value any) bool {
+func (s *Schema) FieldExists(table string, value any) (bool, error) {
     return s.Dialector.FieldExists(table, value, s.DB)
 }
 

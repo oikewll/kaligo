@@ -86,7 +86,6 @@ type DB struct {
     Error         error   // Global error
     StdTx         *sql.Tx // Connection for Transaction
     InTransaction bool    // 是否正在事务执行中
-    query         *Query
     schema        *Schema
 }
 
@@ -120,12 +119,6 @@ func Open(dialector Dialector) (db *DB, err error) {
         err = db.Dialector.Initialize(db)
     }
 
-    db.query = &Query{
-        DB:      db,
-        StdDB:   db.StdDB, // 因为返回的是指针*sql.DB，所以 db.StdDB 和 db.conn.StdDB 是同一个，一个Close()，另一个也会Close()
-        Context: context.Background(),
-    }
-
     // 设置最大初始连接数
     if config.Get[int]("database.mysql.max_open_connections") > 0 {
         db.StdDB.SetMaxOpenConns(config.Get[int]("database.mysql.max_open_connections"))
@@ -141,11 +134,6 @@ func Open(dialector Dialector) (db *DB, err error) {
     }
 
     db.setCharset(config.Get[string]("database.mysql.charset"))
-
-    db.schema = &Schema{
-        Name:  db.Name,
-        Query: db.query,
-    }
 
     //if err != nil {
     //db.Logger.Error(context.Background(), "failed to initialize database, got error %v", err)
@@ -213,14 +201,14 @@ func (db *DB) setCharset(charset string) {
 //    // if user's primary key is non-blank, will use it as condition, then will only update the user's name to `hello`
 //    db.Model(&user).Update("name", "hello")
 //func (db *DB) Model(value any) *Query {
-//db.query = &Query{
+//query := &Query{
 //Model     : value,
 //sqlStr    : "",
 //queryType : 0,
 //DB        : db,
 //StdDB     : db.StdDB,
 //}
-//return db.query
+//return query
 //}
 
 // Query func is use for create a new [*Query]
@@ -242,14 +230,13 @@ func (db *DB) Query(sqlStr string, args ...QueryType) *Query {
 
     // 生成一个新的 Query 对象，一个SQL一个 Query 对象
     //q := new(Query)
-    db.query = &Query{
+    query := &Query{
         sqlStr:    sqlStr,
         queryType: queryType,
         DB:        db,
-        StdDB:     db.StdDB,
     }
 
-    return db.query
+    return query
 }
 
 // Select func is use for create a new [*Select]
@@ -266,7 +253,7 @@ func (db *DB) Query(sqlStr string, args ...QueryType) *Query {
 // @param columns []string  columns to select
 // @return *Query
 func (db *DB) Select(columns ...string) *Query {
-    db.query = &Query{
+    query := &Query{
         S: &Select{
             selects:  columns,
             distinct: false,
@@ -277,9 +264,8 @@ func (db *DB) Select(columns ...string) *Query {
         sqlStr:    "",
         queryType: SELECT,
         DB:        db,
-        StdDB:     db.StdDB,
     }
-    return db.query
+    return query
 }
 
 // Insert func is use for create a new [*Insert]
@@ -296,7 +282,7 @@ func (db *DB) Insert(table string, args ...[]string) *Query {
         columns = args[0]
     }
 
-    db.query = &Query{
+    query := &Query{
         I: &Insert{
             table:   table,
             columns: columns,
@@ -306,9 +292,8 @@ func (db *DB) Insert(table string, args ...[]string) *Query {
         sqlStr:    "",
         queryType: INSERT,
         DB:        db,
-        StdDB:     db.StdDB,
     }
-    return db.query
+    return query
 }
 
 // Update func is use for create a new [*Update]
@@ -320,7 +305,7 @@ func (db *DB) Insert(table string, args ...[]string) *Query {
 // @param table   string    table to update
 // @return *Query
 func (db *DB) Update(table string) *Query {
-    db.query = &Query{
+    query := &Query{
         U: &Update{
             table: table,
         },
@@ -329,9 +314,8 @@ func (db *DB) Update(table string) *Query {
         sqlStr:    "",
         queryType: UPDATE,
         DB:        db,
-        StdDB:     db.StdDB,
     }
-    return db.query
+    return query
 }
 
 // Delete func is use for create a new [*Delete]
@@ -342,7 +326,7 @@ func (db *DB) Update(table string) *Query {
 // @param table   string    table to delete from
 // @return *Query
 func (db *DB) Delete(table string) *Query {
-    db.query = &Query{
+    query := &Query{
         D: &Delete{
             table: table,
         },
@@ -351,9 +335,8 @@ func (db *DB) Delete(table string) *Query {
         sqlStr:    "",
         queryType: DELETE,
         DB:        db,
-        StdDB:     db.StdDB,
     }
-    return db.query
+    return query
 }
 
 // Schema Database schema operations
@@ -361,14 +344,18 @@ func (db *DB) Delete(table string) *Query {
 // Schema.CreateDatabase(/*database*/ database, /*charset*/ 'utf-8', /*ifNotExists*/ true)
 func (db *DB) Schema() *Schema {
     if db.schema == nil {
+        query := &Query{
+            DB:      db,
+            Context: context.Background(),
+        }
         db.schema = &Schema{
             Name:  db.Name,
-            Query: db.query,
+            Query: query,
         }
     }
     return db.schema
 
-    //db.query = &Query{
+    //query := &Query{
     //Schema: &Schema{
     //Name : name,
     //},
@@ -379,7 +366,7 @@ func (db *DB) Schema() *Schema {
     //DB        : db,
     //StdDB     : db.StdDB,
     //}
-    //return db.query
+    //return query
 }
 
 // Expr func is use for create a new [*Expression] which is not escaped. An expression
@@ -392,7 +379,7 @@ func (db *DB) Expr(value string) *Expression {
 
 // TablePrefix Return the table prefix defined in the current configuration.
 func (db *DB) TablePrefix(table string) string {
-    return db.query.tablePrefix + table
+    return db.tablePrefix + table
 }
 
 // Row is the function for query one row

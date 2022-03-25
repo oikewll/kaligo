@@ -5,18 +5,18 @@ type Dialector interface {
     Name() string
     Initialize(*DB) error
     CurrentDatabase(db *DB) string
-    ListDatabases(like string, db *DB) []string
-    ListTables(like string, db *DB) []string
-    ListColumns(table, like string, db *DB) []Column
-    ListIndexes(table, like string, db *DB) []Indexes
+    ListDatabases(like string, db *DB) ([]string, error)
+    ListTables(like string, db *DB) ([]string, error)
+    ListColumns(table, like string, db *DB) ([]Column, error)
+    ListIndexes(table, like string, db *DB) ([]Indexes, error)
     CreateDatabase(database, charset string, ifNotExists bool, db *DB) (err error)
     DropDatabase(database string, db *DB) (err error)
     CreateTable(table string, fields []map[string]any, primaryKeys []string, ifNotExists bool, engine, charset string, foreignKeys []map[string]any, db *DB) (err error)
     RenameTable(oldTable, newTable string, db *DB) (err error)
     DropTable(table string, db *DB) (err error)
     TruncateTable(table string, db *DB) (err error)
-    TableExists(table string, db *DB) bool
-    FieldExists(table string, value any, db *DB) bool
+    TableExists(table string, db *DB) (bool, error)
+    FieldExists(table string, value any, db *DB) (bool, error)
     CreateIndex(table string, indexColumns any, indexName, index string, db *DB) (err error)
     RenameIndex(table, oldName, newName string, db *DB) (err error)
     DropIndex(table, indexName string, db *DB) (err error)

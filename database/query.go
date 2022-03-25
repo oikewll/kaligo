@@ -12,10 +12,10 @@ import (
 // Query is the struct for MySQL DATE type
 type Query struct {
     *DB
+
+    Error   error // Global error
     Context context.Context
     Schema  *Schema
-    StdDB   *sql.DB // MySQL connection
-    StdTx   *sql.Tx // MySQL connection for Transaction
 
     RowsAffected int64 // For select、update、insert
     LastInsertId int64 // Only for insert
@@ -29,11 +29,8 @@ type Query struct {
     D *Delete
     //R *Result
 
-    sqlStr      string    // SQL statement
-    queryType   QueryType // Query type
-    tablePrefix string
-    cryptKey    string
-    cryptFields map[string][]string
+    sqlStr    string    // SQL statement
+    queryType QueryType // Query type
 
     Dest         any           // var user User、var users []User、var result map[string]any、var results []map[string]any、var ages []int64
     Model        any           // Object：&User{}
@@ -50,6 +47,16 @@ type Query struct {
 // QueryType get the type of the query
 func (q *Query) QueryType() QueryType {
     return q.queryType
+}
+
+// AddError add error to db
+func (q *Query) AddError(err error) error {
+    if q.Error == nil {
+        q.Error = err
+    } else if err != nil {
+        q.Error = fmt.Errorf("%v; %w", q.Error, err)
+    }
+    return q.Error
 }
 
 // Cached Enables the query to be cached for a specified amount of time.

@@ -59,7 +59,7 @@ func (dialector Dialector) CurrentDatabase(db *database.DB) (name string) {
 
 // ListDatabases If a database name is given it will return the database name with the configured
 // prefix. If not, then just the prefix is returnd
-func (dialector Dialector) ListDatabases(like string, db *database.DB) []string {
+func (dialector Dialector) ListDatabases(like string, db *database.DB) ([]string, error) {
     sqlStr := "SHOW DATABASES"
     if like != "" {
         sqlStr += " LIKE " + db.Quote("%"+like+"%")
@@ -67,12 +67,12 @@ func (dialector Dialector) ListDatabases(like string, db *database.DB) []string 
 
     var names []string
     db.Query(sqlStr).Scan(&names).Execute()
-    return names
+    return names, nil
 }
 
 // ListTables If a table name is given it will return the table name with the configured
 // prefix. If not, then just the prefix is returnd
-func (dialector Dialector) ListTables(like string, db *database.DB) []string {
+func (dialector Dialector) ListTables(like string, db *database.DB) ([]string, error) {
     sqlStr := "SHOW TABLES"
     if like != "" {
         sqlStr += " LIKE " + db.Quote("%"+like+"%")
@@ -80,19 +80,19 @@ func (dialector Dialector) ListTables(like string, db *database.DB) []string {
 
     var names []string
     db.Query(sqlStr).Scan(&names).Execute()
-    return names
+    return names, nil
 }
 
 // ListColumns Lists all of the columns in a table. Optionally, a LIKE string can be
 // used to search for specific fields.
-func (dialector Dialector) ListColumns(table, like string, db *database.DB) []database.Column {
+func (dialector Dialector) ListColumns(table, like string, db *database.DB) ([]database.Column, error) {
     sqlStr := "SHOW FULL COLUMNS FROM " + db.QuoteTable(table)
     if like != "" {
         sqlStr += " LIKE " + db.Quote("%"+like+"%")
     }
     rows, err := db.Rows(sqlStr)
     if err != nil {
-        db.AddError(err)
+        return nil, err
     }
 
     var (
@@ -110,7 +110,7 @@ func (dialector Dialector) ListColumns(table, like string, db *database.DB) []da
     listColumns := []database.Column{}
     for rows.Next() {
         if err := rows.Scan(&columnField, &columnType, &columnCollation, &columnNull, &columnKey, &columnDefault, &columnExtra, &columnPrivileges, &columnComment); err != nil {
-            db.AddError(err)
+            return nil, err
         } else {
             //if strings.Index(columnType, "unsigned") != -1 { }
             //if strings.Index(columnType, "zerofill") != -1 { }
@@ -159,12 +159,12 @@ func (dialector Dialector) ListColumns(table, like string, db *database.DB) []da
         }
     }
 
-    return listColumns
+    return listColumns, nil
 }
 
 // ListIndexes Lists all of the idexes in a table. Optionally, a LIKE string can be
 // used to search for specific indexes by name.
-func (dialector Dialector) ListIndexes(table, like string, db *database.DB) []database.Indexes {
+func (dialector Dialector) ListIndexes(table, like string, db *database.DB) ([]database.Indexes, error) {
     sqlStr := "SHOW INDEX FROM " + db.QuoteTable(table)
     if like != "" {
         sqlStr += " WHERE " + db.QuoteIdentifier("Key_name") + " LIKE " + db.Quote("%"+like+"%")
@@ -172,7 +172,7 @@ func (dialector Dialector) ListIndexes(table, like string, db *database.DB) []da
 
     rows, err := db.Rows(sqlStr)
     if err != nil {
-        db.AddError(err)
+        return nil, err
     }
 
     type IndexTmp struct {
@@ -203,7 +203,7 @@ func (dialector Dialector) ListIndexes(table, like string, db *database.DB) []da
         }
 
         if err := rows.Scan(columns...); err != nil {
-            db.AddError(err)
+            return nil, err
         } else {
             index := database.Indexes{
                 Table:  indexTmp.Table,
@@ -236,7 +236,7 @@ func (dialector Dialector) ListIndexes(table, like string, db *database.DB) []da
             indexes = append(indexes, index)
         }
     }
-    return indexes
+    return indexes, nil
 }
 
 // CreateDatabase Creates a database. Will throw a Database Exception if it cannot.
@@ -250,9 +250,6 @@ func (dialector Dialector) CreateDatabase(database, charset string, ifNotExists 
     sqlStr += db.QuoteIdentifier(database) + db.ProcessCharset(charset, true)
 
     _, err = db.Exec(sqlStr)
-    if err != nil {
-        db.AddError(err)
-    }
     return err
 }
 
@@ -261,9 +258,6 @@ func (dialector Dialector) DropDatabase(database string, db *database.DB) (err e
     sqlStr := "DROP DATABASE " + db.QuoteIdentifier(database)
 
     _, err = db.Exec(sqlStr)
-    if err != nil {
-        db.AddError(err)
-    }
     return err
 }
 
@@ -297,9 +291,6 @@ func (dialector Dialector) CreateTable(table string, fields []map[string]any, pr
     sqlStr += db.ProcessCharset(charset, true, "") + ";"
 
     _, err = db.Exec(sqlStr)
-    if err != nil {
-        db.AddError(err)
-    }
     return err
 }
 
@@ -311,9 +302,6 @@ func (dialector Dialector) RenameTable(oldTable, newTable string, db *database.D
     sqlStr += db.QuoteTable(newTable)
 
     _, err = db.Exec(sqlStr)
-    if err != nil {
-        db.AddError(err)
-    }
     return err
 }
 
@@ -323,9 +311,6 @@ func (dialector Dialector) DropTable(table string, db *database.DB) (err error) 
     sqlStr += db.QuoteTable(table)
 
     _, err = db.Exec(sqlStr)
-    if err != nil {
-        db.AddError(err)
-    }
     return err
 }
 
@@ -335,28 +320,24 @@ func (dialector Dialector) TruncateTable(table string, db *database.DB) (err err
     sqlStr += db.QuoteTable(table)
 
     _, err = db.Exec(sqlStr)
-    if err != nil {
-        db.AddError(err)
-    }
     return err
 }
 
 // TableExists Generic check if a given table exists.
-func (dialector Dialector) TableExists(table string, db *database.DB) bool {
+func (dialector Dialector) TableExists(table string, db *database.DB) (bool, error) {
     sqlStr := "SELECT * FROM "
     sqlStr += db.QuoteTable(table)
     sqlStr += " LIMIT 1"
 
     _, err := db.Rows(sqlStr)
     if err != nil {
-        db.AddError(err)
-        return false
+        return false, err
     }
-    return true
+    return true, nil
 }
 
 // FieldExists Checks if given field(s) in a given table exists.
-func (dialector Dialector) FieldExists(table string, value any, db *database.DB) bool {
+func (dialector Dialector) FieldExists(table string, value any, db *database.DB) (bool, error) {
     var columns []string
     switch value.(type) {
     case string:
@@ -377,10 +358,9 @@ func (dialector Dialector) FieldExists(table string, value any, db *database.DB)
 
     _, err := db.Rows(sqlStr)
     if err != nil {
-        db.AddError(err)
-        return false
+        return false, err
     }
-    return true
+    return true, nil
 }
 
 // CreateIndex Creates an index on that table.
@@ -460,9 +440,7 @@ func (dialector Dialector) CreateIndex(table string, indexColumns any, indexName
     sqlStr += " (" + columns + ")"
 
     _, err = db.Exec(sqlStr)
-    if err != nil {
-        db.AddError(err)
-    }
+
     return err
 }
 
@@ -470,9 +448,6 @@ func (dialector Dialector) CreateIndex(table string, indexColumns any, indexName
 func (dialector Dialector) RenameIndex(table, oldName, newName string, db *database.DB) (err error) {
     sqlStr := "ALTER TABLE " + db.QuoteTable(table) + " RENAME INDEX " + db.QuoteIdentifier(oldName) + " TO " + db.QuoteIdentifier(newName)
     _, err = db.Exec(sqlStr)
-    if err != nil {
-        db.AddError(err)
-    }
     return
 }
 
@@ -488,9 +463,6 @@ func (dialector Dialector) DropIndex(table, indexName string, db *database.DB) (
     }
 
     _, err = db.Exec(sqlStr)
-    if err != nil {
-        db.AddError(err)
-    }
     return err
 }
 
@@ -499,9 +471,6 @@ func (dialector Dialector) AddForeignKey(table string, foreignKey []map[string]a
     sqlStr := "ALTER TABLE " + db.QuoteTable(table) + " ADD " + strings.TrimLeft(db.ProcessForeignKeys(foreignKey), ",")
 
     _, err = db.Exec(sqlStr)
-    if err != nil {
-        db.AddError(err)
-    }
     return err
 }
 
@@ -510,9 +479,6 @@ func (dialector Dialector) DropForeignKey(table string, fkName string, db *datab
     sqlStr := "ALTER TABLE " + db.QuoteTable(table) + " DROP FOREIGN KEY " + db.QuoteIdentifier(fkName)
 
     _, err = db.Exec(sqlStr)
-    if err != nil {
-        db.AddError(err)
-    }
     return err
 }
 
@@ -571,9 +537,6 @@ func (dialector Dialector) AlterFields(alterType string, table string, fields an
     }
 
     _, err = db.Exec(sqlStr)
-    if err != nil {
-        db.AddError(err)
-    }
     return err
 }
 
