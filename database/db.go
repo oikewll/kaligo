@@ -355,18 +355,18 @@ func (db *DB) Schema() *Schema {
     }
     return db.schema
 
-    //query := &Query{
-    //Schema: &Schema{
-    //Name : name,
-    //},
-    //W: &Where{},
-    //B: &Builder{},
-    //sqlStr    : "",
-    //queryType : DELETE,
-    //DB        : db,
-    //StdDB     : db.StdDB,
-    //}
-    //return query
+    // query := &Query{
+    //     Schema: &Schema{
+    //         Name : name,
+    //     },
+    //     W: &Where{},
+    //     B: &Builder{},
+    //     sqlStr    : "",
+    //     queryType : DELETE,
+    //     DB        : db,
+    //     StdDB     : db.StdDB,
+    // }
+    // return query
 }
 
 // Expr func is use for create a new [*Expression] which is not escaped. An expression
@@ -731,293 +731,265 @@ func (db *DB) ProcessCharset(charset string, isDefault bool, args ...string) str
     return charset
 }
 
-// Caching Per connection cache controller setter/getter
-//func (c *Connection) Caching() bool { return false }
+// // Caching Per connection cache controller setter/getter
+// func (c *Connection) Caching() bool { return false }
+//
+// // slowQueryLog is the function for record the slow query log
+// func (db *DB) slowQueryLog(sql string, queryTime int64) {
+//     msg := fmt.Sprintf("Time: %d --- %s --- %s \n", queryTime, time.Now().Format("2006-01-02 15:04:05"), sql)
+//     if ok, err := util.WriteLog("slow_query.log", msg); !ok {
+//         log.Print(err)
+//     }
+// }
 
-// slowQueryLog is the function for record the slow query log
-// 记录慢查询日志
-//func (db *DB) slowQueryLog(sql string, queryTime int64) {
-//msg := fmt.Sprintf("Time: %d --- %s --- %s \n",
-//queryTime,
-//time.Now().Format("2006-01-02 15:04:05"),
-//sql,
-//)
-//if ok, err := util.WriteLog("slow_query.log", msg); !ok {
-//log.Print(err)
-//}
-//}
+// // 记录错误查询日志
+// func (db *DB) errorSQLLog(sql string, err error) {
+//     msg := fmt.Sprintf("Time: %s --- %s --- %s \n", time.Now().Format("2006-01-02 15:04:05"), sql, err,)
+//     if ok, err := util.WriteLog("error_sql.log", msg); !ok {
+//         log.Print(err)
+//     }
+// }
 
-//// 记录错误查询日志
-//func (db *DB) errorSQLLog(sql string, err error) {
-//msg := fmt.Sprintf("Time: %s --- %s --- %s \n",
-//time.Now().Format("2006-01-02 15:04:05"),
-//sql,
-//err,
-//)
-//if ok, err := util.WriteLog("error_sql.log", msg); !ok {
-//log.Print(err)
-//}
-//}
+// // Query is the function for query
+// // 执行一条语句(读 + 写)
+// func (db *DB) Query(sql string) (*sql.Rows, error) {
+//     startTime := time.Now().UnixNano()
+//     rows, err := db.connonn.Query(sql)
+//     if err != nil {
+//         db.errorSQLLog(sql, err)
+//     }
+//     queryTime := (time.Now().UnixNano() - startTime) / 1000000000
+//
+//     if queryTime > db.logSlowTime && db.logSlowQuery {
+//         db.slowQueryLog(sql, queryTime)
+//     }
+//
+//     return rows, err
+// }
 
-// Query is the function for query
-// 执行一条语句(读 + 写)
-//func (db *DB) Query(sql string) ([]mysql.Row, mysql.Result, error) {
-//func (db *DB) Query(sql string) (*sql.Rows, error) {
-//startTime := time.Now().UnixNano()
-//rows, err := db.connonn.Query(sql)
-//if err != nil {
-//db.errorSQLLog(sql, err)
-//}
-//queryTime := (time.Now().UnixNano() - startTime) / 1000000000
+// // 提取数据表字段名称
+// func (db *DB) getFieldList(str string) ([]string) {
+//     reg, _ := regexp.Compile(`map\[(.*?)\]`)
+//     arr := reg.FindAllString(str, 2)
+//     str = fmt.Sprintf("%s", arr[1])
+//     reg = regexp.MustCompile(`:%!s\(.*?\)`)
+//     str = reg.ReplaceAllString(str, "")
+//     str = strings.Replace(str, "map[", "", 1)
+//     str = strings.Replace(str, "]", "", 1)
+//     fieldList := strings.Split(str, " ")
+//     return fieldList
+// }
 
-//if queryTime > db.logSlowTime && db.logSlowQuery {
-//db.slowQueryLog(sql, queryTime)
-//}
+// // GetOne is the function for get one record
+// // (读)直接从一个sql语句返回一条记录数据
+// func (db *DB) GetOne(sql string) (row map[string]string, err error) {
+//     // 判断SQL语句是否包含 Limit 1
+//     reg, _ := regexp.Compile(`(?i:limit)`)
+//     if !reg.MatchString(sql) {
+//         sql = strings.TrimSpace(sql)
+//         reg, _ = regexp.Compile(`(?i:[,;])$`)
+//         sql = reg.ReplaceAllString(sql, "")
+//     }
+//     sql = fmt.Sprintf("%s Limit 1", sql)
+//
+//     // 非常重要：确保QueryRow之后调用Scan方法，否则持有的数据库链接不会被释放
+//     //err := db.QueryRow(sqlStr, 1).Scan(&u.id, &u.name, &u.age)
+//     rows, err := db.GetAll(sql)
+//
+//     if _, ok := rows[0]; ok {
+//         row = rows[0]
+//     }
+//
+//     return row, err
+// }
 
-//return rows, err
-//}
+// // GetAll is the function for get all record
+// // (读)直接从一个sql语句返回多条记录数据
+// func (db *DB) GetAll(sql string) (row map[int]map[string]string, err error) {
+//     // 最后得到的map
+//     results := make(map[int] map[string]string)
+//     rows, err := db.conn.Query(sql) // 查询多条
+//     if err != nil {
+//         fmt.Println("查询数据库失败", err.Error())
+//         return results, err
+//     }
+//
+//     // 非常重要：关闭rows释放持有的数据库链接
+//     defer rows.Close()
+//
+//     // 读出查询出的列字段名
+//     cols, _ := rows.Columns()
+//     // vals是每个列的值，这里获取到byte里
+//     vals := make([][]byte, len(cols))
+//     // rows.Scan的参数，因为每次查询出来的列是不定长的，用len(cols)定住当次查询的长度
+//     scans := make([]any, len(cols))
+//     // 让每一行数据都填充到[][]byte里面
+//     for i := range vals {
+//         scans[i] = &vals[i]
+//     }
+//
+//     i := 0
+//     // 循环读取结果集中的数据
+//     for rows.Next() { //循环，让游标往下推
+//         if err := rows.Scan(scans...); err != nil { //rows.Scan查询出来的不定长值放到scans[i] = &vals[i],也就是每行都放在vals里
+//             fmt.Println(err)
+//             return results, err
+//         }
+//
+//         row := make(map[string]string) //每行数据
+//
+//         for k, v := range vals { //每行数据是放在values里面，现在把它挪到row里
+//             key := cols[k]
+//             row[key] = string(v)
+//         }
+//         results[i] = row //装入结果集中
+//         i++
+//     }
+//     // 查询出来的数组
+//     for k, v := range results {
+//         fmt.Println(k, v)
+//     }
+//     return results, err
+// }
 
-//// 提取数据表字段名称
-//func (db *DB) getFieldList(str string) ([]string) {
-//reg, _ := regexp.Compile(`map\[(.*?)\]`)
-//arr := reg.FindAllString(str, 2)
-//str = fmt.Sprintf("%s", arr[1])
-//reg = regexp.MustCompile(`:%!s\(.*?\)`)
-//str = reg.ReplaceAllString(str, "")
-//str = strings.Replace(str, "map[", "", 1)
-//str = strings.Replace(str, "]", "", 1)
-//fieldList := strings.Split(str, " ")
-//return fieldList
-//}
+// // Insert is the function for insert data
+// // (写)拼凑一个sql语句插入一条记录数据
+// func (db *DB) Insert(table string, data map[string]string) (bool, error) {
+//     var keys = []string{}
+//     var vals = []string{}
+//     for k, v := range data {
+//         keys = append(keys, k)
+//         vals = append(vals, db.AddSlashes(db.StripSlashes(v)))
+//     }
+//     keysSQL := "`"+strings.Join(keys, "`, `")+"`"
+//     valsSQL := "\""+strings.Join(vals, "\", \"")+"\""
+//     var sqlStr = "Insert Into `"+table+"`("+keysSQL+") Values ("+valsSQL+")"
+//     //fmt.Println(sql)
+//     //_, res, err := db.Query(sql)
+//     res, err := db.connonn.Exec(sqlStr)
+//     if err != nil {
+//         return false, err
+//     }
+//     db.res = res
+//     return true, err
+// }
 
-// GetOne is the function for get one record
-// (读)直接从一个sql语句返回一条记录数据
-//func (db *DB) GetOne(sql string) (row map[string]string, err error) {
-//// 判断SQL语句是否包含 Limit 1
-//reg, _ := regexp.Compile(`(?i:limit)`)
-//if !reg.MatchString(sql) {
-//sql = strings.TrimSpace(sql)
-//reg, _ = regexp.Compile(`(?i:[,;])$`)
-//sql = reg.ReplaceAllString(sql, "")
-//}
-//sql = fmt.Sprintf("%s Limit 1", sql)
-////fmt.Println(sql)
+// // InsertBatch is the function for insert data in bulk
+// // (写)拼凑一个sql语句批量插入多条记录数据
+// func (db *DB) InsertBatch(table string, data []map[string]string) (bool, error) {
+//     var keys string
+//     var vals string
+//     var valsArr []string
+//     for _, d := range data {
+//         keys = ""
+//         vals = ""
+//         // slice是无序的，这里是保证他有顺序
+//         ms := util.NewSortMap(d)
+//         sort.Sort(ms)
+//         for k, v := range ms {
+//             if k == 0 {
+//                 keys = v.Key
+//                 vals = v.Val
+//             } else {
+//                 keys = keys+"`,`"+v.Key
+//                 vals = vals+"\",\""+db.AddSlashes(db.StripSlashes(v.Val))
+//             }
+//         }
+//         keys = "`"+keys+"`"
+//         vals = "(\""+vals+"\")"
+//         valsArr = append(valsArr, vals)
+//     }
+//     var sqlStr = "Insert Into `"+table+"`("+keys+") Values "+strings.Join(valsArr, ", ")
+//
+//     res, err := db.conn.Exec(sqlStr)
+//     if err != nil {
+//         return false, err
+//     }
+//     db.res = res
+//     return true, err
+// }
 
-//// 非常重要：确保QueryRow之后调用Scan方法，否则持有的数据库链接不会被释放
-////err := db.QueryRow(sqlStr, 1).Scan(&u.id, &u.name, &u.age)
-//rows, err := db.GetAll(sql)
+// // Update is the function for update data
+// // (写)拼凑一个sql语句修改一条记录数据
+// func (db *DB) Update(table string, data map[string]string, where string) (bool, error) {
+//     var sets []string
+//     for k, v := range data {
+//         sets = append(sets, "`"+k+"`=\""+db.AddSlashes(db.StripSlashes(v))+"\"")
+//     }
+//     setsSQL := strings.Join(sets, ", ")
+//     var sqlStr = "Update `"+table+"` Set "+setsSQL+" Where "+where
+//     //fmt.Println(sql)
+//     res, err := db.connonn.Exec(sqlStr)
+//     if err != nil {
+//         return false, err
+//     }
+//     db.res = res
+//     return true, err
+// }
 
-//if _, ok := rows[0]; ok {
-//row = rows[0]
-//}
+// // UpdateBatch is the function for update data in bulk
+// // (写)拼凑一个sql语句批量插入多条记录数据
+// func (db *DB) UpdateBatch(table string, data []map[string]string, index string) (bool, error) {
+//     var sqlStr = "Update `"+table+"` Set "
+//     ids := []string{}
+//     rows := map[string][]string {}
+//
+//     // 下面两段是拆解过程
+//     //rows := map[string][]string {
+//     //"channel":[]string {
+//     //"When `plat_user_name` = 'test111' Then 'kkk5'",
+//     //"When `plat_user_name` = 'test222' Then '360'",
+//     //},
+//     //"plat_name":[]string {
+//     //"When `plat_user_name` = 'test111' Then 'kkk5_xxx'",
+//     //"When `plat_user_name` = 'test222' Then '360_xxx'",
+//     //},
+//     //}
+//
+//     //rows["channel"] = []string{}
+//     //rows["channel"] = append(rows["channel"], "When `plat_user_name` = 'test111' Then 'kkk5'")
+//     //rows["channel"] = append(rows["channel"], "When `plat_user_name` = 'test222' Then '360'")
+//     //rows["plat_name"] = []string{}
+//     //rows["plat_name"] = append(rows["plat_name"], "When `plat_user_name` = 'test111' Then 'kkk5_xxx'")
+//     //rows["plat_name"] = append(rows["plat_name"], "When `plat_user_name` = 'test222' Then '360_xxx'")
+//
+//     // 拼凑上面的Map结构出来
+//     for _, d := range data {
+//         ids = append(ids, d[index])
+//         for k, v := range d {
+//             if k != index {
+//                 str := "When `"+index+"` = '" + d[index]+"' Then '"+v+"'"
+//                 rows[k] = append(rows[k], str)
+//             }
+//         }
+//     }
+//     // 拼凑批量修改SQL语句
+//     for k, v := range rows {
+//         sqlStr += "`"+k+"` = Case "
+//         for _, vv := range v {
+//             sqlStr += " "+vv
+//         }
+//         sqlStr += " Else `"+k+"` End, "
+//     }
+//     // 拼凑Where条件
+//     join := "'"+strings.Join(ids, "', '")+"'"
+//     where := " Where `"+index+"` In ("+join+")"
+//     // 完整的可执行SQL语句
+//     sqlStr = util.Substr(sqlStr, 0, len(sqlStr)-2) + where
+//
+//     res, err := db.conn.Exec(sqlStr)
+//     if err != nil {
+//         return false, err
+//     }
+//
+//     db.res = res
+//
+//     return true, err
+// }
 
-////fmt.Println(row)
-//return row, err
-//}
-
-// GetAll is the function for get all record
-// (读)直接从一个sql语句返回多条记录数据
-//func (db *DB) GetAll(sql string) (row map[int]map[string]string, err error) {
-
-//// 最后得到的map
-//results := make(map[int] map[string]string)
-
-////row := db.connonn.QueryRow(sql)  // 查询一条，因为不存在Columns()方法，所以统一用Query吧
-//rows, err := db.conn.Query(sql) // 查询多条
-//if err != nil {
-//fmt.Println("查询数据库失败", err.Error())
-//return results, err
-//}
-
-//// 非常重要：关闭rows释放持有的数据库链接
-//defer rows.Close()
-
-//// 读出查询出的列字段名
-//cols, _ := rows.Columns()
-//// vals是每个列的值，这里获取到byte里
-//vals := make([][]byte, len(cols))
-//// rows.Scan的参数，因为每次查询出来的列是不定长的，用len(cols)定住当次查询的长度
-//scans := make([]any, len(cols))
-//// 让每一行数据都填充到[][]byte里面
-//for i := range vals {
-//scans[i] = &vals[i]
-//}
-
-//i := 0
-//// 循环读取结果集中的数据
-//for rows.Next() { //循环，让游标往下推
-//if err := rows.Scan(scans...); err != nil { //rows.Scan查询出来的不定长值放到scans[i] = &vals[i],也就是每行都放在vals里
-//fmt.Println(err)
-//return results, err
-//}
-
-//row := make(map[string]string) //每行数据
-
-//for k, v := range vals { //每行数据是放在values里面，现在把它挪到row里
-//key := cols[k]
-//row[key] = string(v)
-//}
-//results[i] = row //装入结果集中
-//i++
-//}
-
-//// 查询出来的数组
-////for k, v := range results {
-////fmt.Println(k, v)
-////}
-
-//return results, err
-//}
-
-// Insert is the function for insert data
-// (写)拼凑一个sql语句插入一条记录数据
-//func (db *DB) Insert(table string, data map[string]string) (bool, error) {
-
-//var keys = []string{}
-//var vals = []string{}
-//for k, v := range data {
-//keys = append(keys, k)
-//vals = append(vals, db.AddSlashes(db.StripSlashes(v)))
-//}
-//keysSQL := "`"+strings.Join(keys, "`, `")+"`"
-//valsSQL := "\""+strings.Join(vals, "\", \"")+"\""
-//var sqlStr = "Insert Into `"+table+"`("+keysSQL+") Values ("+valsSQL+")"
-////fmt.Println(sql)
-////_, res, err := db.Query(sql)
-//res, err := db.connonn.Exec(sqlStr)
-//if err != nil {
-//return false, err
-//}
-
-//db.res = res
-
-//return true, err
-//}
-
-// InsertBatch is the function for insert data in bulk
-// (写)拼凑一个sql语句批量插入多条记录数据
-//func (db *DB) InsertBatch(table string, data []map[string]string) (bool, error) {
-
-//var keys string
-//var vals string
-//var valsArr []string
-//for _, d := range data {
-//keys = ""
-//vals = ""
-//// slice是无序的，这里是保证他有顺序
-//ms := util.NewSortMap(d)
-//sort.Sort(ms)
-//for k, v := range ms {
-//if k == 0 {
-//keys = v.Key
-//vals = v.Val
-//} else {
-//keys = keys+"`,`"+v.Key
-//vals = vals+"\",\""+db.AddSlashes(db.StripSlashes(v.Val))
-//}
-//}
-//keys = "`"+keys+"`"
-//vals = "(\""+vals+"\")"
-//valsArr = append(valsArr, vals)
-//}
-//var sqlStr = "Insert Into `"+table+"`("+keys+") Values "+strings.Join(valsArr, ", ")
-////fmt.Println(sql)
-
-//res, err := db.conn.Exec(sqlStr)
-//if err != nil {
-//return false, err
-//}
-
-//db.res = res
-
-//return true, err
-//}
-
-// Update is the function for update data
-// (写)拼凑一个sql语句修改一条记录数据
-//func (db *DB) Update(table string, data map[string]string, where string) (bool, error) {
-
-//var sets []string
-//for k, v := range data {
-//sets = append(sets, "`"+k+"`=\""+db.AddSlashes(db.StripSlashes(v))+"\"")
-//}
-//setsSQL := strings.Join(sets, ", ")
-//var sqlStr = "Update `"+table+"` Set "+setsSQL+" Where "+where
-////fmt.Println(sql)
-//res, err := db.connonn.Exec(sqlStr)
-//if err != nil {
-//return false, err
-//}
-
-//db.res = res
-
-//return true, err
-//}
-
-// UpdateBatch is the function for update data in bulk
-// (写)拼凑一个sql语句批量插入多条记录数据
-//func (db *DB) UpdateBatch(table string, data []map[string]string, index string) (bool, error) {
-
-//var sqlStr = "Update `"+table+"` Set "
-//ids := []string{}
-//rows := map[string][]string {}
-
-//// 下面两段是拆解过程
-////rows := map[string][]string {
-////"channel":[]string {
-////"When `plat_user_name` = 'test111' Then 'kkk5'",
-////"When `plat_user_name` = 'test222' Then '360'",
-////},
-////"plat_name":[]string {
-////"When `plat_user_name` = 'test111' Then 'kkk5_xxx'",
-////"When `plat_user_name` = 'test222' Then '360_xxx'",
-////},
-////}
-
-////rows["channel"] = []string{}
-////rows["channel"] = append(rows["channel"], "When `plat_user_name` = 'test111' Then 'kkk5'")
-////rows["channel"] = append(rows["channel"], "When `plat_user_name` = 'test222' Then '360'")
-////rows["plat_name"] = []string{}
-////rows["plat_name"] = append(rows["plat_name"], "When `plat_user_name` = 'test111' Then 'kkk5_xxx'")
-////rows["plat_name"] = append(rows["plat_name"], "When `plat_user_name` = 'test222' Then '360_xxx'")
-
-//// 拼凑上面的Map结构出来
-//for _, d := range data {
-//ids = append(ids, d[index])
-//for k, v := range d {
-//if k != index {
-//str := "When `"+index+"` = '" + d[index]+"' Then '"+v+"'"
-//rows[k] = append(rows[k], str)
-//}
-//}
-//}
-//// 拼凑批量修改SQL语句
-//for k, v := range rows {
-//sqlStr += "`"+k+"` = Case "
-//for _, vv := range v {
-//sqlStr += " "+vv
-//}
-//sqlStr += " Else `"+k+"` End, "
-//}
-//// 拼凑Where条件
-//join := "'"+strings.Join(ids, "', '")+"'"
-//where := " Where `"+index+"` In ("+join+")"
-//// 完整的可执行SQL语句
-//sqlStr = util.Substr(sqlStr, 0, len(sqlStr)-2) + where
-
-//res, err := db.conn.Exec(sqlStr)
-//if err != nil {
-//return false, err
-//}
-
-//db.res = res
-
-//return true, err
-//}
-
-//// InsertID is the function for get last insert id
-//// 取得最后一次插入记录的自增ID值
-//func (db *DB) InsertID() int64 {
-//id, _ := db.res.LastInsertId()
-//return id
-//}
+// // InsertID is the function for get last insert id
+// // 取得最后一次插入记录的自增ID值
+// func (db *DB) InsertID() int64 {
+//     id, _ := db.res.LastInsertId()
+//     return id
+// }
