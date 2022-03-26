@@ -61,9 +61,9 @@ func runController(controllerType reflect.Type, m string, ctx *Context, params P
 }
 
 // Init returns a new initialized Controller.
-func (c *Controller) Init(contex *Context, childName string) {
-    c.Context = contex
-    c.ChildName = childName
+func (c *Controller) Init(ctx *Context, cn string) {
+    c.Context   = ctx
+    c.ChildName = cn
 }
 
 // Prepare is use for some processing before starting to execute.

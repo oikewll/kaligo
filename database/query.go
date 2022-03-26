@@ -162,18 +162,18 @@ func (q *Query) Execute() (*Query, error) {
     }
 
     // 处理查询缓存
-    //cacheObj = cache.Forge(cacheKey)
-    //if conn.Caching() && q.lifeTime != 0 && q.queryType == SELECT {
-    //var cacheKey string
-    //if q.cacheKey == "" {
-    //h := md5.New()
-    //io.WriteString(h, "Connection.Query(\"" + sqlStr + "\")")
-    //cacheKey += fmt.Sprintf("db.%x", h.Sum(nil))
-    //return db.Cache(cache.Get(cacheKey), sqlStr, q.AsObject)
-    //} else {
-    //cacheKey += q.cacheKey
-    //}
-    //}
+    // cacheObj = cache.Forge(cacheKey)
+    // if conn.Caching() && q.lifeTime != 0 && q.queryType == SELECT {
+    //     var cacheKey string
+    //     if q.cacheKey == "" {
+    //         h := md5.New()
+    //         io.WriteString(h, "Connection.Query(\"" + sqlStr + "\")")
+    //         cacheKey += fmt.Sprintf("db.%x", h.Sum(nil))
+    //         return db.Cache(cache.Get(cacheKey), sqlStr, q.AsObject)
+    //     } else {
+    //         cacheKey += q.cacheKey
+    //     }
+    // }
 
     // Execute the query
     q.queryCount++
