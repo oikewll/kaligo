@@ -127,7 +127,7 @@ func (q *Query) Compile() string {
 }
 
 // Execute the current query on the given database.
-func (q *Query) Execute() *Query {
+func (q *Query) Execute() (*Query, error) {
     var err error
 
     // Compile the SQL query
@@ -183,7 +183,7 @@ func (q *Query) Execute() *Query {
         rows, err = q.Rows(sqlStr)
         if err != nil {
             q.AddError(err)
-            return q
+            return q, err
         }
         defer rows.Close()
         Scan(rows, q)
@@ -192,7 +192,7 @@ func (q *Query) Execute() *Query {
         rs, err = q.Exec(sqlStr)
         if err != nil {
             q.AddError(err)
-            return q
+            return q, err
         }
         var rowsAffected int64 = 0
         var lastInsertID int64 = 0
@@ -204,21 +204,21 @@ func (q *Query) Execute() *Query {
         q.LastInsertId = lastInsertID
         if err != nil {
             q.AddError(err)
-            return q
+            return q, err
         }
     }
 
-    //Cache the result if needed
-    //if  cacheObj != nil && (q.cacheAll || result.count() != 0) {
-    //cacheObj.setExpiration(q.lifeTime).SetContents(result.asArray()).Set()
-    //}
-
+    // Cache the result if needed
+    // if  cacheObj != nil && (q.cacheAll || result.count() != 0) {
+    //     cacheObj.setExpiration(q.lifeTime).SetContents(result.asArray()).Set()
+    // }
+    //
     // 记录日志
-    //db.Logger.Trace(stmt.Context, curTime, func() (string, int64) {
-    //return db.Dialector.Explain(stmt.SQL.String(), stmt.Vars...), db.RowsAffected
-    //}, db.Error)
+    // db.Logger.Trace(stmt.Context, curTime, func() (string, int64) {
+    //     return db.Dialector.Explain(stmt.SQL.String(), stmt.Vars...), db.RowsAffected
+    // }, db.Error)
 
-    return q
+    return q, nil
 }
 
 // Scan is ...
@@ -312,3 +312,5 @@ func (q *Query) Reset() *Query {
 
     return q
 }
+
+/* vim: set expandtab: */

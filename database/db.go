@@ -993,3 +993,5 @@ func (db *DB) ProcessCharset(charset string, isDefault bool, args ...string) str
 //     id, _ := db.res.LastInsertId()
 //     return id
 // }
+
+/* vim: set expandtab: */

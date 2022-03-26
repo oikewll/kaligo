@@ -132,47 +132,33 @@ func (c *Context) Clear(key string) {
 
 // Redirect returns an HTTP redirect to the specific location.
 func (c *Context) Redirect(code int, location string) {
-    http.Redirect(c.ResponseWriter, c.Request, location, code)
-}
-
-func (c *Context) API(code int, msg string, param ...any) {
-    // c.Header("Access-Control-Allow-Origin", "*")             //允许访问所有域
-    // c.Header("Access-Control-Allow-Headers", "Content-Type") //header的类型
-    // c.Header("content-type", "application/json")             //返回数据格式是json
-    if len(param) == 0 {
-        obj := &ErrorJSON{
-            Code: code,
-            Msg:  msg,
-        }
-        c.Render(http.StatusOK, render.JSON{Data: obj})
-    } else {
-        data := param[0]
-        obj := &SuccessJSON{
-            Code: code,
-            Msg:  msg,
-            Data: data,
-        }
-        c.Render(http.StatusOK, render.JSON{Data: obj})
-    }
+    c.Render(-1, render.Redirect{
+        Code:     code,
+        Location: location,
+        Request:  c.Request,
+    })
 }
 
 // JSON serializes the given struct as JSON into the response body.
 // It also sets the Content-Type as "application/json".
 func (c *Context) JSON(code int, obj any) {
+    // c.Header("Access-Control-Allow-Origin", "*")             //允许访问所有域
+    // c.Header("Access-Control-Allow-Headers", "Content-Type") //header的类型
+    // c.Header("content-type", "application/json")             //返回数据格式是json
     c.Render(code, render.JSON{Data: obj})
 }
 
 // String writes the given string into the response body.
 func (c *Context) String(code int, format string, values ...any) {
-    // c.Render(code, render.String{Format: format, Data: values})
+    c.Render(code, render.String{Format: format, Data: values})
 }
 
 // Data writes some data into the body stream and updates the HTTP code.
 func (c *Context) Data(code int, contentType string, data []byte) {
-    // c.Render(code, render.Data{
-    //     ContentType: contentType,
-    //     Data:        data,
-    // })
+    c.Render(code, render.Data{
+        ContentType: contentType,
+        Data:        data,
+    })
 }
 
 func (c *Context) requestHeader(key string) string {
@@ -441,3 +427,5 @@ func (c *Context) Value(key any) any {
     }
     return c.Request.Context().Value(key)
 }
+
+/* vim: set expandtab: */

@@ -25,7 +25,6 @@ type Controller struct {
 
 // New returns a new initialized Controller.
 func New() *Controller {
-    // fmt.Printf("init Controller\n")
     return &Controller{}
 }
 

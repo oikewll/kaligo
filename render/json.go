@@ -2,11 +2,7 @@ package render
 
 import (
     "encoding/json"
-    // "bytes"
-    // "fmt"
-    // "html/template"
     "net/http"
-    // "github.com/astaxie/beego/logs"
 )
 
 // JSON contains the given interface object.

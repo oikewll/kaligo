@@ -6,38 +6,13 @@ import (
     "path"
     "reflect"
     "regexp"
-
-    // "runtime"
     "strings"
     "sync"
 
     "github.com/owner888/kaligo/cache"
     "github.com/owner888/kaligo/database"
     "github.com/owner888/kaligo/util"
-
-    "github.com/astaxie/beego/logs"
 )
-
-// 定义当前package中使用的全局变量
-var (
-    err error
-)
-
-// var db *database.DB
-//
-// func init() {
-//     var err error
-//     // db, err = database.Open(sqlite.Open(config.Get[string]("database.sqlite.file")))
-//     db, err = database.Open(mysql.Open(config.Get[string]("database.mysql.dsn")))
-//     if err != nil {
-//         panic(err)
-//     }
-// }
-
-func init() {
-    logs.SetLogFuncCall(true)
-    logs.SetLogFuncCallDepth(3)
-}
 
 // 强制要求 Mux 实现 Router
 // 假如 Router 是一个第三方库接口，如果第三方库新版动了这个接口，我们发现不了，编译也不报错，只有用的时候才报错，但写了这句，就编译不过了
@@ -122,11 +97,12 @@ func (a *Mux) AddRoute(pattern string, m map[string]string, c Interface) {
     }
 
     // now create the Route
-    route := &Route{}
-    route.Regex = regex
-    route.Methods = m
-    route.Params = params
-    route.ControllerType = reflect.Indirect(reflect.ValueOf(c)).Type()
+    route := &Route{
+        Regex          : regex,
+        Methods        : m,
+        Params         : params,
+        ControllerType : reflect.Indirect(reflect.ValueOf(c)).Type(),
+    }
 
     a.routes = append(a.routes, route)
 }
@@ -186,13 +162,9 @@ func (a *Mux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
         if len(route.Params) > 0 {
             // add url parameters to the query param map
             values := r.URL.Query()
-            // logs.Debug("values", values)
-
             for i, match := range matches[1:] {
                 values.Add(route.Params[i], match)
                 params[i] = Param[string]{route.Params[i], match}
-                // fmt.Println(route.Params[i])
-                // fmt.Println(match)
             }
 
             // reassemble query params and add to RawQuery
