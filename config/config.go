@@ -97,7 +97,7 @@ func Set(key string, value any) {
 // Get 获取配置项，允许使用点式获取，如：core.name
 func Get[T any](key string, defaultValue ...T) (t T) {
     var value any
-    anyDefaultValue := util.CastArray[T, any](defaultValue)
+    anyDefaultValue := util.CastSlice[T, any](defaultValue)
     switch any(t).(type) {
     case string:
         value = String(key, anyDefaultValue...)
