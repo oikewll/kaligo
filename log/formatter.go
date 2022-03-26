@@ -10,7 +10,7 @@ type PlainFormatter struct {
 }
 
 func (f *PlainFormatter) Printf(level Level, format string, a ...any) string {
-    return fmt.Sprintf(format, a...)
+    return fmt.Sprintf(format, a...) + "\n"
 }
 
 type ConsoleFormatter struct {

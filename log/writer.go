@@ -31,6 +31,6 @@ type FileWriter struct {
 }
 
 func NewFileWriter(path string) *FileWriter {
-    f, _ := os.Open(path)
+    f, _ := os.OpenFile(path, os.O_APPEND|os.O_RDWR|os.O_CREATE, os.ModePerm)
     return &FileWriter{DefaultWriter: DefaultWriter{f}}
 }
