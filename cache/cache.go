@@ -29,6 +29,8 @@ type Cache interface {
     Set(key string, val any, timeout time.Duration) error
     IsExist(key string) bool
     Delete(key string) error
+    Incr(key string) int64
+    Decr(key string) int64
 }
 
 func New(param ...string) (Cache, error) {

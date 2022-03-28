@@ -104,6 +104,14 @@ func (r *Redis) Delete(key string) error {
     return nil
 }
 
+func (mem *Redis) Incr(key string) int64 {
+    return 0
+}
+
+func (mem *Redis) Decr(key string) int64 {
+    return 0
+}
+
 func (r *Redis) GetAnyKeyValue(key string, defaultValue ...any) (v any, ok bool) {
     v, err := r.Get(key)
     ok = err == nil

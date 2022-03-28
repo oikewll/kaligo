@@ -8,6 +8,7 @@ import (
     "regexp"
     "strings"
     "sync"
+    "sync/atomic"
 
     "github.com/owner888/kaligo/cache"
     "github.com/owner888/kaligo/database"
@@ -27,6 +28,7 @@ type Mux struct {
     Cache        cache.Cache // interface 本身是指针，不需要用 *cache.Cache，struct 才需要
     pool         sync.Pool   // Context 复用
     Timer        *Timer
+    TimerID      int64
 }
 
 func NewRouter() *Mux {
@@ -37,6 +39,7 @@ func NewRouter() *Mux {
     }
     mux.Cache = cache
     mux.Timer = NewTimer()
+    mux.TimerID = atomic.AddInt64()
     mux.pool.New = func() any {
         return &Context{DB: mux.DB, Cache: mux.Cache, Timer: mux.Timer}
     }

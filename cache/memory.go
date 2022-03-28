@@ -3,6 +3,7 @@ package cache
 import (
     "errors"
     "sync"
+    "sync/atomic"
     "time"
 )
 
@@ -62,6 +63,21 @@ func (mem *Memory) Set(key string, value any, timeout time.Duration) (err error)
 func (mem *Memory) Delete(key string) error {
     mem.data.Delete(key)
     return nil
+}
+
+func (mem *Memory) Incr(key string) int64 {
+    var incrID int64    
+    ret, err := mem.Get(key)
+    if err != nil {
+        incrID = 0
+    }
+    incrID = ret.(int64)
+    incrID = atomic.AddInt64(*incrID)
+    return incrID
+}
+
+func (mem *Memory) Decr(key string) int64 {
+    return 0
 }
 
 func (mem *Memory) GetAnyKeyValue(key string, defaultValue ...any) (v any, ok bool) {
