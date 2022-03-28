@@ -40,8 +40,7 @@ func (t *Timer) DelTimer(name string) bool {
 }
 
 // AddTasker is the function for add tasker
-// AddTasker("default", &control.Task{}, "import_database", "2014-10-15 15:33:00")
-// func AddTasker(name string, control any, action string, taskTime string) {
+// c.Timer.AddTasker("import_database", "2014-10-15 15:33:00", "ImportDatabase", &controller.Get{})
 func (t *Timer) AddTasker(name, taskTime, method string, runner Interface, params any) {
     go func() {
         then, _ := time.ParseInLocation("2006-01-02 15:04:05", taskTime, time.Local)
@@ -59,10 +58,10 @@ func (t *Timer) AddTasker(name, taskTime, method string, runner Interface, param
 }
 
 // AddTimer is the function for add timer, The interval is in microseconds
-// router.AddTimer("import_database", 3000, "ImportDatabase", &controller.Get{})
+// c.Timer.AddTimer("import_database", time.Second * 3, "ImportDatabase", &controller.Get{})
 func (t *Timer) AddTimer(name string, duration time.Duration, method string, runner Interface, params any) {
     go func() {
-        timeTicker := time.NewTicker(duration * time.Millisecond)
+        timeTicker := time.NewTicker(duration)
         t.storeTimers.Store(name, timeTicker)
         for {
             select {

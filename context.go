@@ -142,9 +142,6 @@ func (c *Context) Redirect(code int, location string) {
 // JSON serializes the given struct as JSON into the response body.
 // It also sets the Content-Type as "application/json".
 func (c *Context) JSON(code int, obj any) {
-    // c.Header("Access-Control-Allow-Origin", "*")             //允许访问所有域
-    // c.Header("Access-Control-Allow-Headers", "Content-Type") //header的类型
-    // c.Header("content-type", "application/json")             //返回数据格式是json
     c.Render(code, render.JSON{Data: obj})
 }
 
