@@ -6,7 +6,7 @@ import (
     "sync"
     "time"
 
-    "github.com/owner888/kaligo/log"
+    "github.com/owner888/kaligo/logs"
 )
 
 // Timer 是所有定时任务管理中心
@@ -53,7 +53,7 @@ func (t *Timer) AddTasker(name, taskTime, method string, runner Interface, param
             })
             t.storeTimers.Store(name, timeTasker)
         } else {
-            log.Error("定时任务 --- [ " + name + " ] --- 小于当前时间，将不会被执行")
+            logs.Error("定时任务 --- [ " + name + " ] --- 小于当前时间，将不会被执行")
         }
     }()
 }

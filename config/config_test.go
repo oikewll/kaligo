@@ -5,7 +5,7 @@ import (
     "testing"
     "time"
 
-    "github.com/owner888/kaligo/log"
+    "github.com/owner888/kaligo/logs"
 )
 
 func TestConfig(t *testing.T) {
@@ -28,7 +28,7 @@ func TestConfig(t *testing.T) {
         "sqlite": "wrong",
         "custom": []string{"1", "2"},
     })
-    log.Debug(String("database.mysql.charset"))
+    logs.Debug(String("database.mysql.charset"))
     assertEqual(t, Env("DB_HOST", "127.0.0.1").(string), "127.0.0.1")
     assertEqual(t, Get[string]("database.mysql.charset"), "utf8mb4")
     assertEqual(t, Get[bool]("database.mysql.enable"), true)

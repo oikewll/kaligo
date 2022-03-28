@@ -13,15 +13,15 @@ import (
     "testing"
     "time"
 
-    "github.com/owner888/kaligo/log"
+    "github.com/owner888/kaligo/logs"
     "github.com/stretchr/testify/assert"
     "github.com/stretchr/testify/require"
 )
 
 func TestToGeneric(t *testing.T) {
-    log.Debug("", To[bool](123))
+    logs.Debug("", To[bool](123))
     // {int(1482597504), time.Date(2016, 12, 24, 16, 38, 24, 0, time.UTC), false}
-    log.Debug("", To[time.Time](1472574600))
+    logs.Debug("", To[time.Time](1472574600))
 }
 
 func TestToUintE(t *testing.T) {
