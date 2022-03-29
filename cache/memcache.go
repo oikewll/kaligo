@@ -19,17 +19,19 @@ func NewMemcache(server ...string) *Memcache {
 }
 
 // Get return cached value
-func (mem *Memcache) Get(key string) (reply any, err error) {
+func (mem *Memcache) Get(key string) (any, bool) {
     var item *memcache.Item
+    var err error    
+    var reply any    
 
     if item, err = mem.conn.Get(key); err != nil {
-        return nil, err
+        return nil, false
     }
     if err = json.Unmarshal(item.Value, &reply); err != nil {
-        return nil, err
+        return nil, false
     }
 
-    return reply, nil
+    return reply, true
 }
 
 // Has check value exists in memcache.
@@ -64,12 +66,11 @@ func (mem *Memcache) Decr(key string) int64 {
     return 0
 }
 
-func (mem *Memcache) GetAnyKeyValue(key string, defaultValue ...any) (v any, ok bool) {
-    v, err := mem.Get(key)
-    ok = err == nil
-    if !ok {
+func (mem *Memcache) GetAnyKeyValue(key string, defaultValue ...any) (val any, found bool) {
+    val, found = mem.Get(key)
+    if !found {
         if len(defaultValue) != 0 {
-            v = defaultValue[0]
+            val = defaultValue[0]
         }
     }
     return

@@ -12,6 +12,15 @@ import (
     "golang.org/x/exp/constraints"
 )
 
+const (
+    // For use with functions that take an expiration time.
+    NoExpiration time.Duration = -1
+    // For use with functions that take an expiration time. Equivalent to
+    // passing in the same expiration duration as was given to New() or
+    // NewFrom() when the cache was created (e.g. 5 minutes.)
+    DefaultExpired time.Duration = 0
+)
+
 var (
     // defaultCache 默认的全局缓存，全局的 Get Set 使用此缓存
     defaultCache Cache
@@ -25,7 +34,7 @@ type CacheValue interface {
 // Cache interface
 type Cache interface {
     // kaligo.AnyKeyValueGetter // TODO: import cycle
-    Get(key string) (any, error)
+    Get(key string) (any, bool)
     Set(key string, val any, timeout time.Duration) error
     Has(key string) bool
     Del(key string) error

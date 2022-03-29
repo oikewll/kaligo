@@ -1,99 +1,123 @@
 package cache
 
 import (
-    "errors"
     "sync"
-    "sync/atomic"
     "time"
 )
 
-// Memory struct contains *data
-type Memory struct {
-    data sync.Map
-    lock sync.Mutex
+type Item struct {
+    Object     any
+    Expiration int64
 }
 
-type data struct {
-    Data    any
-    Expired time.Time
+// Returns true if the item has expired.
+func (item Item) Expired() bool {
+	if item.Expiration == 0 {
+		return false
+	}
+	return time.Now().UnixNano() > item.Expiration
+}
+
+// Memory struct contains *data
+type Memory struct {
+    defaultExpiration time.Duration
+    items             sync.Map
+    mu                sync.RWMutex
 }
 
 // NewMemory create new memcache
 func NewMemory() *Memory {
     return &Memory{
-        data: sync.Map{},
-        lock: sync.Mutex{},
+        items: sync.Map{},
+        mu   : sync.RWMutex{},
     }
-}
-
-// Get return cached value
-func (mem *Memory) Get(key string) (reply any, err error) {
-    val, ok := mem.data.Load(key)
-    if !ok {
-        return nil, errors.New("sync.Map load error.")
-    }
-
-    ret := val.(*data)
-    if ret.Expired.Before(time.Now()) {
-        mem.data.Delete(key)
-        return nil, errors.New("key expired.")
-    }
-
-    reply = ret.Data
-    return reply, nil
-}
-
-// IsExist check value exists in memcache.
-func (mem *Memory) Has(key string) bool {
-    _, err := mem.Get(key)
-    if err != nil {
-        return false
-    }
-    return true
 }
 
 // Set cached value with key and expire time.
+// cache.Set("key", "value", 5 time.Second)
 func (mem *Memory) Set(key string, value any, timeout time.Duration) (err error) {
-    // max := 1<<63 - 1
-    mem.data.Store(key, &data{
-        Data:    value,
-        Expired: time.Now().Add(timeout),
+    var expired int64
+    if timeout == DefaultExpired {
+        timeout = mem.defaultExpiration
+    }
+    if timeout > 0 {
+        expired = time.Now().Add(timeout).UnixNano()
+    }
+    mem.items.Store(key, Item{
+        Object    : value,
+        Expiration: expired,
     })
     return nil
 }
 
-// Delete delete value in memcache.
+// Get return cached value
+func (mem *Memory) Get(key string) (any, bool) {
+    val, found := mem.items.Load(key)
+    if !found {
+        return nil, false
+    }
+
+    item := val.(*Item)
+    // 存在过期时间, -1 和 0 为永不过期
+    if item.Expiration > 0 {
+        // 当前时间大于过期时间
+        if time.Now().UnixNano() > item.Expiration {
+            mem.items.Delete(key)
+            return nil, false
+        }
+    }
+
+    return item.Object, true
+}
+
+// Has check value exists in cache.
+func (mem *Memory) Has(key string) bool {
+    _, found := mem.Get(key)
+    return found
+}
+
+// Delete delete value in cache.
 func (mem *Memory) Del(key string) error {
-    mem.data.Delete(key)
+    mem.items.Delete(key)
     return nil
 }
 
 func (mem *Memory) Incr(key string) int64 {
-    mem.lock.Lock()
-    defer mem.lock.Unlock()
-    ret, err := mem.Get(key)
-    if err != nil {
-        return 0
+    mem.mu.Lock()
+    defer mem.mu.Unlock()
+
+    item, found := mem.Get(key)
+    var val int64    
+    if !found {
+        val = 1
+    } else {
+        val = item.(int64) + 1
     }
-    return ret.(int64) + 1
+    // 设置为永不过期
+    mem.Set(key, val, NoExpiration)
+    return val
 }
 
 func (mem *Memory) Decr(key string) int64 {
-    mem.lock.Lock()
-    defer mem.lock.Unlock()
-    ret, err := mem.Get(key)
-    if err != nil {
-        return 0
+    mem.mu.Lock()
+    defer mem.mu.Unlock()
+
+    item, found := mem.Get(key)
+    var val int64    
+    if !found {
+        val = 1
+    } else {
+        val = item.(int64) - 1
     }
-    return ret.(int64) - 1
+    mem.Set(key, val, NoExpiration)
+    return val
 }
 
-func (mem *Memory) GetAnyKeyValue(key string, defaultValue ...any) (v any, ok bool) {
-    v, err := mem.Get(key)
-    ok = err == nil
-    if !ok {
+func (mem *Memory) GetAnyKeyValue(key string, defaultValue ...any) (val any, found bool) {
+    val, found = mem.Get(key)
+    if !found {
         if len(defaultValue) != 0 {
-            v = defaultValue[0]
+            val = defaultValue[0]
         }
     }
     return
