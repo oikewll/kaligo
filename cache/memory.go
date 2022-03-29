@@ -10,6 +10,7 @@ import (
 // Memory struct contains *data
 type Memory struct {
     data sync.Map
+    lock sync.Mutex
 }
 
 type data struct {
@@ -21,6 +22,7 @@ type data struct {
 func NewMemory() *Memory {
     return &Memory{
         data: sync.Map{},
+        lock: sync.Mutex{},
     }
 }
 
@@ -42,7 +44,7 @@ func (mem *Memory) Get(key string) (reply any, err error) {
 }
 
 // IsExist check value exists in memcache.
-func (mem *Memory) IsExist(key string) bool {
+func (mem *Memory) Has(key string) bool {
     _, err := mem.Get(key)
     if err != nil {
         return false
@@ -52,6 +54,7 @@ func (mem *Memory) IsExist(key string) bool {
 
 // Set cached value with key and expire time.
 func (mem *Memory) Set(key string, value any, timeout time.Duration) (err error) {
+    // max := 1<<63 - 1
     mem.data.Store(key, &data{
         Data:    value,
         Expired: time.Now().Add(timeout),
@@ -60,24 +63,29 @@ func (mem *Memory) Set(key string, value any, timeout time.Duration) (err error)
 }
 
 // Delete delete value in memcache.
-func (mem *Memory) Delete(key string) error {
+func (mem *Memory) Del(key string) error {
     mem.data.Delete(key)
     return nil
 }
 
 func (mem *Memory) Incr(key string) int64 {
-    var incrID int64    
+    mem.lock.Lock()
+    defer mem.lock.Unlock()
     ret, err := mem.Get(key)
     if err != nil {
-        incrID = 0
+        return 0
     }
-    incrID = ret.(int64)
-    incrID = atomic.AddInt64(*incrID)
-    return incrID
+    return ret.(int64) + 1
 }
 
 func (mem *Memory) Decr(key string) int64 {
-    return 0
+    mem.lock.Lock()
+    defer mem.lock.Unlock()
+    ret, err := mem.Get(key)
+    if err != nil {
+        return 0
+    }
+    return ret.(int64) - 1
 }
 
 func (mem *Memory) GetAnyKeyValue(key string, defaultValue ...any) (v any, ok bool) {

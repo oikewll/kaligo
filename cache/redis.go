@@ -82,8 +82,8 @@ func (r *Redis) Set(key string, val any, timeout time.Duration) (err error) {
     return
 }
 
-// IsExist 判断key是否存在
-func (r *Redis) IsExist(key string) bool {
+// Has 判断key是否存在
+func (r *Redis) Has(key string) bool {
     conn := r.conn.Get()
     defer conn.Close()
 
@@ -93,7 +93,7 @@ func (r *Redis) IsExist(key string) bool {
 }
 
 // Delete 删除
-func (r *Redis) Delete(key string) error {
+func (r *Redis) Del(key string) error {
     conn := r.conn.Get()
     defer conn.Close()
 

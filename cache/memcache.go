@@ -32,8 +32,8 @@ func (mem *Memcache) Get(key string) (reply any, err error) {
     return reply, nil
 }
 
-// IsExist check value exists in memcache.
-func (mem *Memcache) IsExist(key string) bool {
+// Has check value exists in memcache.
+func (mem *Memcache) Has(key string) bool {
     if _, err := mem.conn.Get(key); err != nil {
         return false
     }
@@ -52,7 +52,7 @@ func (mem *Memcache) Set(key string, val any, timeout time.Duration) (err error)
 }
 
 // Delete delete value in memcache.
-func (mem *Memcache) Delete(key string) error {
+func (mem *Memcache) Del(key string) error {
     return mem.conn.Delete(key)
 }
 
