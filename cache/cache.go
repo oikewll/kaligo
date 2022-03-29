@@ -93,8 +93,8 @@ func Get[T CacheValue](key string) T {
 
 // GetCache 从 cache 获取 T 类型 value
 func GetCache[T CacheValue](cache Cache, key string) (value T) {
-    v, err := cache.Get(key)
-    if err != nil {
+    v, found := cache.Get(key)
+    if !found {
         return
     }
     if v, ok := v.(T); ok {
