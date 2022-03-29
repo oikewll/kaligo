@@ -51,6 +51,21 @@ func NewRedis(opts *RedisOpts) *Redis {
     return &Redis{pool}
 }
 
+// Set 设置一个值
+func (r *Redis) Set(key string, val any, timeout time.Duration) (err error) {
+    conn := r.conn.Get()
+    defer conn.Close()
+
+    var data []byte
+    if data, err = json.Marshal(val); err != nil {
+        return
+    }
+
+    _, err = conn.Do("SETEX", key, int64(timeout/time.Second), data)
+
+    return
+}
+
 // Get 获取一个值
 func (r *Redis) Get(key string) (any, bool) {
     var err error    
@@ -67,21 +82,6 @@ func (r *Redis) Get(key string) (any, bool) {
     }
 
     return reply, true
-}
-
-// Set 设置一个值
-func (r *Redis) Set(key string, val any, timeout time.Duration) (err error) {
-    conn := r.conn.Get()
-    defer conn.Close()
-
-    var data []byte
-    if data, err = json.Marshal(val); err != nil {
-        return
-    }
-
-    _, err = conn.Do("SETEX", key, int64(timeout/time.Second), data)
-
-    return
 }
 
 // Has 判断key是否存在
@@ -106,12 +106,28 @@ func (r *Redis) Del(key string) error {
     return nil
 }
 
-func (mem *Redis) Incr(key string) int64 {
-    return 0
+func (r *Redis) Incr(key string, args ...uint64) int64 {
+    conn := r.conn.Get()
+    defer conn.Close()
+
+    val, err := redis.Int64(conn.Do("INCR", key)) 
+    if err != nil {
+        return 0
+    }
+
+    return val
 }
 
-func (mem *Redis) Decr(key string) int64 {
-    return 0
+func (r *Redis) Decr(key string, args ...uint64) int64 {
+    conn := r.conn.Get()
+    defer conn.Close()
+
+    val, err := redis.Int64(conn.Do("DECR", key)) 
+    if err != nil {
+        return 0
+    }
+
+    return val
 }
 
 func (r *Redis) GetAnyKeyValue(key string, defaultValue ...any) (val any, found bool) {

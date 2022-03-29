@@ -26,6 +26,16 @@ var (
     defaultCache Cache
 )
 
+func getDelta(args ...uint64) uint64 {
+    var delta uint64    
+    if len(args) != 0 {
+        delta = args[0]
+    } else {
+        delta = 1
+    }
+    return delta
+}
+
 // 支持存取到 Cache 的类型
 type CacheValue interface {
     constraints.Integer | constraints.Float | ~bool | ~string
@@ -38,8 +48,8 @@ type Cache interface {
     Set(key string, val any, timeout time.Duration) error
     Has(key string) bool
     Del(key string) error
-    Incr(key string) int64
-    Decr(key string) int64
+    Incr(key string, args ...uint64) int64
+    Decr(key string, args ...uint64) int64
 }
 
 func New(param ...string) (Cache, error) {

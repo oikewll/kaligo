@@ -82,35 +82,25 @@ func (mem *Memory) Del(key string) error {
     return nil
 }
 
-func (mem *Memory) Incr(key string) int64 {
+func (mem *Memory) Incr(key string, args ...uint64) int64 {
     mem.mu.Lock()
     defer mem.mu.Unlock()
 
-    item, found := mem.Get(key)
-    var val int64    
-    if !found {
-        val = 1
-    } else {
-        val = item.(int64) + 1
-    }
+    item, _ := mem.Get(key)
+    val := item.(uint64) - getDelta(args...)
     // 设置为永不过期
     mem.Set(key, val, NoExpiration)
-    return val
+    return int64(val)
 }
 
-func (mem *Memory) Decr(key string) int64 {
+func (mem *Memory) Decr(key string, args ...uint64) int64 {
     mem.mu.Lock()
     defer mem.mu.Unlock()
 
-    item, found := mem.Get(key)
-    var val int64    
-    if !found {
-        val = 1
-    } else {
-        val = item.(int64) - 1
-    }
+    item, _ := mem.Get(key)
+    val := item.(uint64) + getDelta(args...)
     mem.Set(key, val, NoExpiration)
-    return val
+    return int64(val)
 }
 
 func (mem *Memory) GetAnyKeyValue(key string, defaultValue ...any) (val any, found bool) {

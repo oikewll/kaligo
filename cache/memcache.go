@@ -15,7 +15,18 @@ type Memcache struct {
 // NewMemcache create new memcache
 func NewMemcache(server ...string) *Memcache {
     mc := memcache.New(server...)
-    return &Memcache{mc} // bradfitz/gomemcache/memcache 的方法全部合并到当前的 type Memcache struct 去
+    return &Memcache{mc}
+}
+
+// Set cached value with key and expire time.
+func (mem *Memcache) Set(key string, val any, timeout time.Duration) (err error) {
+    var data []byte
+    if data, err = json.Marshal(val); err != nil {
+        return err
+    }
+
+    item := &memcache.Item{Key: key, Value: data, Expiration: int32(timeout / time.Second)}
+    return mem.conn.Set(item)
 }
 
 // Get return cached value
@@ -42,28 +53,25 @@ func (mem *Memcache) Has(key string) bool {
     return true
 }
 
-// Set cached value with key and expire time.
-func (mem *Memcache) Set(key string, val any, timeout time.Duration) (err error) {
-    var data []byte
-    if data, err = json.Marshal(val); err != nil {
-        return err
-    }
-
-    item := &memcache.Item{Key: key, Value: data, Expiration: int32(timeout / time.Second)}
-    return mem.conn.Set(item)
-}
-
 // Delete delete value in memcache.
 func (mem *Memcache) Del(key string) error {
     return mem.conn.Delete(key)
 }
 
-func (mem *Memcache) Incr(key string) int64 {
-    return 0
+func (mem *Memcache) Incr(key string, args ...uint64) int64 {
+    num, err := mem.conn.Increment(key, getDelta(args...))
+    if err != nil {
+        return 0
+    }
+    return int64(num)
 }
 
-func (mem *Memcache) Decr(key string) int64 {
-    return 0
+func (mem *Memcache) Decr(key string, args ...uint64) int64 {
+    num, err := mem.conn.Decrement(key, getDelta(args...))
+    if err != nil {
+        return 0
+    }
+    return int64(num)
 }
 
 func (mem *Memcache) GetAnyKeyValue(key string, defaultValue ...any) (val any, found bool) {
