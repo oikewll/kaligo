@@ -8,7 +8,6 @@ import (
     "regexp"
     "strings"
     "sync"
-    "sync/atomic"
 
     "github.com/owner888/kaligo/cache"
     "github.com/owner888/kaligo/database"
@@ -21,6 +20,7 @@ var _ Router = &Mux{}
 
 // Mux is use for add Route struct and StaticRoute struct
 type Mux struct {
+    ID           int64
     Handler      http.Handler // http.ServeMux
     routes       []*Route
     staticRoutes []*StaticRoute
@@ -28,7 +28,6 @@ type Mux struct {
     Cache        cache.Cache // interface 本身是指针，不需要用 *cache.Cache，struct 才需要
     pool         sync.Pool   // Context 复用
     Timer        *Timer
-    TimerID      int64
 }
 
 func NewRouter() *Mux {
@@ -37,9 +36,9 @@ func NewRouter() *Mux {
     if err != nil {
         panic(err)
     }
+    mux.ID = cache.Incr("router_id")
     mux.Cache = cache
     mux.Timer = NewTimer()
-    mux.TimerID = atomic.AddInt64()
     mux.pool.New = func() any {
         return &Context{DB: mux.DB, Cache: mux.Cache, Timer: mux.Timer}
     }

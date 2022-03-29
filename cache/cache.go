@@ -16,8 +16,7 @@ const (
     // For use with functions that take an expiration time.
     NoExpiration time.Duration = -1
     // For use with functions that take an expiration time. Equivalent to
-    // passing in the same expiration duration as was given to New() or
-    // NewFrom() when the cache was created (e.g. 5 minutes.)
+    // passing in the same expiration duration as was given to New() when the cache was created (e.g. 5 minutes.)
     DefaultExpired time.Duration = 0
 )
 
@@ -43,8 +42,11 @@ type CacheValue interface {
 
 // Cache interface
 type Cache interface {
-    // kaligo.AnyKeyValueGetter // TODO: import cycle
     Get(key string) (any, bool)
+    String(key string) string
+    Int(key string) int
+    Int64(key string) int64
+    Uint64(key string) uint64
     Set(key string, val any, timeout time.Duration) error
     Has(key string) bool
     Del(key string) error

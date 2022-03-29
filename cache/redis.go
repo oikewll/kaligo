@@ -84,6 +84,38 @@ func (r *Redis) Get(key string) (any, bool) {
     return reply, true
 }
 
+func (r *Redis) String(key string) string {
+    reply, found := r.Get(key);
+    if  !found {
+        return ""
+    }
+    return reply.(string)
+}
+
+func (r *Redis) Int(key string) int {
+    reply, found := r.Get(key);
+    if  !found {
+        return 0
+    }
+    return reply.(int)
+}
+
+func (r *Redis) Int64(key string) int64 {
+    reply, found := r.Get(key);
+    if  !found {
+        return 0
+    }
+    return reply.(int64)
+}
+
+func (r *Redis) Uint64(key string) uint64 {
+    reply, found := r.Get(key);
+    if  !found {
+        return 0
+    }
+    return reply.(uint64)
+}
+
 // Has 判断key是否存在
 func (r *Redis) Has(key string) bool {
     conn := r.conn.Get()
@@ -130,7 +162,7 @@ func (r *Redis) Decr(key string, args ...uint64) int64 {
     return val
 }
 
-func (r *Redis) GetAnyKeyValue(key string, defaultValue ...any) (val any, found bool) {
+func (r *Redis) DefaultGet(key string, defaultValue ...any) (val any, found bool) {
     val, found = r.Get(key)
     if !found {
         if len(defaultValue) != 0 {
