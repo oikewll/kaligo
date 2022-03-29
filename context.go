@@ -195,6 +195,29 @@ func (c *Context) Header(key, value string) {
     c.ResponseWriter.Header().Set(key, value)
 }
 
+/************************************/
+/************ INPUT DATA ************/
+/************************************/
+
+// Param returns the value of the URL param.
+// It is a shortcut for c.Params.ByName(key)
+//     router.GET("/user/:id", func(c *gin.Context) {
+//         // a GET request to /user/john
+//         id := c.Param("id") // id == "john"
+//     })
+func (c *Context) Param(key string, defaultValue ...string) string {
+	return c.Params.ByName(key, defaultValue...)
+}
+
+// AddParam adds param to context and
+// replaces path param key with given value for e2e testing purposes
+// Example Route: "/user/:id"
+// AddParam("id", 1)
+// Result: "/user/1"
+// func (c *Context) AddParam(key, value string) {
+//     c.Params = append(c.Params, Params{Key: key, Value: value})
+// }
+
 // GetHeader returns value from request headers.
 func (c *Context) GetHeader(key string) string {
     return c.requestHeader(key)
@@ -225,10 +248,10 @@ func (c *Context) getDefaultValue(defaultValue ...string) string {
 // QueryValue returns the keyed url query value if it exists,
 // It is shortcut for `c.Request.URL.Query().Get(key)`
 //     GET /path?id=1234&name=Manu&value=
-// 	   c.Query("id") == "1234"
-// 	   c.Query("name") == "Manu"
-// 	   c.Query("value") == ""
-// 	   c.Query("wtf") == ""
+// 	   c.QueryValue("id") == "1234"
+// 	   c.QueryValue("name") == "Manu"
+// 	   c.QueryValue("value") == ""
+// 	   c.QueryValue("wtf") == ""
 func (c *Context) QueryValue(key string, defaultValue ...string) string {
     c.initQueryCache()
     if value, ok := c.queryCache.Get(key); ok {

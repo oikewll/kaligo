@@ -116,6 +116,14 @@ func (r *Redis) Uint64(key string) uint64 {
     return reply.(uint64)
 }
 
+func (r *Redis) Float64(key string) float64 {
+    reply, found := r.Get(key);
+    if  !found {
+        return 0
+    }
+    return reply.(float64)
+}
+
 // Has 判断key是否存在
 func (r *Redis) Has(key string) bool {
     conn := r.conn.Get()
@@ -162,14 +170,25 @@ func (r *Redis) Decr(key string, args ...uint64) int64 {
     return val
 }
 
-func (r *Redis) DefaultGet(key string, defaultValue ...any) (val any, found bool) {
-    val, found = r.Get(key)
-    if !found {
-        if len(defaultValue) != 0 {
-            val = defaultValue[0]
-        }
+// push insert a value to List
+func (r *Redis) push(command, key, value string) {
+    conn := r.conn.Get()
+    defer conn.Close()
+
+    _, _ = conn.Do(command, key, value)
+}
+
+// RPop return a value from List
+func (r *Redis) pop(command, key string) string {
+    conn := r.conn.Get()
+    defer conn.Close()
+
+    reply, err := redis.String(conn.Do(command, key))
+    if  err != nil {
+        return ""
     }
-    return
+
+    return reply
 }
 
 func (r *Redis) LPush(key string, value string) {
@@ -180,41 +199,10 @@ func (r *Redis) RPush(key string, value string) {
     r.push("RPUSH", key, value)
 }
 
-// push insert a value to List
-func (r *Redis) push(command, key, value string) {
-    conn := r.conn.Get()
-    defer conn.Close()
-
-    var err error    
-    var data []byte
-    if data, err = json.Marshal(value); err != nil {
-        return
-    }
-
-    _, err = conn.Do(command, key, data)
-}
-
 func (r *Redis) LPop(key string) string {
     return r.pop("LPOP", key)
 }
 
 func (r *Redis) RPop(key string) string {
     return r.pop("RPOP", key)
-}
-
-// RPop return a value from List
-func (r *Redis) pop(command, key string) (reply string) {
-    conn := r.conn.Get()
-    defer conn.Close()
-
-    var err error
-    var data []byte
-    if data, err = redis.Bytes(conn.Do(command, key)); err != nil {
-        return ""
-    }
-    if err = json.Unmarshal(data, &reply); err != nil {
-        return ""
-    }
-
-    return reply
 }
