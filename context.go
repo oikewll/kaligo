@@ -215,16 +215,26 @@ func (c *Context) initQueryCache() {
     }
 }
 
+func (c *Context) getDefaultValue(defaultValue ...string) string {
+    if len(defaultValue) > 0 {
+        return defaultValue[0]
+    }
+    return ""
+}
+
+// QueryValue returns the keyed url query value if it exists,
+// It is shortcut for `c.Request.URL.Query().Get(key)`
+//     GET /path?id=1234&name=Manu&value=
+// 	   c.Query("id") == "1234"
+// 	   c.Query("name") == "Manu"
+// 	   c.Query("value") == ""
+// 	   c.Query("wtf") == ""
 func (c *Context) QueryValue(key string, defaultValue ...string) string {
     c.initQueryCache()
-    ret, ok := c.queryCache.Get(key)
-    if !ok {
-        if len(defaultValue) > 0 {
-            return defaultValue[0]
-        }
-        return ""
+    if value, ok := c.queryCache.Get(key); ok {
+        return value
     }
-    return ret
+    return c.getDefaultValue(defaultValue...)
 }
 
 func (c *Context) initFormCache() {
@@ -233,16 +243,13 @@ func (c *Context) initFormCache() {
     }
 }
 
+// FormValue returns the specified key from a POST urlencoded form or multipart form
 func (c *Context) FormValue(key string, defaultValue ...string) string {
     c.initFormCache()
-    ret, ok := c.formCache.Get(key)
-    if !ok {
-        if len(defaultValue) > 0 {
-            return defaultValue[0]
-        }
-        return ""
+    if value, ok := c.formCache.Get(key); ok {
+        return value
     }
-    return ret
+    return c.getDefaultValue(defaultValue...)
 }
 
 // JsonBodyValue 解析 application/json、XML、ymal 等数据到 struct

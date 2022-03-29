@@ -203,13 +203,12 @@ func (r *Redis) RPop(key string) string {
 }
 
 // RPop return a value from List
-func (r *Redis) pop(command, key string) string {
+func (r *Redis) pop(command, key string) (reply string) {
     conn := r.conn.Get()
     defer conn.Close()
 
     var err error
     var data []byte
-    var reply string
     if data, err = redis.Bytes(conn.Do(command, key)); err != nil {
         return ""
     }
