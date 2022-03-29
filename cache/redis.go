@@ -171,3 +171,51 @@ func (r *Redis) DefaultGet(key string, defaultValue ...any) (val any, found bool
     }
     return
 }
+
+func (r *Redis) LPush(key string, value string) {
+    r.push("LPUSH", key, value)
+}
+
+func (r *Redis) RPush(key string, value string) {
+    r.push("RPUSH", key, value)
+}
+
+// push insert a value to List
+func (r *Redis) push(command, key, value string) {
+    conn := r.conn.Get()
+    defer conn.Close()
+
+    var err error    
+    var data []byte
+    if data, err = json.Marshal(value); err != nil {
+        return
+    }
+
+    _, err = conn.Do(command, key, data)
+}
+
+func (r *Redis) LPop(key string) string {
+    return r.pop("LPOP", key)
+}
+
+func (r *Redis) RPop(key string) string {
+    return r.pop("RPOP", key)
+}
+
+// RPop return a value from List
+func (r *Redis) pop(command, key string) string {
+    conn := r.conn.Get()
+    defer conn.Close()
+
+    var err error
+    var data []byte
+    var reply string
+    if data, err = redis.Bytes(conn.Do(command, key)); err != nil {
+        return ""
+    }
+    if err = json.Unmarshal(data, &reply); err != nil {
+        return ""
+    }
+
+    return reply
+}
