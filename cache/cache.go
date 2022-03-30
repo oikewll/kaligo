@@ -48,7 +48,7 @@ type Cache interface {
     Int64(key string) int64
     Uint64(key string) uint64
     Float64(key string) float64
-    Set(key string, val any, timeout time.Duration) error
+    Set(key string, value any, timeout time.Duration) error
     Has(key string) bool
     Del(key string) error
     Incr(key string, args ...uint64) int64
@@ -57,6 +57,10 @@ type Cache interface {
     RPush(key string, value string)
     LPop(key string) string
     RPop(key string) string
+    // LPushObject(key string, value any)
+    // RPushObject(key string, value any)
+    // LPopObject(key string) any
+    // RPopObject(key string) any
 }
 
 func New(param ...string) (Cache, error) {

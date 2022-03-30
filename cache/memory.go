@@ -1,4 +1,5 @@
 package cache
+// https://github.com/patrickmn/go-cache/blob/master/cache.go
 
 import (
     "sync"

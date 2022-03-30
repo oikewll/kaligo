@@ -195,17 +195,30 @@ func (c *Context) Header(key, value string) {
     c.ResponseWriter.Header().Set(key, value)
 }
 
-/************************************/
-/************ INPUT DATA ************/
-/************************************/
+// """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+// => INPUT DATA
+// """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+// key 找不到 value 时返回的默认值，用于 
+func (c *Context) getDefaultValue(defaultValue ...string) string {
+    if len(defaultValue) > 0 {
+        return defaultValue[0]
+    }
+    return ""
+}
 
 // Param returns the value of the URL param.
 // It is a shortcut for c.Params.ByName(key)
-//     router.GET("/user/:id", func(c *gin.Context) {
-//         // a GET request to /user/john
-//         id := c.Param("id") // id == "john"
-//     })
-func (c *Context) Param(key string, defaultValue ...string) string {
+//    r.AddRoute("/user/:id([0-9]+)", map[string]string{
+//        "GET"   : "GetUser",
+//    }, &controller.UserController{})
+//
+//    // a GET request to /user/10
+//    id := c.RouterValue("id") // id == "10"
+func (c *Context) ParamValue(key string, defaultValue ...string) string {
+	return c.Params.ByName(key, defaultValue...)
+}
+func (c *Context) RouterValue(key string, defaultValue ...string) string {
 	return c.Params.ByName(key, defaultValue...)
 }
 
@@ -218,13 +231,13 @@ func (c *Context) Param(key string, defaultValue ...string) string {
 //     c.Params = append(c.Params, Params{Key: key, Value: value})
 // }
 
-// GetHeader returns value from request headers.
-func (c *Context) GetHeader(key string) string {
+// HeaderValue returns value from request headers.
+func (c *Context) HeaderValue(key string, defaultValue ...string) string {
     return c.requestHeader(key)
 }
 
-// GetRawData returns stream data.
-func (c *Context) GetRawData() ([]byte, error) {
+// RawDataValue returns stream data.
+func (c *Context) RawDataValue() ([]byte, error) {
     return ioutil.ReadAll(c.Request.Body)
 }
 
@@ -236,13 +249,6 @@ func (c *Context) initQueryCache() {
             c.queryCache = util.UrlValues{}
         }
     }
-}
-
-func (c *Context) getDefaultValue(defaultValue ...string) string {
-    if len(defaultValue) > 0 {
-        return defaultValue[0]
-    }
-    return ""
 }
 
 // QueryValue returns the keyed url query value if it exists,
