@@ -268,6 +268,22 @@ func (db *DB) Select(columns ...string) *Query {
     return query
 }
 
+func (db *DB) SelectArray(columns []string) *Query {
+    query := &Query{
+        S: &Select{
+            selects:  columns,
+            distinct: false,
+            offset:   0,
+        },
+        W:         &Where{},
+        B:         &Builder{},
+        sqlStr:    "",
+        queryType: SELECT,
+        DB:        db,
+    }
+    return query
+}
+
 // Insert func is use for create a new [*Insert]
 // Insert -> Builder -> Query
 //     INSERT INTO `user` (`name`, `age`) VALUES ("test", "25")

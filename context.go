@@ -21,16 +21,11 @@ import (
     "github.com/owner888/kaligo/util"
 )
 
-type SuccessJSON struct {
-    Code int    `json:"code"`
-    Msg  string `json:"msg"`
-    Data any    `json:"data"`
-}
-
-type ErrorJSON struct {
-    Code int    `json:"code"`
-    Msg  string `json:"msg"`
-}
+// type JSONResult struct {
+//     Code int     `json:"code" `
+//     Msg  string  `json:"msg"`
+//     Data any     `json:"data"`
+// }
 
 // Context is use for ServeHTTP goroutine
 type Context struct {
@@ -162,9 +157,9 @@ func (c *Context) requestHeader(key string) string {
     return c.Request.Header.Get(key)
 }
 
-/************************************/
-/******** RESPONSE RENDERING ********/
-/************************************/
+// """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+// => RESPONSE RENDERING
+// """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
 // bodyAllowedForStatus is a copy of http.bodyAllowedForStatus non-exported function.
 func bodyAllowedForStatus(status int) bool {
@@ -199,6 +194,16 @@ func (c *Context) Header(key, value string) {
 // => INPUT DATA
 // """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
+// HeaderValue returns value from request headers.
+func (c *Context) HeaderValue(key string) string {
+    return c.requestHeader(key)
+}
+
+// RawDataValue returns stream data.
+func (c *Context) RawDataValue() ([]byte, error) {
+    return ioutil.ReadAll(c.Request.Body)
+}
+
 // key 找不到 value 时返回的默认值，用于 
 func (c *Context) getDefaultValue(defaultValue ...string) string {
     if len(defaultValue) > 0 {
@@ -218,9 +223,6 @@ func (c *Context) getDefaultValue(defaultValue ...string) string {
 func (c *Context) ParamValue(key string, defaultValue ...string) string {
 	return c.Params.ByName(key, defaultValue...)
 }
-func (c *Context) RouterValue(key string, defaultValue ...string) string {
-	return c.Params.ByName(key, defaultValue...)
-}
 
 // AddParam adds param to context and
 // replaces path param key with given value for e2e testing purposes
@@ -230,16 +232,6 @@ func (c *Context) RouterValue(key string, defaultValue ...string) string {
 // func (c *Context) AddParam(key, value string) {
 //     c.Params = append(c.Params, Params{Key: key, Value: value})
 // }
-
-// HeaderValue returns value from request headers.
-func (c *Context) HeaderValue(key string, defaultValue ...string) string {
-    return c.requestHeader(key)
-}
-
-// RawDataValue returns stream data.
-func (c *Context) RawDataValue() ([]byte, error) {
-    return ioutil.ReadAll(c.Request.Body)
-}
 
 func (c *Context) initQueryCache() {
     if c.queryCache == nil {
