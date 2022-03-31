@@ -88,7 +88,7 @@ func NewAuth() *Auth {
 }
 
 // @description    检查账号
-// @auth           seatle            时间（2022/03/30   08:02 ）
+// @author         seatle            时间（2022/03/30   08:02 ）
 // @param          account           string           "账号"
 // @param          password          string           "密码"
 // @param          remember          string           "是否记住登陆状态"
