@@ -16,30 +16,30 @@ func TestRedis(t *testing.T) {
     key := "any_key"
     value := "any value"
     assert.NoError(t, redis.Set(key, value, time.Second))
-    assert.True(t, redis.IsExist(key))
+    assert.True(t, redis.Has(key))
     v, err := redis.Get(key)
-    assert.NoError(t, err)
+    assert.True(t, err)
     assert.Equal(t, value, v)
-    assert.NoError(t, redis.Delete(key))
+    assert.NoError(t, redis.Del(key))
     v, err = redis.Get(key)
     assert.Nil(t, v)
-    assert.Error(t, err)
+    assert.False(t, err)
 
     // 测试 timeout
     assert.NoError(t, redis.Set(key, value, time.Second))
     v, err = redis.Get(key)
-    assert.NoError(t, err)
+    assert.True(t, err)
     assert.Equal(t, value, v)
     time.Sleep(time.Second)
     v, err = redis.Get(key)
     assert.Nil(t, v)
-    assert.Error(t, err)
+    assert.False(t, err)
 
     // 测试不存在的 key
     key = "unknown_key"
-    assert.False(t, redis.IsExist(key))
+    assert.False(t, redis.Has(key))
     v, err = redis.Get(key)
     assert.Nil(t, v)
-    assert.Error(t, err)
-    assert.NoError(t, redis.Delete(key))
+    assert.False(t, err)
+    assert.NoError(t, redis.Del(key))
 }
