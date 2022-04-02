@@ -1,7 +1,7 @@
 package requests
 
 import (
-    "log"
+    // "log"
     "io/ioutil"
     "net/http"
     "os"
@@ -16,7 +16,6 @@ func TestResponse(t *testing.T) {
         t.Fatal(err)
     }
     t.Log(resp)
-    log.Printf("%v", resp)
 }
 
 func TestGet(t *testing.T) {
@@ -118,7 +117,6 @@ func TestWithSetCookie(t *testing.T) {
         MaxAge: 300,
     }
     str, err := Get("http://httpbin.org/cookies").SetCookie(cookie).String()
-    log.Printf("%v", str)
     if err != nil {
         t.Fatal(err)
     }

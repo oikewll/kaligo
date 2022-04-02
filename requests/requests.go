@@ -53,7 +53,7 @@ import (
     "encoding/xml"
     "io"
     "io/ioutil"
-    "log"
+    // "log"
     "mime/multipart"
     "net"
     "net/http"
@@ -101,6 +101,7 @@ type Requests struct {
     resp    *http.Response
     body    []byte
     dump    []byte
+    errs    []error
 }
 
 // createDefaultCookie creates a global cookiejar to store cookies.
@@ -128,8 +129,12 @@ func NewRequests(rawurl, method string) *Requests {
     var resp http.Response
     u, err := url.Parse(rawurl)
     if err != nil {
-        log.Fatal(err)
+        // log.Fatal(err)
+        var errs []error    
+        errs = append(errs, err)
+        return &Requests{defaultSetting, rawurl, nil, map[string]string{}, map[string]string{}, &resp, nil, nil, errs}
     }
+
     req := http.Request{
         URL:        u,
         Method:     method,
@@ -138,7 +143,7 @@ func NewRequests(rawurl, method string) *Requests {
         ProtoMajor: 1,
         ProtoMinor: 1,
     }
-    return &Requests{defaultSetting, rawurl, &req, map[string]string{}, map[string]string{}, &resp, nil, nil}
+    return &Requests{defaultSetting, rawurl, &req, map[string]string{}, map[string]string{}, &resp, nil, nil, nil}
 }
 
 // Get returns *Requests with GET method.
@@ -180,6 +185,11 @@ func Patch(url string) *Requests {
 func (r *Requests) Setting(setting Settings) *Requests {
     r.setting = setting
     return r
+}
+
+// GetErrors return all error
+func (r *Requests) GetErrors() []error {
+    return r.errs
 }
 
 // SetBasicAuth sets the request's Authorization header to use HTTP Basic Authentication with the provided username and password.
@@ -377,20 +387,21 @@ func (r *Requests) buildUrl(paramBody string) {
             pr, pw := io.Pipe()
             bodyWriter := multipart.NewWriter(pw)
             go func() {
+
                 for formname, filename := range r.files {
                     fileWriter, err := bodyWriter.CreateFormFile(formname, filename)
                     if err != nil {
-                        log.Fatal(err)
+                        r.errs = append(r.errs, err)
                     }
                     fh, err := os.Open(filename)
                     if err != nil {
-                        log.Fatal(err)
+                        r.errs = append(r.errs, err)
                     }
-                    //iocopy
+                    // iocopy
                     _, err = io.Copy(fileWriter, fh)
                     fh.Close()
                     if err != nil {
-                        log.Fatal(err)
+                        r.errs = append(r.errs, err)
                     }
                 }
                 for k, v := range r.params {
