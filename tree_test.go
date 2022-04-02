@@ -3,14 +3,14 @@ package kaligo
 import (
     "testing"
 
-    "github.com/owner888/kaligo/cache"
     "github.com/stretchr/testify/assert"
 )
 
 var _ AnyKeyValueGetter = Params{}
-var _ AnyKeyValueGetter = cache.NewMemcache()
-var _ AnyKeyValueGetter = cache.NewMemory()
-var _ AnyKeyValueGetter = cache.NewRedis(&cache.RedisOpts{})
+
+// var _ AnyKeyValueGetter = cache.NewMemcache()
+// var _ AnyKeyValueGetter = cache.NewMemory()
+// var _ AnyKeyValueGetter = cache.NewRedis(&cache.RedisOpts{})
 
 func TestParams(t *testing.T) {
     params := Params{

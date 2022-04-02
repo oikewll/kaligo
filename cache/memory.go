@@ -1,4 +1,5 @@
 package cache
+
 // https://github.com/patrickmn/go-cache/blob/master/cache.go
 
 import (
@@ -13,10 +14,10 @@ type Item struct {
 
 // Returns true if the item has expired.
 func (item Item) Expired() bool {
-	if item.Expiration == 0 {
-		return false
-	}
-	return time.Now().UnixNano() > item.Expiration
+    if item.Expiration == 0 {
+        return false
+    }
+    return time.Now().UnixNano() > item.Expiration
 }
 
 // Memory struct contains *data
@@ -30,7 +31,7 @@ type Memory struct {
 func NewMemory() *Memory {
     return &Memory{
         items: sync.Map{},
-        mu   : sync.RWMutex{},
+        mu:    sync.RWMutex{},
     }
 }
 
@@ -45,7 +46,7 @@ func (mem *Memory) Set(key string, value any, timeout time.Duration) (err error)
         expired = time.Now().Add(timeout).UnixNano()
     }
     mem.items.Store(key, Item{
-        Object    : value,
+        Object:     value,
         Expiration: expired,
     })
     return nil
@@ -58,7 +59,7 @@ func (mem *Memory) Get(key string) (any, bool) {
         return nil, false
     }
 
-    item := val.(*Item)
+    item := val.(Item)
     // 存在过期时间, -1 和 0 为永不过期
     if item.Expiration > 0 {
         // 当前时间大于过期时间
@@ -72,40 +73,40 @@ func (mem *Memory) Get(key string) (any, bool) {
 }
 
 func (mem *Memory) String(key string) string {
-    reply, found := mem.Get(key);
-    if  !found {
+    reply, found := mem.Get(key)
+    if !found {
         return ""
     }
     return reply.(string)
 }
 
 func (mem *Memory) Int(key string) int {
-    reply, found := mem.Get(key);
-    if  !found {
+    reply, found := mem.Get(key)
+    if !found {
         return 0
     }
     return reply.(int)
 }
 
 func (mem *Memory) Int64(key string) int64 {
-    reply, found := mem.Get(key);
-    if  !found {
+    reply, found := mem.Get(key)
+    if !found {
         return 0
     }
     return reply.(int64)
 }
 
 func (mem *Memory) Uint64(key string) uint64 {
-    reply, found := mem.Get(key);
-    if  !found {
+    reply, found := mem.Get(key)
+    if !found {
         return 0
     }
     return reply.(uint64)
 }
 
 func (mem *Memory) Float64(key string) float64 {
-    reply, found := mem.Get(key);
-    if  !found {
+    reply, found := mem.Get(key)
+    if !found {
         return 0
     }
     return reply.(float64)

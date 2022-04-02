@@ -26,7 +26,7 @@ const (
 )
 
 var (
-    standardLogger Logger = logger{formatter: &ConsoleFormatter{}, writer: &ConsoleWriter{}, Level: LevelDebug}
+    root Logger = &logger{formatter: &ConsoleFormatter{}, writer: &ConsoleWriter{}, Level: LevelDebug}
 )
 
 // Logger logger interface
@@ -42,58 +42,85 @@ type Logger interface {
 
 type Log struct {
     Message string
+    Level   Level
+    file    string
+    line    int
 }
 
 type logger struct {
-    formatter Formatter
-    writer    Writer
-    Level     Level
+    formatter  Formatter
+    writer     Writer
+    Level      Level
+    Prefix     string
+    TimeFormat string
+    parent     Logger // formatter 和 writer 可以继承自 parent
 }
 
-func (l logger) LogMode(Level) Logger {
+func New(prefix string, level Level, parant Logger) Logger {
+    if parant == nil {
+        parant = root
+    }
+    return &logger{Prefix: prefix, Level: level, parent: parant}
+}
+
+func (l *logger) LogMode(Level) Logger {
     return l
 }
 
-func (l logger) Debug(msg string, data ...any) {
+func (l *logger) Debug(msg string, data ...any) {
     if l.Level >= LevelDebug {
-        l.writer.Write(l.formatter.Printf(LevelDebug, msg, data...))
+        l.getWriter().Write(l.getFormatter().Printf(l.Prefix, LevelDebug, msg, data...))
     }
 }
 
-func (l logger) Info(msg string, data ...any) {
+func (l *logger) Info(msg string, data ...any) {
     if l.Level >= LevelInfo {
-        l.writer.Write(l.formatter.Printf(LevelInfo, msg, data...))
+        l.getWriter().Write(l.getFormatter().Printf(l.Prefix, LevelInfo, msg, data...))
     }
 }
 
-func (l logger) Warn(msg string, data ...any) {
+func (l *logger) Warn(msg string, data ...any) {
     if l.Level >= LevelWarn {
-        l.writer.Write(l.formatter.Printf(LevelWarn, msg, data...))
+        l.getWriter().Write(l.getFormatter().Printf(l.Prefix, LevelWarn, msg, data...))
     }
 }
 
-func (l logger) Error(msg string, data ...any) {
+func (l *logger) Error(msg string, data ...any) {
     if l.Level >= LevelError {
-        l.writer.Write(l.formatter.Printf(LevelError, msg, data...))
+        l.getWriter().Write(l.getFormatter().Printf(l.Prefix, LevelError, msg, data...))
     }
 }
 
-func (l logger) Trace(begin time.Time, fc func() (sql string, rowsAffected int64), err error) {
+func (l *logger) getWriter() Writer {
+    if l.writer == nil {
+        return l.parent.(*logger).getWriter()
+    }
+    return l.writer
+}
+
+func (l *logger) getFormatter() Formatter {
+    if l.formatter == nil {
+        return l.parent.(*logger).getFormatter()
+    }
+    return l.formatter
+}
+
+func (l *logger) Trace(begin time.Time, fc func() (sql string, rowsAffected int64), err error) {
 
 }
 
 func Debug(msg string, data ...any) {
-    standardLogger.Debug(msg, data...)
+    root.Debug(msg, data...)
 }
 
 func Info(msg string, data ...any) {
-    standardLogger.Info(msg, data...)
+    root.Info(msg, data...)
 }
 
 func Warn(msg string, data ...any) {
-    standardLogger.Warn(msg, data...)
+    root.Warn(msg, data...)
 }
 
 func Error(msg string, data ...any) {
-    standardLogger.Error(msg, data...)
+    root.Error(msg, data...)
 }
