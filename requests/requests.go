@@ -124,7 +124,7 @@ func SetDefaultSetting(setting Settings) {
     }
 }
 
-// return *BeegoHttpRequest with specific method
+// return *Requests with specific method
 func NewRequests(rawurl, method string) *Requests {
     var resp http.Response
     u, err := url.Parse(rawurl)
@@ -221,7 +221,7 @@ func (r *Requests) DumpRequest() []byte {
     return r.dump
 }
 
-// SetTimeout sets connect time out and read-write time out for BeegoRequest.
+// SetTimeout sets connect time out and read-write time out for Requests.
 func (r *Requests) SetTimeout(connectTimeout, readWriteTimeout time.Duration) *Requests {
     r.setting.ConnectTimeout = connectTimeout
     r.setting.ReadWriteTimeout = readWriteTimeout
@@ -330,6 +330,13 @@ func (r *Requests) SetProxyString(proxy string) *Requests {
 func (r *Requests) Param(key, value string) *Requests {
     // 不用加锁，因为一个请求一个 Requests struct
     r.params[key] = value
+    return r
+}
+
+func (r *Requests) Params(params map[string]string) *Requests {
+    for key, value := range params {
+        r.params[key] = value
+    }
     return r
 }
 
