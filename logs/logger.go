@@ -45,9 +45,11 @@ type Log struct {
 }
 
 type logger struct {
-    formatter Formatter
-    writer    Writer
-    Level     Level
+    formatter  Formatter
+    writer     Writer
+    Level      Level
+    Prefix     string
+    TimeFormat string
 }
 
 func (l logger) LogMode(Level) Logger {
@@ -56,25 +58,25 @@ func (l logger) LogMode(Level) Logger {
 
 func (l logger) Debug(msg string, data ...any) {
     if l.Level >= LevelDebug {
-        l.writer.Write(l.formatter.Printf(LevelDebug, msg, data...))
+        l.writer.Write(l.formatter.Printf(l.Prefix, LevelDebug, msg, data...))
     }
 }
 
 func (l logger) Info(msg string, data ...any) {
     if l.Level >= LevelInfo {
-        l.writer.Write(l.formatter.Printf(LevelInfo, msg, data...))
+        l.writer.Write(l.formatter.Printf(l.Prefix, LevelInfo, msg, data...))
     }
 }
 
 func (l logger) Warn(msg string, data ...any) {
     if l.Level >= LevelWarn {
-        l.writer.Write(l.formatter.Printf(LevelWarn, msg, data...))
+        l.writer.Write(l.formatter.Printf(l.Prefix, LevelWarn, msg, data...))
     }
 }
 
 func (l logger) Error(msg string, data ...any) {
     if l.Level >= LevelError {
-        l.writer.Write(l.formatter.Printf(LevelError, msg, data...))
+        l.writer.Write(l.formatter.Printf(l.Prefix, LevelError, msg, data...))
     }
 }
 
