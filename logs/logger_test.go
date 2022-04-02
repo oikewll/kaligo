@@ -12,6 +12,8 @@ func TestLogLevel(t *testing.T) {
 }
 
 func TestLogFile(t *testing.T) {
-    standardLogger = logger{formatter: &PlainFormatter{}, writer: Writers{&ConsoleWriter{}, NewFileWriter("logs.log")}, Level: LevelDebug, Prefix: "KALI"}
+    root = &logger{formatter: &PlainFormatter{}, writer: Writers{&ConsoleWriter{}, NewFileWriter("logs.log")}, Level: LevelDebug}
     TestLogLevel(t)
+    log := New("KALI", LevelDebug, nil)
+    log.Error("Error with prefix")
 }
