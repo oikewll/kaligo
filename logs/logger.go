@@ -2,6 +2,8 @@ package logs
 
 import (
     "errors"
+    "fmt"
+    "os"
     "time"
 )
 
@@ -15,6 +17,8 @@ const (
     _ Level = iota
     // LevelSilent is the default log level
     LevelSilent
+    // LevelError  is the critical log level
+    LevelCritical
     // LevelError is the error log level
     LevelError
     // LevelWarn is the warn log level
@@ -37,6 +41,7 @@ type Logger interface {
     Info(string, ...any)
     Warn(string, ...any)
     Error(string, ...any)
+    Critical(string, ...any)
     Trace(begin time.Time, fc func() (sql string, rowsAffected int64), err error)
 }
 
@@ -91,6 +96,12 @@ func (l *logger) Error(msg string, data ...any) {
     }
 }
 
+func (l *logger) Critical(msg string, data ...any) {
+    if l.Level >= LevelCritical {
+        l.getWriter().Write(l.getFormatter().Printf(l.Prefix, LevelCritical, msg, data...))
+    }
+}
+
 func (l *logger) getWriter() Writer {
     if l.writer == nil {
         return l.parent.(*logger).getWriter()
@@ -123,4 +134,20 @@ func Warn(msg string, data ...any) {
 
 func Error(msg string, data ...any) {
     root.Error(msg, data...)
+}
+
+func Critical(msg string, data ...any) {
+    root.Critical(msg, data...)
+}
+
+// Panic 输出 Critical 日志并 panic
+func Panic(msg string, data ...any) {
+    Critical(msg, data...)
+    panic(fmt.Sprintf(msg, data...))
+}
+
+// Fatal 输出 Critical 日志并退出程序
+func Fatal(msg string, data ...any) {
+    Critical(msg, data...)
+    os.Exit(1)
 }

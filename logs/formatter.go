@@ -5,6 +5,8 @@ import (
     "strconv"
     "strings"
     "time"
+
+    "github.com/owner888/kaligo/logs/ansi"
 )
 
 var (
@@ -50,22 +52,28 @@ func (f *ConsoleFormatter) Printf(prefix string, level Level, format string, a .
     builder.WriteString(Seperator)
     switch level {
     case LevelDebug:
-        builder.WriteString(BlackLight)
+        builder.WriteString(ansi.BlackLight)
         builder.WriteString("Ⓓ DEBUG")
-        builder.WriteString(Reset)
+        builder.WriteString(ansi.Reset)
     case LevelInfo:
         builder.WriteString("ⓘ INFO ")
     case LevelWarn:
-        builder.WriteString(Yellow)
+        builder.WriteString(ansi.Yellow)
         builder.WriteString("ⓦ WARN ")
-        builder.WriteString(Reset)
+        builder.WriteString(ansi.Reset)
     case LevelError:
-        builder.WriteString(Red)
+        builder.WriteString(ansi.Red)
         builder.WriteString("ⓧ ERROR")
-        builder.WriteString(Reset)
+        builder.WriteString(ansi.Reset)
+    case LevelCritical:
+        builder.WriteString(ansi.Red)
+        builder.WriteString("🅧 CRITICAL")
     }
     builder.WriteString(Seperator)
     builder.WriteString(fmt.Sprintf(format, a...))
+    if level == LevelCritical {
+        builder.WriteString(ansi.Reset)
+    }
     builder.WriteString(Terminator)
     return builder.String()
 }
