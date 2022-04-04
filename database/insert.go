@@ -10,6 +10,7 @@ type Insert struct {
     table    string
     columns  []string
     values   [][]string
+    updates  map[string]string
     subQuery string // 子查询
 }
 
@@ -31,6 +32,16 @@ func (q *Query) Values(values any) *Query {
     default:
         //fmt.Println("Unknow Type")
     }
+    return q
+}
+
+// ON DUPLICATE KEY UPDATE
+func (q *Query) OnDuplicateKeyUpdate(updates map[string]string) *Query {
+    q.I.updates = updates
+    return q
+}
+
+func (q *Query) OnDuplicateKeyUpdateArray() *Query {
     return q
 }
 
@@ -59,7 +70,7 @@ func (q *Query) SubSelect(query *Query) *Query {
 // InsertCompile Compile the SQL query and return it.
 func (q *Query) InsertCompile() string {
     var sqlStr string
-    table := q.I.table
+    table   := q.I.table
     columns := q.I.columns
 
     // Start and update query
@@ -105,7 +116,15 @@ func (q *Query) InsertCompile() string {
         sqlStr += q.I.subQuery
     }
 
-    //fmt.Printf("InsertCompile === %v\n", sqlStr)
+    // INSERT INTO table(`UniqueKeyField`, `field1`, `field2) VALUES ("UniqueKeyFieldVal", "field1Val", "field2Val") ON DUPLICATE KEY UPDATE `field1` = "field1Val", `field2` = "field2Val";
+    if q.I.updates != nil {
+        var updates []string
+        for key, value := range q.I.updates {
+            updates = append(updates, fmt.Sprintf("`%s` = \"%s\"", key, value))
+        }
+        sqlStr += " ON DUPLICATE KEY UPDATE " + strings.Join(updates, ", ")
+    }
+    // fmt.Printf("InsertCompile === %v\n", sqlStr)
     q.sqlStr = sqlStr
 
     return sqlStr
