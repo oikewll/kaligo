@@ -134,9 +134,9 @@ func (q *Query) InsertCompile() string {
 func (q *Query) InsertReset() *Query {
     //fmt.Println("InsertReset")
     q.I.table = ""
-    q.I.columns = nil // gc 回收原有数据，len(), cap() 都为0，序列化成 json 的时候，为 null，如果是 columns[:0] 则 gc 不回收，len() 为0， cap() 不变，json 为 []
-    q.I.values = nil
-
+    q.I.columns  = nil // gc 回收原有数据，len(), cap() 都为0，序列化成 json 的时候，为 null，如果是 columns[:0] 则 gc 不回收，len() 为0， cap() 不变，json 为 []
+    q.I.values   = nil
+    q.I.updates  = nil
     q.parameters = nil
 
     return q
