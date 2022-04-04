@@ -52,10 +52,6 @@ func (q *Query) OnDuplicateKeyUpdate(updates any) *Query {
     return q
 }
 
-func (q *Query) OnDuplicateKeyUpdateArray() *Query {
-    return q
-}
-
 // SetValues is a warpper function for calling Columns() and Values().
 func (q *Query) SetValues(pairs map[string]string) *Query {
     var keys []string
