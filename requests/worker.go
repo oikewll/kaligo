@@ -14,16 +14,17 @@ import (
 // uniUrl
 
 type Url struct {
-    method string
-    urlStr string
-    params map[string]string
+    Method string
+    UrlStr string
+    Params map[string]string
+    Info   map[string]any // 自定义数据
 }
 
 type Worker struct {
-    count    int            // 协程数量
-    channel  chan struct{}  // 空结构体变量的内存占用大小为 0，而 bool 类型内存占用大小为 1
-    urls     []*Url         // 要采集的 URLs
-    callBack func(*Url)     // 采集成功回调
+    count    int           // 协程数量
+    channel  chan struct{} // 空结构体变量的内存占用大小为 0，而 bool 类型内存占用大小为 1
+    urls     []*Url        // 要采集的 URLs
+    Callback func(*Url)    // 采集成功回调
 }
 
 // Worker struct 初始化
@@ -34,11 +35,12 @@ func NewWorker(count int) *Worker {
     }
 }
 
-func (w *Worker) AddUrl(method, urlStr string, params map[string]string) {
+func (w *Worker) AddUrl(method, urlStr string, params map[string]string, info map[string]any) {
     w.urls = append(w.urls, &Url{
-        method: method,
-        urlStr: urlStr,
-        params: params,
+        Method: method,
+        UrlStr: urlStr,
+        Params: params,
+        Info:   info,
     })
 }
 
@@ -47,7 +49,7 @@ func (w *Worker) Run() {
     for _, v := range w.urls {
         w.channel <- struct{}{}
         go func(u *Url) {
-            w.callBack(u)
+            w.Callback(u)
             <-w.channel
         }(v)
     }
@@ -72,16 +74,16 @@ func main() {
         p := map[string]string{
             "phone": RandMobile(),
         }
-        worker.AddUrl("GET", "http://apis.juhe.cn/mobile/get", p)
-        worker.callBack = func(u *Url) {
+        worker.AddUrl("GET", "http://apis.juhe.cn/mobile/get", p, nil)
+        worker.Callback = func(u *Url) {
             param := url.Values{}
             param.Set("key", "您申请的KEY") // 接口请求Key
-            for key, value := range u.params {
+            for key, value := range u.Params {
                 param.Set(key, value)
             }
 
             // 发送请求
-            data, err := HttpGet(u.urlStr, param)
+            data, err := HttpGet(u.UrlStr, param)
             if err != nil {
                 fmt.Println(err)
                 return
@@ -132,4 +134,3 @@ func RandInt(min, max int) int {
     rand.Seed(time.Now().UnixNano())
     return min + rand.Intn(max-min)
 }
-
