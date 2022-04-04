@@ -3,6 +3,7 @@ package database
 import (
     "fmt"
     "strings"
+    "github.com/owner888/kaligo/logs"
 )
 
 // Insert is the struct for MySQL DATE type
@@ -30,7 +31,7 @@ func (q *Query) Values(values any) *Query {
             q.I.values = append(q.I.values, v)
         }
     default:
-        //fmt.Println("Unknow Type")
+        logs.Error("Insert Values: Unknow Type")
     }
     return q
 }
@@ -46,7 +47,7 @@ func (q *Query) OnDuplicateKeyUpdate(updates any) *Query {
             q.I.updates = append(q.I.updates, v)
         }
     default:
-        //fmt.Println("Unknow Type")
+        logs.Error("Insert OnDuplicateKeyUpdate: Unknow Type")
     }
 
     return q
