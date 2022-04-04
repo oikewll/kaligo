@@ -38,7 +38,7 @@ func NewRouter() *Mux {
     }
     mux.ID = cache.Incr("router_id")
     mux.Cache = cache
-    mux.Timer = NewTimer()
+    mux.Timer = NewTimer(mux)
     mux.pool.New = func() any {
         return &Context{DB: mux.DB, Cache: mux.Cache, Timer: mux.Timer}
     }
@@ -100,10 +100,10 @@ func (a *Mux) AddRoute(pattern string, m map[string]string, c Interface) {
 
     // now create the Route
     route := &Route{
-        Regex          : regex,
-        Methods        : m,
-        Params         : params,
-        ControllerType : reflect.Indirect(reflect.ValueOf(c)).Type(),
+        Regex:          regex,
+        Methods:        m,
+        Params:         params,
+        ControllerType: reflect.Indirect(reflect.ValueOf(c)).Type(),
     }
 
     a.routes = append(a.routes, route)

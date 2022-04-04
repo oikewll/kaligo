@@ -7,6 +7,6 @@ import (
 )
 
 func TestTimer(t *testing.T) {
-    timer := NewTimer()
+    timer := NewTimer(nil)
     assert.NotNil(t, timer)
 }
