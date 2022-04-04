@@ -10,7 +10,7 @@ type Insert struct {
     table    string
     columns  []string
     values   [][]string
-    updates  map[string]string
+    updates  []map[string]string
     subQuery string // 子查询
 }
 
@@ -36,8 +36,19 @@ func (q *Query) Values(values any) *Query {
 }
 
 // ON DUPLICATE KEY UPDATE
-func (q *Query) OnDuplicateKeyUpdate(updates map[string]string) *Query {
-    q.I.updates = updates
+func (q *Query) OnDuplicateKeyUpdate(updates any) *Query {
+    // q.I.updates = updates
+    switch vals := updates.(type) {
+    case map[string]string:
+        q.I.updates = append(q.I.updates, vals)
+    case []map[string]string:
+        for _, v := range vals {
+            q.I.updates = append(q.I.updates, v)
+        }
+    default:
+        //fmt.Println("Unknow Type")
+    }
+
     return q
 }
 
@@ -83,9 +94,7 @@ func (q *Query) InsertCompile() string {
         for k, v := range columns {
             columns[k] = q.QuoteIdentifier(v)
         }
-        sqlStr += " (" + strings.Join(columns, ", ") + ") "
-    } else {
-        sqlStr += " "
+        sqlStr += " (" + strings.Join(columns, ", ") + ")"
     }
 
     if q.I.subQuery == "" {
@@ -110,17 +119,20 @@ func (q *Query) InsertCompile() string {
         }
 
         // Add the values
-        sqlStr += "VALUES " + strings.Join(groups, ", ")
+        sqlStr += " VALUES " + strings.Join(groups, ", ")
     } else {
         // Add the sub-query
-        sqlStr += q.I.subQuery
+        // INSERT INTO table1 ( `column1` ) SELECT `col1` FROM `table2`
+        sqlStr += " " + q.I.subQuery
     }
 
     // INSERT INTO table(`UniqueKeyField`, `field1`, `field2) VALUES ("UniqueKeyFieldVal", "field1Val", "field2Val") ON DUPLICATE KEY UPDATE `field1` = "field1Val", `field2` = "field2Val";
     if q.I.updates != nil {
         var updates []string
-        for key, value := range q.I.updates {
-            updates = append(updates, fmt.Sprintf("`%s` = \"%s\"", key, value))
+        for _, sliceMap := range q.I.updates {
+            for key, value := range sliceMap {
+                updates = append(updates, fmt.Sprintf("`%s` = \"%s\"", key, value))
+            }
         }
         sqlStr += " ON DUPLICATE KEY UPDATE " + strings.Join(updates, ", ")
     }
