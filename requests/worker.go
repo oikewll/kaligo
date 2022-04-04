@@ -114,7 +114,18 @@ func HttpGet(apiURL string, params url.Values) (rs []byte, err error) {
     }
     // 如果参数中有中文参数,这个方法会进行URLEncode
     Url.RawQuery = params.Encode()
-    resp, err := http.Get(Url.String())
+    req, err := http.NewRequest(http.MethodGet, Url.String(), nil)
+    if err != nil {
+        return nil, err
+    }
+    req.Header.Add("Pragma", "no-cache")
+    req.Header.Add("Accept", "*/*")
+    req.Header.Add("Accept-Language", "zh-CN,zh-Hans;q=0.9")
+    // req.Header.Add("Accept-Encoding", "gzip, deflate, br")
+    req.Header.Add("Cache-Control", "no-cache")
+    req.Header.Add("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.3 Safari/605.1.15")
+    client := &http.Client{}
+    resp, err := client.Do(req)
     if err != nil {
         return nil, err
     }
