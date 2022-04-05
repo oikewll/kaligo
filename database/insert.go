@@ -38,7 +38,6 @@ func (q *Query) Values(values any) *Query {
 
 // ON DUPLICATE KEY UPDATE
 func (q *Query) OnDuplicateKeyUpdate(updates any) *Query {
-    // q.I.updates = updates
     switch vals := updates.(type) {
     case map[string]string:
         q.I.updates = append(q.I.updates, vals)
