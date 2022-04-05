@@ -10,14 +10,11 @@ import (
     "time"
 )
 
-// $url = "https://www.baidu.com/link?url=qFuET8I6x6Qpo-RyKVAqNL6LBHHdzLZ-kQ3kKdj5Ci8jTwXaVnBL5RxaNjmw8kkl&wd=&eqid=98020cf2000c2e2400000006624462b0";
-// uniUrl
-
 type Url struct {
     Method string
     UrlStr string
     Params map[string]string
-    Info   any // 自定义数据
+    Extras any // 自定义数据
 }
 
 type Worker struct {
@@ -35,12 +32,12 @@ func NewWorker(count int) *Worker {
     }
 }
 
-func (w *Worker) AddUrl(method, urlStr string, params map[string]string, info any) {
+func (w *Worker) AddUrl(method, urlStr string, params map[string]string, extras any) {
     w.urls = append(w.urls, &Url{
         Method: method,
         UrlStr: urlStr,
         Params: params,
-        Info:   info,
+        Extras: extras,
     })
 }
 
