@@ -21,10 +21,10 @@
 // | $_POST
 // +----------------------------------------------------------------------
 // | POST RESTful请求
-// | $data = array('name'=>'request');
-// | $data_string = json_encode($data);
-// | requests.SetHeader("Content-Type", "application/json");
-// | requests.Post('http://www.test.com', $data_string);
+// | $data = array('name'=>'request')
+// | $data_string = json_encode($data)
+// | requests.Header("Content-Type", "application/json")
+// | requests.Post('http://www.test.com', $data_string)
 // | PHP SERVER
 // | file_get_contents('php://input')
 // +----------------------------------------------------------------------
@@ -35,8 +35,10 @@
 // | $_FILES
 // +----------------------------------------------------------------------
 // | 代理
-// | requests.SetProxy(array('223.153.69.150:42354'));
-// | $html = requests.Get('https://www.test.com');
+// | requests.SetProxyString("http://223.153.69.150:42354");
+// | html = requests.Get('https://www.test.com');
+// | 随机代理
+// | requests.AddRandomProxies("http://223.153.69.150:42354");
 // +----------------------------------------------------------------------
 
 //----------------------------------
@@ -54,6 +56,7 @@ import (
     "io"
     "io/ioutil"
     // "log"
+    "math/rand"
     "mime/multipart"
     "net"
     "net/http"
@@ -72,7 +75,7 @@ const (
 )
 
 var (
-    defaultSetting = Settings{false, "requests/2.0.0", 60 * time.Second, 60 * time.Second, nil, nil, nil, false, true, true}
+    defaultSetting = Settings{false, "requests/2.0.0", 60 * time.Second, 60 * time.Second, nil, nil, nil, nil, false, true, true}
     defaultCookieJar http.CookieJar
     settingMutex sync.Mutex
 )
@@ -85,6 +88,7 @@ type Settings struct {
     ReadWriteTimeout time.Duration
     TlsClientConfig  *tls.Config
     Proxy            func(*http.Request) (*url.URL, error)
+    RandomProxies    []func(*http.Request) (*url.URL, error)
     Transport        http.RoundTripper
     EnableCookie     bool
     Gzip             bool
@@ -255,12 +259,6 @@ func (r *Requests) SetReferer(referer string) *Requests {
     return r
 }
 
-// Header add header item string in request.
-func (r *Requests) Header(key, value string) *Requests {
-    r.req.Header.Set(key, value)
-    return r
-}
-
 // SetUserAgent sets User-Agent header field
 // r.SetUserAgent("Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)")
 func (r *Requests) SetUserAgent(useragent string) *Requests {
@@ -311,17 +309,46 @@ func (r *Requests) SetTransport(transport http.RoundTripper) *Requests {
 // 		u, _ := url.ParseRequestURI("http://127.0.0.1:8118")
 // 		return u, nil
 // 	}
+//
+// proxyUrl, err := url.Parse("http://proxyIp:proxyPort")
+// myClient := &http.Client{Transport: &http.Transport{Proxy: http.ProxyURL(proxyUrl)}}
 func (r *Requests) SetProxy(proxy func(*http.Request) (*url.URL, error)) *Requests {
     r.setting.Proxy = proxy
     return r
 }
 
-func (r *Requests) SetProxyString(proxy string) *Requests {
+// example:
+//   proxyStr := "http://localhost:7000"
+func (r *Requests) SetProxyString(proxyStr string) *Requests {
     r.setting.Proxy = func(req *http.Request) (*url.URL, error) {
-        u, _ := url.ParseRequestURI(proxy)
-        return u, nil
+        proxyURL, _ := url.ParseRequestURI(proxyStr)
+        return proxyURL, nil
     }
+    return r
+}
 
+// AddRandomProxies add random proxy ip list
+func (r *Requests) AddRandomProxies(proxyStrs []string) *Requests {
+    for _, proxyStr := range proxyStrs {
+        r.setting.RandomProxies = append(r.setting.RandomProxies, func(req *http.Request) (*url.URL, error) {
+            proxyURL, _ := url.ParseRequestURI(proxyStr)
+            return proxyURL, nil
+        })
+    }
+    return r
+}
+
+// Header add header item string in request.
+func (r *Requests) Header(key, value string) *Requests {
+    r.req.Header.Set(key, value)
+    return r
+}
+
+// Headers add header item string in batches
+func (r *Requests) Headers(headers map[string]string) *Requests {
+    for key, value := range headers {
+        r.req.Header.Set(key, value)
+    }
     return r
 }
 
@@ -465,6 +492,15 @@ func (r *Requests) SendOut() (*http.Response, error) {
     r.req.URL = url
 
     trans := r.setting.Transport
+
+    // get and set proxy from proxy list with random
+    if r.setting.RandomProxies != nil {
+        randomProxies := r.setting.RandomProxies
+        source := rand.NewSource(time.Now().Unix())
+        randed := rand.New(source) // initialize local pseudorandom generator 
+        idx := randed.Intn(len(randomProxies))
+        r.setting.Proxy = randomProxies[idx]
+    }
 
     if trans == nil {
         // create default transport
