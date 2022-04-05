@@ -17,7 +17,7 @@ type Url struct {
     Method string
     UrlStr string
     Params map[string]string
-    Info   map[string]any // 自定义数据
+    Info   any // 自定义数据
 }
 
 type Worker struct {
@@ -35,7 +35,7 @@ func NewWorker(count int) *Worker {
     }
 }
 
-func (w *Worker) AddUrl(method, urlStr string, params map[string]string, info map[string]any) {
+func (w *Worker) AddUrl(method, urlStr string, params map[string]string, info any) {
     w.urls = append(w.urls, &Url{
         Method: method,
         UrlStr: urlStr,
