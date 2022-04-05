@@ -305,20 +305,21 @@ func (q *Query) SelectCompile() string {
 // SelectReset the query parameters
 func (q *Query) SelectReset() *Query {
     //fmt.Println("SelectReset")
-    q.S.selects  = nil
-    q.S.distinct = false
-    q.S.froms    = nil
-    q.S.groupBys = nil
-    q.S.havings  = nil
-    q.S.offset   = 0
+    q.S.selects   = nil
+    q.S.distinct  = false
+    q.S.froms     = nil
+    q.S.groupBys  = nil
+    q.S.havings   = nil
+    q.S.offset    = 0
+    q.S.forUpdate = false
 
-    q.W.wheres   = nil
-    q.W.orderBys = nil
-    q.W.limit    = 0
+    q.W.wheres    = nil
+    q.W.orderBys  = nil
+    q.W.limit     = 0
 
-    q.joinObjs   = nil
-    q.lastJoin   = nil
-    q.parameters = nil
+    q.joinObjs    = nil
+    q.lastJoin    = nil
+    q.parameters  = nil
 
     return q
 }
