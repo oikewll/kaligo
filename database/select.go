@@ -4,16 +4,18 @@ import (
     "fmt"
     "strconv"
     "strings"
+    "github.com/owner888/kaligo/logs"
 )
 
 // Select is the struct for MySQL DATE type
 type Select struct {
-    selects  []string
-    distinct bool
-    froms    []string
-    groupBys []string
-    havings  map[string][][]string
-    offset   int
+    selects   []string
+    distinct  bool
+    froms     []string
+    groupBys  []string
+    havings   map[string][][]string
+    offset    int
+    forUpdate bool
 }
 
 // Select Choose the columns to select from.
@@ -45,6 +47,12 @@ func (q *Query) Distinct(value bool) *Query {
 // From Choose the tables to select "FROM ...".
 func (q *Query) From(tables ...string) *Query {
     q.S.froms = append(q.S.froms, tables...)
+
+    return q
+}
+
+func (q *Query) ForUpdate(forUpdate bool) *Query {
+    q.S.forUpdate = forUpdate
 
     return q
 }
@@ -278,6 +286,16 @@ func (q *Query) SelectCompile() string {
         sqlStr += " OFFSET " + strconv.Itoa(q.S.offset)
     }
 
+    if q.S.forUpdate {
+        // Add for update
+        if q.InTransaction == true {
+            sqlStr += " FOR UPDATE"
+        } else {
+            logs.Warn("SELECT xxx FOR UPDATE can't use for non-transactional environment")
+        }
+    }
+
+    //fmt.Printf("SelectCompile === %v\n", sqlStr)
     //fmt.Printf("SelectCompile === %v\n", sqlStr)
     q.sqlStr = sqlStr
 
