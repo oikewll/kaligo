@@ -128,7 +128,10 @@ func (mem *Memory) Incr(key string, args ...uint64) int64 {
     mem.mu.Lock()
     defer mem.mu.Unlock()
 
-    item, _ := mem.Get(key)
+    item, ok := mem.Get(key)
+    if !ok {
+        item = uint64(0)
+    }
     val := item.(uint64) - getDelta(args...)
     // 设置为永不过期
     mem.Set(key, val, NoExpiration)
