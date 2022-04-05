@@ -204,7 +204,7 @@ func (c *Context) RawDataValue() ([]byte, error) {
     return ioutil.ReadAll(c.Request.Body)
 }
 
-// key 找不到 value 时返回的默认值，用于 
+// key 找不到 value 时返回的默认值，用于
 func (c *Context) getDefaultValue(defaultValue ...string) string {
     if len(defaultValue) > 0 {
         return defaultValue[0]
@@ -221,7 +221,7 @@ func (c *Context) getDefaultValue(defaultValue ...string) string {
 //    // a GET request to /user/10
 //    id := c.RouterValue("id") // id == "10"
 func (c *Context) ParamValue(key string, defaultValue ...string) string {
-	return c.Params.ByName(key, defaultValue...)
+    return c.Params.ByName(key, defaultValue...)
 }
 
 // AddParam adds param to context and
@@ -246,10 +246,10 @@ func (c *Context) initQueryCache() {
 // QueryValue returns the keyed url query value if it exists,
 // It is shortcut for `c.Request.URL.Query().Get(key)`
 //     GET /path?id=1234&name=Manu&value=
-// 	   c.QueryValue("id") == "1234"
-// 	   c.QueryValue("name") == "Manu"
-// 	   c.QueryValue("value") == ""
-// 	   c.QueryValue("wtf") == ""
+//     c.QueryValue("id") == "1234"
+//     c.QueryValue("name") == "Manu"
+//     c.QueryValue("value") == ""
+//     c.QueryValue("wtf") == ""
 func (c *Context) QueryValue(key string, defaultValue ...string) string {
     c.initQueryCache()
     if value, ok := c.queryCache.Get(key); ok {
@@ -279,6 +279,7 @@ func (c *Context) FormValue(key string, defaultValue ...string) string {
 //    var users []User
 //    c.JsonBodyValue(&users)
 func (c *Context) JsonBodyValue(obj any) error {
+    defer c.Request.Body.Close()
     return json.NewDecoder(c.Request.Body).Decode(obj)
 }
 

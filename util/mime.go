@@ -48,6 +48,7 @@ func (m *MIMEJsonParser) ParseValues(request *http.Request) UrlValues {
     values := UrlValues{}
     var form map[string]any
     json.NewDecoder(request.Body).Decode(&form)
+    defer request.Body.Close()
     for k, v := range form {
         values[k] = []string{fmt.Sprint(v)}
     }
