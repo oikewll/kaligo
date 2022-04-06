@@ -1,7 +1,10 @@
 package kaligo
 
 import (
+    "context"
     "log"
+    "os"
+    "os/signal"
     "net/http"
     "path"
     "reflect"
@@ -230,24 +233,57 @@ func (a *Mux) With(middlewares ...func(http.Handler) http.Handler) Router {
     return a
 }
 
-// RunTLS is to run a tls server
-func RunTLS(mux *Mux, port, crtFile, keyFile string) {
-    log.Printf("ListenAndServe: %s - %s - %s", port, crtFile, keyFile)
-
-    err := http.ListenAndServeTLS(port, crtFile, keyFile, mux)
-    if err != nil {
-        log.Fatal("ListenAndServe: ", err)
-    }
+type TLSOption struct {
+    crtFile, keyFile string
 }
 
 // Run is to run a router
-func Run(mux *Mux, port string) {
-    log.Printf("ListenAndServe: %s", port)
+func Run(mux *Mux, addr string, options ...TLSOption) {
+    // addr := fmt.Sprintf("%s:%d", cfg.host, cfg.port)
+    server := &http.Server{Addr: addr, Handler: mux}
 
-    err := http.ListenAndServe(port, mux)
-    if err != nil {
-        log.Fatal("ListenAndServe: ", err)
+    // Creating a waiting group that waits until the graceful shutdown procedure is done
+    var wg sync.WaitGroup
+    wg.Add(1)
+
+    go func() {
+        stop := make(chan os.Signal, 1)
+        signal.Notify(stop, os.Interrupt)
+        <-stop
+        log.Println("Shutting down the HTTP server...")
+        err := server.Shutdown(context.Background())
+        if err != nil {
+            log.Printf("Error during shutdown: %v\n", err)
+        }
+        wg.Done()
+    }()
+
+    log.Printf("ListenAndServe: %s", addr)
+
+    var err error
+    // err = http.ListenAndServe(port, mux)
+    if options == nil {
+        err = server.ListenAndServe()
+    } else {
+        err = server.ListenAndServeTLS(
+            options[0].crtFile, // cfg.certificatePemFilePath,
+            options[0].keyFile, // cfg.certificatePemPrivKeyFilePath,
+        )
+    }
+
+    if err == http.ErrServerClosed { // graceful shutdown
+        log.Println("Commencing server shutdown...")
+        wg.Wait()
+        log.Println("Server was gracefully shut down.")
+    } else if err != nil {
+        log.Printf("Server error: %v\n", err)
     }
 }
+
+// 2021/03/12 13:39:49 listening on port 3333...
+// 2021/03/12 13:39:50 user initiated a request
+// 2021/03/12 13:39:54 commencing server shutdown...
+// 2021/03/12 13:40:00 user request is fulfilled
+// 2021/03/12 13:40:01 server was gracefully shut down.
 
 /* vim: set expandtab: */
