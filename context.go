@@ -1,9 +1,6 @@
 package kaligo
 
 import (
-    // "log"
-
-    // "context"
     "encoding/json"
     "fmt"
     "io"
@@ -30,8 +27,6 @@ import (
 
 // Context is use for ServeHTTP goroutine
 type Context struct {
-    // context.Context
-
     ResponseWriter http.ResponseWriter
     Request        *http.Request
 
