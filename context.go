@@ -47,12 +47,12 @@ type Context struct {
     // Keys map[string]any
     Keys sync.Map
 
-    // queryCache caches the query result from c.Request.URL.Query().
-    queryCache util.UrlValues
+    // QueryCache caches the query result from c.Request.URL.Query().
+    QueryCache util.UrlValues
 
-    // formCache caches c.Request.PostForm, which contains the parsed form data from POST, PATCH,
+    // FormCache caches c.Request.PostForm, which contains the parsed form data from POST, PATCH,
     // or PUT body parameters.
-    formCache util.UrlValues
+    FormCache util.UrlValues
 
     // SameSite allows a server to define a cookie attribute making it impossible for
     // the browser to send this cookie along with cross-site requests.
@@ -65,8 +65,8 @@ func (c *Context) Reset() {
     c.Params = c.Params[:0]
     c.fullPath = ""
     c.Keys = sync.Map{}
-    c.queryCache = nil
-    c.formCache = nil
+    c.QueryCache = nil
+    c.FormCache = nil
     c.sameSite = 0
     fmt.Print()
 }
@@ -234,11 +234,11 @@ func (c *Context) ParamValue(key string, defaultValue ...string) string {
 // }
 
 func (c *Context) initQueryCache() {
-    if c.queryCache == nil {
+    if c.QueryCache == nil {
         if c.Request != nil {
-            c.queryCache = util.UrlValues(c.Request.URL.Query())
+            c.QueryCache = util.UrlValues(c.Request.URL.Query())
         } else {
-            c.queryCache = util.UrlValues{}
+            c.QueryCache = util.UrlValues{}
         }
     }
 }
@@ -252,22 +252,22 @@ func (c *Context) initQueryCache() {
 //     c.QueryValue("wtf") == ""
 func (c *Context) QueryValue(key string, defaultValue ...string) string {
     c.initQueryCache()
-    if value, ok := c.queryCache.Get(key); ok {
+    if value, ok := c.QueryCache.Get(key); ok {
         return value
     }
     return c.getDefaultValue(defaultValue...)
 }
 
 func (c *Context) initFormCache() {
-    if c.formCache == nil {
-        c.formCache = util.DefaultMIMEParsers.ParseValues(c.Request)
+    if c.FormCache == nil {
+        c.FormCache = util.DefaultMIMEParsers.ParseValues(c.Request)
     }
 }
 
 // FormValue returns the specified key from a POST urlencoded form or multipart form
 func (c *Context) FormValue(key string, defaultValue ...string) string {
     c.initFormCache()
-    if value, ok := c.formCache.Get(key); ok {
+    if value, ok := c.FormCache.Get(key); ok {
         return value
     }
     return c.getDefaultValue(defaultValue...)
