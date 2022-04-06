@@ -119,6 +119,17 @@ func (a *Mux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
         return
     }
 
+    // TODO context cancel()
+	// for {
+	//     select {
+	//     case <-ctx.Done():
+	//         // logs.Info("InitProducer done")
+	//         return
+    //     default
+    //         // ...
+	//     }
+	// }
+
     requestPath := r.URL.RawPath
     if requestPath == "" {
         requestPath = r.URL.Path // 会自动 unescape, 先用 RawPath ,不行才用这个
