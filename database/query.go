@@ -222,6 +222,7 @@ func (q *Query) Execute() (*Query, error) {
 }
 
 func (q *Query) Count(value any) *Query {
+    return q
 }
 
 // Scan is ...
