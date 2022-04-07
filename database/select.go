@@ -9,9 +9,8 @@ import (
 
 // Select is the struct for MySQL DATE type
 type Select struct {
-    selects   []string
-    expr      *Expression
-    // selects   []any
+    // selects   []string
+    selects   []any
     distinct  bool
     froms     []string
     groupBys  []string
@@ -21,14 +20,9 @@ type Select struct {
 }
 
 // Select Choose the columns to select from.
-func (q *Query) Select(columns any) *Query {
-    switch c := columns.(type) {
-    case []string:
-        q.S.selects = append(q.S.selects, c...)
-    case *Expression:
-        q.S.expr = c
-    default:
-        // code...
+func (q *Query) Select(columns []any) *Query {
+    for _, value := range columns {
+        q.S.selects = append(q.S.selects, value)
     }
 
     return q
@@ -210,18 +204,21 @@ func (q *Query) SelectCompile() string {
     }
 
     if len(q.S.selects) == 0 {
-        if q.S.expr != nil {
-            // 兼容SELECT COUNT、SUM 语法
-            sqlStr += q.S.expr.Value()
-        } else {
-            // Select all columns
-            sqlStr += "*"
-        }
+        sqlStr += "*"
     } else {
+        var selects []string    
+        for _, v := range q.S.selects {
+            switch c := v.(type) {
+            case string:
+                q.S.selects = append(q.S.selects, c)
+            case *Expression:
+                q.S.selects = append(q.S.selects, c.Value())
+            }
+        }
         // 去重
-        q.S.selects = arrayUnique(q.S.selects)
+        selects = arrayUnique(selects)
 
-        for k, v := range q.S.selects {
+        for k, v := range selects {
             // Is the column need decrypt ???
             for _, table := range  q.S.froms {
                 if cryptFields, ok := q.cryptFields[table]; ok && q.Dialector.Name() == "mysql" && q.cryptKey != "" && InSlice(v, &cryptFields) {
@@ -231,7 +228,7 @@ func (q *Query) SelectCompile() string {
                 }
             }
         }
-        sqlStr += strings.Join(q.S.selects, ", ")
+        sqlStr += strings.Join(selects, ", ")
     }
 
     // Set tables to select from
@@ -310,7 +307,6 @@ func (q *Query) SelectCompile() string {
 func (q *Query) SelectReset() *Query {
     //fmt.Println("SelectReset")
     q.S.selects   = nil
-    q.S.expr      = nil
     q.S.distinct  = false
     q.S.froms     = nil
     q.S.groupBys  = nil
