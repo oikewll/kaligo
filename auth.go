@@ -106,7 +106,7 @@ func (a *Auth) CheckUser(account, password string, remember ...bool) (err error)
     // }
 
     var user AuthUser
-    _, err = a.ctx.DB.SelectArray(TableAdminField).From("user").Where("id", "=", "1").Scan(&user).Execute()
+    _, err = a.ctx.DB.Select(TableAdminField...).From("user").Where("id", "=", "1").Scan(&user).Execute()
     if err != nil {
         return errors.New("账号不存在！")
     }
