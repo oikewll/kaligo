@@ -121,7 +121,7 @@ func (q *Query) Compile() string {
     }
 
     // 不需要了, 一个Query()一个对象，db.query = &Query{} 以后之前那个就会被回收掉了
-    //q.Reset()
+    q.Reset()
 
     return sqlStr
 }
