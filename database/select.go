@@ -213,6 +213,8 @@ func (q *Query) SelectCompile() string {
                 selects = append(selects, c)
             case Expression:    // type Expression string
                 selects = append(selects, string(c))
+            default:
+                logs.Warn("Select Columns Type Error: %v", c)
             }
         }
         // 去重
