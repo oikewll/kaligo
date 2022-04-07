@@ -244,10 +244,10 @@ func (db *DB) Query(sqlStr string, args ...QueryType) *Query {
 //     SELECT `id`, `name``
 //     Select("id", "username")
 //
-//     arr := []string{"id", "username"} 
+//     arr := []string{"id", "username"}
 //     Select(arr...)
 //
-//     SelectExpression(&Expression{"COUNT(*) AS `count"})
+//     SelectExpression(&Expression{"COUNT(*) AS `count`"})
 //
 //     SELECT id AS user_id
 //     select("id AS user_id")
@@ -276,7 +276,7 @@ func (db *DB) Select(columns ...string) *Query {
 func (db *DB) SelectExpression(expr *Expression) *Query {
     query := &Query{
         S: &Select{
-            expr:  expr,
+            expr:     expr,
             distinct: false,
             offset:   0,
         },

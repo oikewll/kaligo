@@ -1,9 +1,7 @@
 // 分页工具类
 package database
 
-import (
-    // "fmt"
-)
+// "fmt"
 
 type Page[T any] struct {
     CurrentPage int64
@@ -28,13 +26,13 @@ func NewPageResponse[T any](page Page[T]) *PageResponse[T] {
         PageSize:    page.PageSize,
         Total:       page.Total,
         Pages:       page.Pages,
-        Data:        page.Data, 
+        Data:        page.Data,
     }
 }
 
 func (page *Page[T]) SelectPage(db *DB, columns []string, table string, wrapper func(*Query)) (e error) {
     // var model T
-    q, _ := db.SelectExpression(&Expression{"COUNT"}).From(table).WhereWrapper(wrapper).Scan(&page.Total).Execute()
+    q, _ := db.SelectExpression(&Expression{"COUNT(*) AS `count`"}).From(table).WhereWrapper(wrapper).Scan(&page.Total).Execute()
     // DB.Model(&model).Where(wrapper).Count(&page.Total)
     if page.Total == 0 {
         // 没有符合条件的数据，直接返回一个T类型的空列表
