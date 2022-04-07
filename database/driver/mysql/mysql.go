@@ -9,7 +9,7 @@ import (
     //"strconv"
     "strings"
 
-    _ "github.com/go-sql-driver/mysql" // need comment
+    _ "github.com/go-sql-driver/mysql" // use for call mysql init() method
     "github.com/owner888/kaligo/database"
 )
 

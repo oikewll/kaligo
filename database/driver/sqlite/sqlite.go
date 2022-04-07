@@ -9,7 +9,7 @@ import (
     //"strconv"
     "strings"
 
-    _ "github.com/mattn/go-sqlite3" // need comment
+    _ "github.com/mattn/go-sqlite3" // use for call go-sqlite3 init() method
     "github.com/owner888/kaligo/database"
 )
 

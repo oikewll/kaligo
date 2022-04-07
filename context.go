@@ -2,7 +2,6 @@ package kaligo
 
 import (
     "encoding/json"
-    "fmt"
     "io"
     "io/ioutil"
     "mime/multipart"
@@ -60,13 +59,12 @@ type Context struct {
 var MaxMultipartMemory int64 = 32 << 20 // 32 MiB
 
 func (c *Context) Reset() {
-    c.Params = c.Params[:0]
-    c.fullPath = ""
-    c.Keys = sync.Map{}
+    c.Params     = c.Params[:0]
+    c.fullPath   = ""
+    c.Keys       = sync.Map{}
     c.QueryCache = nil
-    c.FormCache = nil
-    c.sameSite = 0
-    fmt.Print()
+    c.FormCache  = nil
+    c.sameSite   = 0
 }
 
 // FullPath returns a matched route full path. For not found routes
