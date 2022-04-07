@@ -10,6 +10,8 @@ import (
 // Select is the struct for MySQL DATE type
 type Select struct {
     selects   []string
+    selectSql string
+    // selects   []any
     distinct  bool
     froms     []string
     groupBys  []string
@@ -19,19 +21,14 @@ type Select struct {
 }
 
 // Select Choose the columns to select from.
-func (q *Query) Select(columns []string) *Query {
-    q.S.selects = append(q.S.selects, columns...)
-
-    return q
-}
-
-// SelectArray Choose the columns to select from.
-func (q *Query) SelectArray(columns []string, reset bool) *Query {
-    // 重设查询栏目
-    if reset {
-        q.S.selects = columns
-    } else {
-        q.S.selects = append(q.S.selects, columns...)
+func (q *Query) Select(columns any) *Query {
+    switch c := columns.(type) {
+    case []string:
+        q.S.selects = append(q.S.selects, c...)
+    case Expression:
+        q.S.selectSql = c.Value()
+    default:
+        // code...
     }
 
     return q
@@ -213,10 +210,17 @@ func (q *Query) SelectCompile() string {
     }
 
     if len(q.S.selects) == 0 {
-        // Select all columns
-        sqlStr += "*"
+        if q.S.selectSql != "" {
+            // 兼容SELECT COUNT、SUM 语法
+            sqlStr += q.S.selectSql
+        } else {
+            // Select all columns
+            sqlStr += "*"
+        }
     } else {
+        // 去重
         q.S.selects = arrayUnique(q.S.selects)
+
         for k, v := range q.S.selects {
             // Is the column need decrypt ???
             for _, table := range  q.S.froms {
