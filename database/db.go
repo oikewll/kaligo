@@ -247,6 +247,8 @@ func (db *DB) Query(sqlStr string, args ...QueryType) *Query {
 //     arr := []string{"id", "username"} 
 //     Select(arr...)
 //
+//     SelectExpression(&Expression{"COUNT"})
+//
 //     SELECT id AS user_id
 //     select("id AS user_id")
 //     SELECT `id`, `name` FROM `user`
