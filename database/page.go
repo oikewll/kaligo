@@ -32,7 +32,7 @@ func NewPageResponse[T any](page Page[T]) *PageResponse[T] {
 
 func (page *Page[T]) SelectPage(db *DB, columns []string, table string, wrapper func(*Query)) (e error) {
     // var model T
-    q, _ := db.SelectExpression(&Expression{"COUNT(*) AS `count`"}).From(table).WhereWrapper(wrapper).Scan(&page.Total).Execute()
+    db.SelectExpression(&Expression{"COUNT(*) AS `count`"}).From(table).WhereWrapper(wrapper).Scan(&page.Total).Execute()
     // DB.Model(&model).Where(wrapper).Count(&page.Total)
     if page.Total == 0 {
         // 没有符合条件的数据，直接返回一个T类型的空列表
@@ -44,7 +44,7 @@ func (page *Page[T]) SelectPage(db *DB, columns []string, table string, wrapper 
     offset := int((page.CurrentPage - 1) * size)
 
     // 查询结果可以直接存到Page的Data字段中，因为编译的时候page.Data是有确定类型的
-    q.Select(columns).WhereWrapper(wrapper).Offset(offset).Limit(int(page.PageSize)).Scan(&page.Data).Execute()
+    db.Select(columns...).From(table).WhereWrapper(wrapper).Offset(offset).Limit(int(size)).Scan(&page.Data).Execute()
     // e = DB.Model(&model).Where(wrapper).Scopes(Paginate(page)).Find(&page.Data).Error
     return
 }
