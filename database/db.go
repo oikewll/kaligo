@@ -243,7 +243,10 @@ func (db *DB) Query(sqlStr string, args ...QueryType) *Query {
 // Select -> Where -> Builder -> Query
 //     SELECT `id`, `name``
 //     Select("id", "username")
-//     Select([]string{"id", "username"})
+//
+//     arr := []string{"id", "username"} 
+//     Select(arr...)
+//
 //     SELECT id AS user_id
 //     select("id AS user_id")
 //     SELECT `id`, `name` FROM `user`
@@ -268,10 +271,10 @@ func (db *DB) Select(columns ...string) *Query {
     return query
 }
 
-func (db *DB) SelectArray(columns []string) *Query {
+func (db *DB) SelectExpression(expr *Expression) *Query {
     query := &Query{
         S: &Select{
-            selects:  columns,
+            expr:  expr,
             distinct: false,
             offset:   0,
         },

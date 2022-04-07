@@ -10,7 +10,7 @@ import (
 // Select is the struct for MySQL DATE type
 type Select struct {
     selects   []string
-    selectSql string
+    expr      *Expression
     // selects   []any
     distinct  bool
     froms     []string
@@ -25,8 +25,8 @@ func (q *Query) Select(columns any) *Query {
     switch c := columns.(type) {
     case []string:
         q.S.selects = append(q.S.selects, c...)
-    case Expression:
-        q.S.selectSql = c.Value()
+    case *Expression:
+        q.S.expr = c
     default:
         // code...
     }
@@ -210,9 +210,9 @@ func (q *Query) SelectCompile() string {
     }
 
     if len(q.S.selects) == 0 {
-        if q.S.selectSql != "" {
+        if q.S.expr != nil {
             // 兼容SELECT COUNT、SUM 语法
-            sqlStr += q.S.selectSql
+            sqlStr += q.S.expr.Value()
         } else {
             // Select all columns
             sqlStr += "*"
