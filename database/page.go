@@ -30,9 +30,9 @@ func NewPageResponse[T any](page Page[T]) *PageResponse[T] {
     }
 }
 
-func (page *Page[T]) SelectPage(db *DB, columns []string, table string, wrapper func(*Query)) (e error) {
+func (page *Page[T]) SelectPage(db *DB, columns []any, table string, wrapper func(*Query)) (e error) {
     // var model T
-    db.SelectExpression(&Expression{"COUNT(*) AS `count`"}).From(table).WhereWrapper(wrapper).Scan(&page.Total).Execute()
+    db.Select([]any{Expression("COUNT(*) AS `count`")}).From(table).WhereWrapper(wrapper).Scan(&page.Total).Execute()
     // DB.Model(&model).Where(wrapper).Count(&page.Total)
     if page.Total == 0 {
         // 没有符合条件的数据，直接返回一个T类型的空列表

@@ -210,9 +210,9 @@ func (q *Query) SelectCompile() string {
         for _, v := range q.S.selects {
             switch c := v.(type) {
             case string:
-                q.S.selects = append(q.S.selects, c)
-            case *Expression:
-                q.S.selects = append(q.S.selects, c.Value())
+                selects = append(selects, c)
+            case Expression:    // type Expression string
+                selects = append(selects, string(c))
             }
         }
         // 去重
