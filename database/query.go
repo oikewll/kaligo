@@ -221,6 +221,9 @@ func (q *Query) Execute() (*Query, error) {
     return q, nil
 }
 
+func (q *Query) Count(value any) *Query {
+}
+
 // Scan is ...
 func (q *Query) Scan(value any) *Query {
     if value == nil {

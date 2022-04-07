@@ -17,18 +17,18 @@ import (
     //"github.com/stretchr/testify/assert"
 )
 
-//type singleton struct {
-//}
-
-//var instance *singleton
-//var once sync.Once
-
-//func GetInstance() *singleton {
-//once.Do(func() {
-//instance = &singleton{}
-//})
-//return instance
-//}
+// type singleton struct {
+// }
+//
+// var instance *singleton
+// var once sync.Once
+//
+// func GetInstance() *singleton {
+//     once.Do(func() {
+//         instance = &singleton{}
+//     })
+//     return instance
+// }
 
 var (
     once      sync.Once

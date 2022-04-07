@@ -1,15 +1,26 @@
 package database
 
+type WhereParam struct {
+    column  string
+    op      string
+    value   any
+}
+
 // Where is the struct for MySQL DATE type
 type Where struct {
-    wheres   map[string][][]string
+    wheres   map[string][][]string  // map["AND"][][]string{column, op, value}
     orderBys [][2]string
     limit    int
 }
 
 // Where Alias of andWhere
-func (q *Query) Where(column string, op string, value string) *Query {
+func (q *Query) Where(column string, op string, value any) *Query {
     return q.AndWhere(column, op, value)
+}
+
+func (q *Query) WhereWrapper(wrapper func(*Query)) *Query {
+    wrapper(q)
+    return q
 }
 
 // AndWhere Creates a new "AND WHERE" condition for the query.
@@ -20,17 +31,17 @@ func (q *Query) Where(column string, op string, value string) *Query {
 // @param  op     string 操作符 >、=、<、>=、<=
 // @param  value  string 查询值
 // @return w     *Where Where对象
-func (q *Query) AndWhere(column string, op string, value string) *Query {
+func (q *Query) AndWhere(column string, op string, value any) *Query {
     if q.W.wheres == nil {
         q.W.wheres = make(map[string][][]string)
     }
-    q.W.wheres["AND"] = append(q.W.wheres["AND"], []string{column, op, value})
+    q.W.wheres["AND"] = append(q.W.wheres["AND"], []string{column, op, ToString(value)})
     return q
 }
 
 // OrWhere Creates a new "OR WHERE" condition for the query.
 func (q *Query) OrWhere(column string, op string, value string) *Query {
-    q.W.wheres["OR"] = append(q.W.wheres["OR"], []string{column, op, value})
+    q.W.wheres["OR"] = append(q.W.wheres["OR"], []string{column, op, ToString(value)})
     return q
 }
 
@@ -71,7 +82,7 @@ func (q *Query) OrWhereClose() *Query {
 // OrderBy Applies sorting with "ORDER By ..."
 func (q *Query) OrderBy(column string, args ...string) *Query {
     var direction string    
-    if len(args) != 0 {
+    if len(args) > 0 {
         direction = args[0]
     } else {
         direction = "ASC"
