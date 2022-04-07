@@ -2,6 +2,7 @@ package kaligo
 
 import (
     "context"
+    "fmt"
     "log"
     "os"
     "os/signal"
@@ -11,6 +12,7 @@ import (
     "regexp"
     "strings"
     "sync"
+    "sync/atomic"
 
     "github.com/owner888/kaligo/cache"
     "github.com/owner888/kaligo/database"
@@ -21,31 +23,57 @@ import (
 // 假如 Router 是一个第三方库接口，如果第三方库新版动了这个接口，我们发现不了，编译也不报错，只有用的时候才报错，但写了这句，就编译不过了
 var _ Router = &Mux{}
 
+// var muxCounter uint32
+
 // Mux is use for add Route struct and StaticRoute struct
 type Mux struct {
-    ID           int64
-    Handler      http.Handler // http.ServeMux
-    routes       []*Route
-    staticRoutes []*StaticRoute
-    DB           *database.DB
-    Cache        cache.Cache // interface 本身是指针，不需要用 *cache.Cache，struct 才需要
-    pool         sync.Pool   // Context 复用
-    Timer        *Timer
+    // Handler       http.Handler // http.ServeMux
+    routes        []*Route
+    staticRoutes  []*StaticRoute
+    DB            *database.DB
+    Cache         cache.Cache // interface 本身是指针，不需要用 *cache.Cache，struct 才需要
+    pool          sync.Pool   // Context 复用
+    Timer         *Timer
+    // 统计
+    requestCount  uint32
+    responseCount uint32
+    notFoundCount uint32
 }
 
+// 只会调用一次
 func NewRouter() *Mux {
     mux := &Mux{}
     cache, err := cache.New()
     if err != nil {
         panic(err)
     }
-    mux.ID = cache.Incr("router_id")
     mux.Cache = cache
     mux.Timer = NewTimer(mux)
     mux.pool.New = func() any {
         return &Context{DB: mux.DB, Cache: mux.Cache, Timer: mux.Timer}
     }
     return mux
+}
+
+// String is the text representation of the collector.
+// It contains useful debug information about the collector's internals
+func (a *Mux) String() string {
+    // return fmt.Sprintf(
+    //     "Requests made: %d (%d responses) | Callbacks: OnRequest: %d, OnHTML: %d, OnResponse: %d, OnError: %d",
+    //     atomic.LoadUint32(&a.requestCount),
+    //     atomic.LoadUint32(&a.responseCount),
+    //     // len(c.requestCallbacks),
+    //     // len(c.htmlCallbacks),
+    //     // len(c.responseCallbacks),
+    //     // len(c.errorCallbacks),
+    // )
+
+    return fmt.Sprintf(
+        "Requests made: %d (%d responses) | NotFound: %d",
+        atomic.LoadUint32(&a.requestCount),
+        atomic.LoadUint32(&a.responseCount),
+        atomic.LoadUint32(&a.notFoundCount),
+    )
 }
 
 // AddDB is use for add a db struct
@@ -117,10 +145,11 @@ func (a *Mux) AddRoute(pattern string, m map[string]string, c Interface) {
 //     ServeHTTP(ResponseWriter, *Request)
 // }
 func (a *Mux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-    if a.Handler != nil { // 有注入 Handler 时只使用注入的 Handler，不走默认逻辑
-        a.Handler.ServeHTTP(w, r)
-        return
-    }
+    // 不想走这里的时候才需要使用注入
+    // if a.Handler != nil { // 有注入 Handler 时只使用注入的 Handler，不走默认逻辑
+    //     a.Handler.ServeHTTP(w, r)
+    //     return
+    // }
 
     requestPath := r.URL.RawPath
     if requestPath == "" {
@@ -144,6 +173,9 @@ func (a *Mux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
             return
         }
     }
+
+    // 请求数 +1 
+    atomic.AddUint32(&a.requestCount, 1)
 
     var matchRouted bool
 
@@ -182,11 +214,18 @@ func (a *Mux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
         // Request callback
         if m, ok = route.Methods[r.Method]; !ok {
             http.NotFound(w, r)
+
+            // 错误数 +1 
+            atomic.AddUint32(&a.notFoundCount, 1)
+            return
         }
 
         a.controllerMethodCall(route.ControllerType, m, w, r, params)
         matchRouted = true
     }
+
+    // 相应数 +1 
+    atomic.AddUint32(&a.responseCount, 1)
 
     // if no matches to url, throw a not found exception
     if matchRouted == false {
