@@ -4,28 +4,29 @@ import (
     // "log"
     "errors"
     "sync"
+
     "golang.org/x/crypto/bcrypt"
 )
 
 // 后台管理员表
 const (
-    TableAdmin              = "#PB#_admin"
-    TableAdminGroup         = "#PB#_admin_group"
-    TableAdminLoginLog      = "#PB#_admin_login_log"
-    TableAdminOperationLog  = "#PB#_admin_operation_log"
-    TableAdminPurview       = "#PB#_admin_purview"
-    TableAdminSession       = "#PB#_admin_session"
+    TableAdmin             = "#PB#_admin"
+    TableAdminGroup        = "#PB#_admin_group"
+    TableAdminLoginLog     = "#PB#_admin_login_log"
+    TableAdminOperationLog = "#PB#_admin_operation_log"
+    TableAdminPurview      = "#PB#_admin_purview"
+    TableAdminSession      = "#PB#_admin_session"
 )
 
 // 后台管理员字段
 var (
-    TableAdminField = []string{
-        "id", 
-        "groups", 
-        "account", 
-        "password", 
-        "realname", 
-        "avatar", 
+    TableAdminField = []any{
+        "id",
+        "groups",
+        "account",
+        "password",
+        "realname",
+        "avatar",
         "email",
         "session",
         "session_expired",
@@ -33,10 +34,10 @@ var (
     }
 
     TableAdminSessionField = []string{
-        "id", 
-        "token", 
-        "utma", 
-        "ip", 
+        "id",
+        "token",
+        "utma",
+        "ip",
     }
 
     Author = &Auth{}
@@ -48,22 +49,22 @@ type UserParam struct {
 }
 
 type AuthUser struct {
-    ID               uint64      `db:"id"`
+    ID uint64 `db:"id"`
     // Groups           []uint64    `db:"groups"`
-    Account          string      `db:"account"`
-    Password         string      `db:"password"`
-    Realname         string      `db:"realname"`
-    Avatar           string      `db:"avatar"`
-    Email            string      `db:"email"`
-    Session          string      `db:"session"`
-    SessionExpired   uint64      `db:"session_expired"`
-    Status           int32       `db:"status"`
+    Account        string `db:"account"`
+    Password       string `db:"password"`
+    Realname       string `db:"realname"`
+    Avatar         string `db:"avatar"`
+    Email          string `db:"email"`
+    Session        string `db:"session"`
+    SessionExpired uint64 `db:"session_expired"`
+    Status         int32  `db:"status"`
 }
 
 type Auth struct {
-    User        *AuthUser
-    ctx         *Context
-    cacheStore  *sync.Map
+    User       *AuthUser
+    ctx        *Context
+    cacheStore *sync.Map
 }
 
 func init() {
@@ -129,13 +130,13 @@ func (a *Auth) SaveUserSession(account, password string, remember ...bool) (err 
 // }
 
 func (a *Auth) PasswordHash(password string) (string, error) {
-	bytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	return string(bytes), err
+    bytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+    return string(bytes), err
 }
 
 func (a *Auth) PasswordVerify(password, hash string) bool {
-	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
-	return err == nil
+    err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+    return err == nil
 }
 
 // 检测账号格式合法性

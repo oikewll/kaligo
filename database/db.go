@@ -392,10 +392,8 @@ func (db *DB) Schema() *Schema {
 
 // Expr func is use for create a new [*Expression] which is not escaped. An expression
 // is the only way to use SQL functions within query builders.
-func (db *DB) Expr(value string) *Expression {
-    return &Expression{
-        value: value,
-    }
+func (db *DB) Expr(value string) Expression {
+    return Expression(value)
 }
 
 // TablePrefix Return the table prefix defined in the current configuration.
@@ -549,9 +547,9 @@ func (db *DB) Quote(values any) string {
     case *Query:
         // Create a sub-query
         return "(" + vals.Compile() + ")"
-    case *Expression:
+    case Expression:
         // Use a raw expression
-        return vals.value
+        return string(vals)
     default:
         return db.Escape(vals.(string))
     }
@@ -612,9 +610,9 @@ func (db *DB) QuoteIdentifier(values any) string {
     case *Query:
         // Create a sub-query
         return "(" + vals.Compile() + ")"
-    case *Expression:
+    case Expression:
         // Use a raw expression
-        return vals.value
+        return string(vals)
     default:
         return vals.(string)
     }
