@@ -310,6 +310,7 @@ func (q *Query) SelectCompile() string {
 func (q *Query) SelectReset() *Query {
     //fmt.Println("SelectReset")
     q.S.selects   = nil
+    q.S.expr      = nil
     q.S.distinct  = false
     q.S.froms     = nil
     q.S.groupBys  = nil
