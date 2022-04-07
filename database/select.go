@@ -193,7 +193,7 @@ func (q *Query) SelectCompile() string {
     if len(q.S.froms) == 0 {
         q.AddError(ErrInvalidValue)
     }
-    from := arrayUnique(q.S.froms)
+    froms := arrayUnique(q.S.froms)
 
     // Start a selection query
     sqlStr := "SELECT "
@@ -231,11 +231,11 @@ func (q *Query) SelectCompile() string {
         sqlStr += strings.Join(selects, ", ")
     }
 
-    // Set tables to select from
-    for k, v := range from {
-        from[k] = q.QuoteTable(v)
+    // Set tables to select froms
+    for k, v := range froms {
+        froms[k] = q.QuoteTable(v)
     }
-    sqlStr += " FROM " + strings.Join(from, ", ")
+    sqlStr += " FROM " + strings.Join(froms, ", ")
 
     if len(q.joinObjs) != 0 {
         // Add tables to join
