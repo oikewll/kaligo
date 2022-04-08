@@ -2,14 +2,16 @@ package config
 
 import (
     "math/rand"
+    "strings"
     "testing"
     "time"
 
     "github.com/owner888/kaligo/logs"
+    "github.com/stretchr/testify/assert"
 )
 
 func TestConfig(t *testing.T) {
-    Add("database", StrMap{
+    Set("database", StrMap{
         "mysql": StrMap{
             // 数据库连接信息
             "host":     Env("DB_HOST", "127.0.0.1"),
@@ -29,22 +31,22 @@ func TestConfig(t *testing.T) {
         "custom": []string{"1", "2"},
     })
     logs.Debug(String("database.mysql.charset"))
-    assertEqual(t, Env("DB_HOST", "127.0.0.1").(string), "127.0.0.1")
-    assertEqual(t, Get[string]("database.mysql.charset"), "utf8mb4")
-    assertEqual(t, Get[bool]("database.mysql.enable"), true)
-    assertNotEqual(t, Get[bool]("database.mysql.enable"), false)
-    assertEqual(t, Get("database.sqlite", "default value"), "wrong")
-    assertEqual(t, Get[string]("database.sqlite"), "wrong")
-    assertEqual(t, Get("database.sqlite.host", "localhost"), "localhost")
-    assert(t, Get[any]("database.sqlite.host") == nil)
-    assert(t, arrayEqual(Get[[]string]("database.custom"), []string{"1", "2"}))
+    assert.Equal(t, Env("DB_HOST", "127.0.0.1").(string), "127.0.0.1")
+    assert.Equal(t, Get[string]("database.mysql.charset"), "utf8mb4")
+    assert.Equal(t, Get[bool]("database.mysql.enable"), true)
+    assert.NotEqual(t, Get[bool]("database.mysql.enable"), false)
+    assert.Equal(t, Get("database.sqlite", "default value"), "wrong")
+    assert.Equal(t, Get[string]("database.sqlite"), "wrong")
+    assert.Equal(t, Get("database.sqlite.host", "localhost"), "localhost")
+    assert.Nil(t, Get[any]("database.sqlite.host"))
+    assert.Equal(t, Get[[]string]("database.custom"), []string{"1", "2"})
 }
 
 func TestSet(t *testing.T) {
     Set("database.mysql.port", "1234")
-    assertEqual(t, Get[string]("database.mysql.port"), "1234")
+    assert.Equal(t, Get[string]("database.mysql.port"), "1234")
     Set("database.mysql.port", "4321")
-    assertEqual(t, Get[string]("database.mysql.port"), "4321")
+    assert.Equal(t, Get[string]("database.mysql.port"), "4321")
 }
 
 func TestGoroutine(t *testing.T) {
@@ -60,28 +62,25 @@ func TestGoroutine(t *testing.T) {
     time.Sleep(time.Second * 1)
 }
 
-func arrayEqual[T comparable](a, b []T) bool {
-    if len(a) != len(b) {
-        return false
-    }
-    for i, v := range a {
-        if b[i] != v {
-            return false
-        }
-    }
-    return true
-}
-
-func assertEqual[T comparable](t *testing.T, expected, actual T, messages ...any) {
-    assert(t, expected == actual, append(messages, actual, "is not expected", expected)...)
-}
-
-func assertNotEqual[T comparable](t *testing.T, expected, actual T, messages ...any) {
-    assert(t, expected != actual, append(messages, actual, "is not expected")...)
-}
-
-func assert(t *testing.T, result bool, messages ...any) {
-    if !result {
-        t.Fatal(append([]any{"Fail!"}, messages...)...)
-    }
+func TestLoadFiles(t *testing.T) {
+    Set("database", StrMap{
+        "mysql": StrMap{
+            "host": "127.0.0.1",
+            "port": "3308",
+        },
+        "sqlite": "unknown",
+    })
+    yaml := `
+    database:
+      mysql:
+        host: 192.168.0.1
+      sqlite:
+        host: 192.168.0.2
+    custom: 1
+    `
+    LoadConfig(strings.NewReader(yaml), "yaml")
+    assert.Equal(t, Get("database.mysql.host", "localhost"), "192.168.0.1")
+    assert.Equal(t, Get[string]("database.mysql.port"), "3308")
+    assert.Equal(t, Get[string]("database.sqlite.host"), "192.168.0.2")
+    assert.Equal(t, Get[int]("custom"), 1)
 }

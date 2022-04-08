@@ -12,11 +12,15 @@
 package config
 
 import (
+    "io"
+    "os"
     "strings"
     "sync"
 
     // "github.com/astaxie/beego/logs"
+
     "github.com/owner888/kaligo/util"
+    "gopkg.in/yaml.v3"
 )
 
 var (
@@ -66,9 +70,25 @@ func Env(key string, defaultValue ...any) any {
     return nil
 }
 
-// Deprecated: Use config.Set instead.Add 新增配置项
-func Add(key string, value any) {
-    Set(key, value)
+// 新增配置项(合并)，所有子级必须是 StrMap
+func Add(value StrMap) {
+    merge(&configMaps, value)
+}
+
+func merge(from ConfigMap, to StrMap) {
+    for k, v := range to {
+        switch t := v.(type) {
+        case StrMap:
+            subMap := getConfigMap(from, k)
+            if subMap == nil {
+                subMap = &StrMap{}
+                from.Store(k, subMap)
+            }
+            merge(subMap, t)
+        default:
+            from.Store(k, v)
+        }
+    }
 }
 
 // Set 设置配置项
@@ -172,4 +192,22 @@ func (m StrMap) toSyncMap() *sync.Map {
         syncMap.Store(k, v)
     }
     return &syncMap
+}
+
+// LoadFiles 加载配置文件，支持 yaml
+func LoadFiles(files ...string) {
+    for _, v := range files {
+        file, _ := os.Open(v)
+        defer file.Close()
+        LoadConfig(file, "yaml")
+    }
+}
+
+// LoadConfig 加载配置 fileType = yaml
+func LoadConfig(reader io.Reader, fileType string) {
+    var value StrMap
+    if fileType == "yaml" {
+        yaml.NewDecoder(reader).Decode(&value)
+        Add(value)
+    }
 }
