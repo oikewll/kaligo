@@ -24,14 +24,14 @@ type PlainFormatter struct {
 
 func (f *PlainFormatter) Printf(prefix string, level Level, format string, a ...any) string {
     var builder strings.Builder
+    builder.WriteString(formatTime(time.Now()))
+    builder.WriteString(Seperator)
     if len(prefix) > 0 {
         builder.WriteString("[")
         builder.WriteString(prefix)
         builder.WriteString("]")
         builder.WriteString(Seperator)
     }
-    builder.WriteString(formatTime(time.Now()))
-    builder.WriteString(Seperator)
     if len(format) > 0 {
         builder.WriteString(fmt.Sprintf(format, a...))
     } else {
@@ -46,12 +46,6 @@ type ConsoleFormatter struct {
 
 func (f *ConsoleFormatter) Printf(prefix string, level Level, format string, a ...any) string {
     var builder strings.Builder
-    if len(prefix) > 0 {
-        builder.WriteString("[")
-        builder.WriteString(prefix)
-        builder.WriteString("]")
-        builder.WriteString(Seperator)
-    }
     builder.WriteString(formatTime(time.Now()))
     builder.WriteString(Seperator)
     switch level {
@@ -74,6 +68,12 @@ func (f *ConsoleFormatter) Printf(prefix string, level Level, format string, a .
         builder.WriteString("🅧 CRITICAL")
     }
     builder.WriteString(Seperator)
+    if len(prefix) > 0 {
+        builder.WriteString("[")
+        builder.WriteString(prefix)
+        builder.WriteString("]")
+        builder.WriteString(Seperator)
+    }
     if len(format) > 0 {
         builder.WriteString(fmt.Sprintf(format, a...))
     } else {
