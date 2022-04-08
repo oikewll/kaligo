@@ -49,6 +49,20 @@ func TestSet(t *testing.T) {
     assert.Equal(t, Get[string]("database.mysql.port"), "4321")
 }
 
+func TestConfigValue(t *testing.T) {
+    Set("database", StrMap{
+        "mysql": StrMap{
+            // 数据库连接信息
+            "host": Env("DB_HOST", "127.0.0.2"),
+            "port": Env("DB_PORT", "3306"),
+            "dsn": ConfigValueFunc(func() (value any, ok bool) {
+                return String("database.mysql.host") + ":" + String("database.mysql.port"), true
+            }),
+        },
+    })
+    assert.Equal(t, "127.0.0.2:3306", String("database.mysql.dsn"))
+}
+
 func TestGoroutine(t *testing.T) {
     rwConfig := func() {
         key := "test.test2"

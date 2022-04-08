@@ -35,6 +35,19 @@ type ConfigMap interface {
     Store(key, value any)
 }
 
+// ConfigValue 是 config 中存储的动态值类型
+type ConfigValue interface {
+    // 获取值，ok == false 则使用 config.Get 的默认值
+    Load() (value any, ok bool)
+}
+
+// 函数类型的 ConfigValue
+type ConfigValueFunc func() (value any, ok bool)
+
+func (f ConfigValueFunc) Load() (value any, ok bool) {
+    return f()
+}
+
 // StrMap is use for string -> map
 type StrMap map[string]any
 
@@ -58,6 +71,12 @@ func Env(key string, defaultValue ...any) any {
     for i, k := range keys {
         if i == lastIndex {
             if val, ok := maps.Load(k); ok {
+                if val, ok := val.(ConfigValue); ok {
+                    if val, ok := val.Load(); ok {
+                        return val
+                    }
+                    break
+                }
                 return val
             }
         } else if m := getConfigMap(maps, k); m != nil {
