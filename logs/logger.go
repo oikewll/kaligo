@@ -120,34 +120,54 @@ func (l *logger) Trace(begin time.Time, fc func() (sql string, rowsAffected int6
 
 }
 
-func Debug(msg string, data ...any) {
+func Debug(data ...any) {
+    root.Debug("", data...)
+}
+
+func Info(data ...any) {
+    root.Info("", data...)
+}
+
+func Warn(data ...any) {
+    root.Warn("", data...)
+}
+
+func Error(data ...any) {
+    root.Error("", data...)
+}
+
+func Critical(data ...any) {
+    root.Critical("", data...)
+}
+
+func Debugf(msg string, data ...any) {
     root.Debug(msg, data...)
 }
 
-func Info(msg string, data ...any) {
+func Infof(msg string, data ...any) {
     root.Info(msg, data...)
 }
 
-func Warn(msg string, data ...any) {
+func Warnf(msg string, data ...any) {
     root.Warn(msg, data...)
 }
 
-func Error(msg string, data ...any) {
+func Errorf(msg string, data ...any) {
     root.Error(msg, data...)
 }
 
-func Critical(msg string, data ...any) {
+func Criticalf(msg string, data ...any) {
     root.Critical(msg, data...)
 }
 
 // Panic 输出 Critical 日志并 panic
 func Panic(msg string, data ...any) {
-    Critical(msg, data...)
+    Criticalf(msg, data...)
     panic(fmt.Sprintf(msg, data...))
 }
 
 // Fatal 输出 Critical 日志并退出程序
 func Fatal(msg string, data ...any) {
-    Critical(msg, data...)
+    Criticalf(msg, data...)
     os.Exit(1)
 }

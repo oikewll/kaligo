@@ -32,7 +32,11 @@ func (f *PlainFormatter) Printf(prefix string, level Level, format string, a ...
     }
     builder.WriteString(formatTime(time.Now()))
     builder.WriteString(Seperator)
-    builder.WriteString(fmt.Sprintf(format, a...))
+    if len(format) > 0 {
+        builder.WriteString(fmt.Sprintf(format, a...))
+    } else {
+        builder.WriteString(fmt.Sprint(a...))
+    }
     builder.WriteString(Terminator)
     return builder.String()
 }
@@ -70,7 +74,11 @@ func (f *ConsoleFormatter) Printf(prefix string, level Level, format string, a .
         builder.WriteString("🅧 CRITICAL")
     }
     builder.WriteString(Seperator)
-    builder.WriteString(fmt.Sprintf(format, a...))
+    if len(format) > 0 {
+        builder.WriteString(fmt.Sprintf(format, a...))
+    } else {
+        builder.WriteString(fmt.Sprint(a...))
+    }
     if level == LevelCritical {
         builder.WriteString(ansi.Reset)
     }
