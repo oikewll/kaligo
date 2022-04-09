@@ -4,19 +4,19 @@ package database
 // "fmt"
 
 type Page[T any] struct {
-    CurrentPage int64
-    PageSize    int64
-    Total       int64
-    Pages       int64
-    Data        []T
+    CurrentPage int64 `json:"current_page"` // 当前页
+    PageSize    int64 `json:"page_size"`    // 单页数
+    Total       int64 `json:"total"`        // 总条数
+    Pages       int64 `json:"pages"`        // 总页数
+    Data        []T   `json:"data"`         // 数据
 }
 
 type PageResponse[T any] struct {
-    CurrentPage int64 `json:"currentPage"`
-    PageSize    int64 `json:"pageSize"` // 单页数
-    Total       int64 `json:"total"`    // 总条数
-    Pages       int64 `json:"pages"`    // 总页数
-    Data        []T   `json:"data"`
+    CurrentPage int64 `json:"current_page"` // 当前页
+    PageSize    int64 `json:"page_size"`    // 单页数
+    Total       int64 `json:"total"`        // 总条数
+    Pages       int64 `json:"pages"`        // 总页数
+    Data        []T   `json:"data"`         // 数据
 }
 
 // 将原始的Page结构体转换为前端需要的PageResponse结构体
