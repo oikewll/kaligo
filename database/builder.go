@@ -2,7 +2,6 @@ package database
 
 import (
     "fmt"
-    "strconv"
     "strings"
 )
 
@@ -27,14 +26,14 @@ func (q *Query) CompileConditions(conditions map[string][][]string) string {
     var lastCondition string
     var sqlStr string
 
-    for _, group := range conditions {
+    for logic, group := range conditions {
         // Process groups of conditions
-        for logic, condition := range group {
+        for _, condition := range group {
             conditionStr := strings.Join(condition, "")
             if conditionStr == "(" {
                 if sqlStr != "" && lastCondition != "(" {
                     // Include logic operator
-                    sqlStr += " " + strconv.Itoa(logic) + " "
+                    sqlStr += " " + logic + " "
                 }
 
                 sqlStr += "("
@@ -43,7 +42,7 @@ func (q *Query) CompileConditions(conditions map[string][][]string) string {
             } else {
                 if sqlStr != "" && lastCondition != "(" {
                     // Add the logic operator
-                    sqlStr += " " + strconv.Itoa(logic) + " "
+                    sqlStr += " " + logic + " "
                 }
 
                 // Split the condition
