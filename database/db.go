@@ -592,7 +592,7 @@ func (db *DB) QuoteTable(values any) string {
 func (db *DB) QuoteIdentifier(values any) string {
     switch vals := values.(type) {
     case string:
-        if vals == "*" || strings.Index(vals, "`") != -1 {
+        if vals == "*" || strings.Index(vals, "`") != -1 || strings.Index(vals, `"`) != -1 {
             // * 不需要变成 `*`，已经有 `` 包含着的直接返回
             return vals
         } else if strings.Index(vals, ".") != -1 {
