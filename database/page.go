@@ -4,29 +4,26 @@ package database
 // "fmt"
 
 type Page[T any] struct {
-    CurrentPage int64 `json:"current_page"` // 当前页
-    PageSize    int64 `json:"page_size"`    // 单页数
-    Total       int64 `json:"total"`        // 总条数
-    Pages       int64 `json:"pages"`        // 总页数
-    Data        []T   `json:"data"`         // 数据
+    Page  int64 `json:"page"`  // 当前页
+    Size  int64 `json:"size"`  // 单页数
+    Total int64 `json:"total"` // 总条数
+    Data  []T   `json:"data"`  // 数据
 }
 
 type PageResponse[T any] struct {
-    CurrentPage int64 `json:"current_page"` // 当前页
-    PageSize    int64 `json:"page_size"`    // 单页数
-    Total       int64 `json:"total"`        // 总条数
-    Pages       int64 `json:"pages"`        // 总页数
-    Data        []T   `json:"data"`         // 数据
+    Page  int64 `json:"page"`  // 当前页
+    Size  int64 `json:"size"`  // 单页数
+    Total int64 `json:"total"` // 总条数
+    Data  []T   `json:"data"`  // 数据
 }
 
 // 将原始的Page结构体转换为前端需要的PageResponse结构体
 func NewPageResponse[T any](page Page[T]) *PageResponse[T] {
     return &PageResponse[T]{
-        CurrentPage: page.CurrentPage,
-        PageSize:    page.PageSize,
-        Total:       page.Total,
-        Pages:       page.Pages,
-        Data:        page.Data,
+        Page:  page.Page,
+        Size:  page.Size,
+        Total: page.Total,
+        Data:  page.Data,
     }
 }
 
@@ -42,9 +39,8 @@ func (page *Page[T]) SelectPage(db *DB, columns []any, table string, wrapper fun
         page.Data = []T{}
         return
     }
-    page.Pages = int64((page.Total-1)/page.PageSize) + 1
-    size := page.PageSize
-    offset := int((page.CurrentPage - 1) * size)
+    size := page.Size
+    offset := int((page.Page - 1) * size)
 
     // 查询结果可以直接存到Page的Data字段中，因为编译的时候page.Data是有确定类型的
     db.Select(columns...).From(table).WhereWrapper(where(false)).Offset(offset).Limit(int(size)).Scan(&page.Data).Execute()
