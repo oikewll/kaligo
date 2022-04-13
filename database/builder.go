@@ -120,32 +120,35 @@ func (q *Query) CompileConditions(conditions map[string][][]string) string {
 }
 
 // CompileSet Compiles an array of set values into an SQL partial. Used for UPDATE
-func (q *Query) CompileSet(values [][]string) string {
+func (q *Query) CompileSet(values []set) string {
     var sqlStr string
 
     dict := make(map[string]string)
     var sets []string
     for _, group := range values {
         // Split the set
-        column := group[0]
-        value := group[1]
+        column := group.column
+        value := group.value
 
-        // set value 应该是any, 当string进这里
-        if val, ok := q.parameters[value]; ok {
-            // Use the parameter value
-            value = val
+        if valueStr, ok := value.(string); ok {
+            // set value 应该是any, 当string进这里
+            if val, ok := q.parameters[valueStr]; ok {
+                // Use the parameter value
+                value = val
+            }
         }
 
+        valueStr := ""
         // Is the value need encrypt ???
         table := q.U.table
         if cryptFields, ok := q.cryptFields[table]; ok && q.Dialector.Name() == "mysql" && q.cryptKey != "" && InSlice(column, &cryptFields) {
-            value = fmt.Sprintf("AES_ENCRYPT(%s, \"%s\")", q.Quote(value), q.cryptKey)
+            valueStr = fmt.Sprintf("AES_ENCRYPT(%s, \"%s\")", q.Quote(value), q.cryptKey)
         } else {
-            value = q.Quote(value)
+            valueStr = q.Quote(value)
         }
 
         // Quote the column name
-        dict[column] = q.QuoteIdentifier(column) + " = " + value
+        dict[column] = q.QuoteIdentifier(column) + " = " + valueStr
     }
 
     for _, v := range dict {

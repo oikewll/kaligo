@@ -4,10 +4,15 @@ import (
     "strconv"
 )
 
+type set struct {
+    column string
+    value  any
+}
+
 // Update is the struct for MySQL DATE type
 type Update struct {
-    table    string
-    sets     [][]string  // 多维slice
+    table string
+    sets  []set // 多维slice
 }
 
 // Set the values to update with an associative array
@@ -20,9 +25,13 @@ func (q *Query) Set(pairs map[string]string) *Query {
 
 // Value Set the value of a single column.
 func (q *Query) Value(column string, value string) *Query {
-    var sets []string    
-    sets = append(sets, column, value)
-    q.U.sets = append(q.U.sets, sets)
+    q.U.sets = append(q.U.sets, set{column: column, value: value})
+    return q
+}
+
+// Value Set the value of a single column.
+func (q *Query) ValueExpression(column string, value Expression) *Query {
+    q.U.sets = append(q.U.sets, set{column: column, value: value})
     return q
 }
 
@@ -48,7 +57,7 @@ func (q *Query) UpdateCompile() string {
         sqlStr += " " + q.CompileOrderBy(q.W.orderBys)
     }
 
-    // SQLite does not support LIMIT for DELETE、UPDATE 
+    // SQLite does not support LIMIT for DELETE、UPDATE
     if q.W.limit != 0 && q.Dialector.Name() != "sqlite" {
         // Add limiting
         sqlStr += " LIMIT " + strconv.Itoa(q.W.limit)
@@ -61,15 +70,15 @@ func (q *Query) UpdateCompile() string {
 
 // UpdateReset the query parameters
 func (q *Query) UpdateReset() *Query {
-    q.U.table    = ""
-    q.U.sets     = nil
+    q.U.table = ""
+    q.U.sets = nil
 
-    q.W.wheres   = nil
+    q.W.wheres = nil
     q.W.orderBys = nil
-    q.W.limit    = 0
+    q.W.limit = 0
 
-    q.joinObjs   = nil
-    q.lastJoin   = nil
+    q.joinObjs = nil
+    q.lastJoin = nil
     q.parameters = nil
 
     return q
