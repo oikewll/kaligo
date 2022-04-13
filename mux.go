@@ -4,9 +4,9 @@ import (
     "context"
     "fmt"
     "log"
+    "net/http"
     "os"
     "os/signal"
-    "net/http"
     "path"
     "reflect"
     "regexp"
@@ -28,12 +28,12 @@ var _ Router = &Mux{}
 // Mux is use for add Route struct and StaticRoute struct
 type Mux struct {
     // Handler       http.Handler // http.ServeMux
-    routes        []*Route
-    staticRoutes  []*StaticRoute
-    DB            *database.DB
-    Cache         cache.Cache // interface 本身是指针，不需要用 *cache.Cache，struct 才需要
-    pool          sync.Pool   // Context 复用
-    Timer         *Timer
+    routes       []*Route
+    staticRoutes []*StaticRoute
+    DB           *database.DB
+    Cache        cache.Cache // interface 本身是指针，不需要用 *cache.Cache，struct 才需要
+    pool         sync.Pool   // Context 复用
+    Timer        *Timer
     // 统计
     requestCount  uint32
     responseCount uint32
@@ -174,8 +174,15 @@ func (a *Mux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
         }
     }
 
-    // 请求数 +1 
+    // 请求数 +1
     atomic.AddUint32(&a.requestCount, 1)
+
+    if r.Method == "OPTIONS" {
+        w.Header().Set("Access-Control-Allow-Origin", "*")
+        w.Header().Set("Access-Control-Allow-Headers", "*")
+        w.WriteHeader(http.StatusNoContent)
+        return
+    }
 
     var matchRouted bool
 
@@ -215,7 +222,7 @@ func (a *Mux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
         if m, ok = route.Methods[r.Method]; !ok {
             http.NotFound(w, r)
 
-            // 错误数 +1 
+            // 错误数 +1
             atomic.AddUint32(&a.notFoundCount, 1)
             return
         }
@@ -224,7 +231,7 @@ func (a *Mux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
         matchRouted = true
     }
 
-    // 相应数 +1 
+    // 相应数 +1
     atomic.AddUint32(&a.responseCount, 1)
 
     // if no matches to url, throw a not found exception
