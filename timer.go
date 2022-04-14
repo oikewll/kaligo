@@ -1,7 +1,6 @@
 package kaligo
 
 import (
-    "reflect"
     "sync"
     "time"
 
@@ -48,7 +47,7 @@ func (t *Timer) AddTasker(name, taskTime, method string, runner Interface, param
         //fmt.Println(dura)
         if dura > 0 {
             timeTasker := time.AfterFunc(dura, func() {
-                t.run(runner, method, params)
+                t.mux.CallController(runner, method, params)
             })
             t.storeTimers.Store(name, timeTasker)
         } else {
@@ -66,7 +65,7 @@ func (t *Timer) AddTimer(name string, duration time.Duration, method string, run
         for {
             select {
             case <-timeTicker.C:
-                t.run(runner, method, params)
+                t.mux.CallController(runner, method, params)
             }
         }
     }()
@@ -79,14 +78,10 @@ func (t *Timer) AddSchedule(name string, s string, method string, runner Interfa
         for {
             select {
             case <-timeTicker.C:
-                t.run(runner, method, params)
+                t.mux.CallController(runner, method, params)
             }
         }
     }()
-}
-
-func (t *Timer) run(runner any, method string, params Params) error {
-    return t.mux.controllerMethodCall(reflect.Indirect(reflect.ValueOf(runner)).Type(), method, nil, nil, params)
 }
 
 // Schedule 基于时间的循环任务

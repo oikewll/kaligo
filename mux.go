@@ -241,6 +241,10 @@ func (a *Mux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
     }
 }
 
+func (a *Mux) CallController(controller Interface, method string, params Params) (err error) {
+    return a.controllerMethodCall(reflect.Indirect(reflect.ValueOf(controller)).Type(), method, nil, nil, params)
+}
+
 func (a *Mux) controllerMethodCall(controllerType reflect.Type, m string, w http.ResponseWriter, r *http.Request, params Params) (err error) {
     ctx := a.pool.Get().(*Context)
     ctx.Reset()
