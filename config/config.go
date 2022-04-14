@@ -144,7 +144,11 @@ func Get[T any](key string, defaultValue ...T) (t T) {
         value = Int(key, anyDefaultValue...)
     case int64:
         value = Int64(key, anyDefaultValue...)
-    case float32:
+    case uint:
+        value = Uint(key, anyDefaultValue...)
+    case uint64:
+        value = Uint64(key, anyDefaultValue...)
+    case float64:
         value = Float64(key, anyDefaultValue...)
     case bool:
         value = Bool(key, anyDefaultValue...)
@@ -170,6 +174,16 @@ func Int(key string, defaultValue ...any) int {
 // Int64 获取 Int64 类型的配置信息
 func Int64(key string, defaultValue ...any) int64 {
     return util.ToInt64(Env(key, defaultValue...))
+}
+
+// Uint 获取 Uint 类型的配置信息
+func Uint(key string, defaultValue ...any) uint {
+    return util.ToUint(Env(key, defaultValue...))
+}
+
+// Uint64 获取 Uint64 类型的配置信息
+func Uint64(key string, defaultValue ...any) uint64 {
+    return util.ToUint64(Env(key, defaultValue...))
 }
 
 // Float64 获取 Float64 类型的配置信息
