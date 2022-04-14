@@ -72,6 +72,47 @@ func (t *Timer) AddTimer(name string, duration time.Duration, method string, run
     }()
 }
 
+func (t *Timer) AddSchedule(name string, s string, method string, runner Interface, params Params) {
+    go func() {
+        timeTicker := NewSchedule(s)
+        t.storeTimers.Store(name, timeTicker)
+        for {
+            select {
+            case <-timeTicker.C:
+                t.run(runner, method, params)
+            }
+        }
+    }()
+}
+
 func (t *Timer) run(runner any, method string, params Params) error {
     return t.mux.controllerMethodCall(reflect.Indirect(reflect.ValueOf(runner)).Type(), method, nil, nil, params)
+}
+
+// Schedule 基于时间的循环任务
+type Schedule struct {
+    C      <-chan time.Time
+    ticker *time.Ticker
+}
+
+func NewSchedule(s string) *Schedule {
+    first, period := scheduleParse(s)
+    c := make(chan time.Time, 1)
+    schedule := &Schedule{C: c}
+    time.AfterFunc(first, func() {
+        schedule.ticker = time.NewTicker(period)
+        c <- time.Now()
+        for {
+            select {
+            case t := <-schedule.ticker.C:
+                c <- t
+            }
+        }
+    })
+    return schedule
+}
+
+func scheduleParse(s string) (first, period time.Duration) {
+    // TODO: 解析规则
+    return time.Hour, time.Hour
 }

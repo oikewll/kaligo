@@ -4,7 +4,6 @@ import (
     "encoding/json"
     "time"
 
-    "github.com/owner888/kaligo/logs"
     "github.com/gomodule/redigo/redis"
 )
 
@@ -69,8 +68,8 @@ func (r *Redis) Set(key string, val any, timeout time.Duration) (err error) {
 
 // Get 获取一个值
 func (r *Redis) Get(key string) (any, bool) {
-    var err error    
-    var reply any    
+    var err error
+    var reply any
     conn := r.conn.Get() // 从连接池中获取一个链接
     defer conn.Close()
 
@@ -86,56 +85,56 @@ func (r *Redis) Get(key string) (any, bool) {
 }
 
 func (r *Redis) String(key string) string {
-    reply, found := r.Get(key);
-    if  !found {
+    reply, found := r.Get(key)
+    if !found {
         return ""
     }
     return reply.(string)
 }
 
 func (r *Redis) Int(key string) int {
-    reply, found := r.Get(key);
-    if  !found {
+    reply, found := r.Get(key)
+    if !found {
         return 0
     }
     return reply.(int)
 }
 
 func (r *Redis) Int64(key string) int64 {
-    reply, found := r.Get(key);
-    if  !found {
+    reply, found := r.Get(key)
+    if !found {
         return 0
     }
     return reply.(int64)
 }
 
 func (r *Redis) Uint(key string) uint {
-    reply, found := r.Get(key);
-    if  !found {
+    reply, found := r.Get(key)
+    if !found {
         return 0
     }
     return reply.(uint)
 }
 
 func (r *Redis) Uint64(key string) uint64 {
-    reply, found := r.Get(key);
-    if  !found {
+    reply, found := r.Get(key)
+    if !found {
         return 0
     }
     return reply.(uint64)
 }
 
 func (r *Redis) Float64(key string) float64 {
-    reply, found := r.Get(key);
-    if  !found {
+    reply, found := r.Get(key)
+    if !found {
         return 0
     }
     return reply.(float64)
 }
 
 func (r *Redis) Bool(key string) bool {
-    reply, found := r.Get(key);
-    if  !found {
+    reply, found := r.Get(key)
+    if !found {
         return false
     }
     return reply.(bool)
@@ -167,7 +166,7 @@ func (r *Redis) Incr(key string, args ...uint64) int64 {
     conn := r.conn.Get()
     defer conn.Close()
 
-    val, err := redis.Int64(conn.Do("INCR", key)) 
+    val, err := redis.Int64(conn.Do("INCR", key))
     if err != nil {
         return 0
     }
@@ -179,7 +178,7 @@ func (r *Redis) Decr(key string, args ...uint64) int64 {
     conn := r.conn.Get()
     defer conn.Close()
 
-    val, err := redis.Int64(conn.Do("DECR", key)) 
+    val, err := redis.Int64(conn.Do("DECR", key))
     if err != nil {
         return 0
     }
@@ -201,7 +200,7 @@ func (r *Redis) pop(command, key string) string {
     defer conn.Close()
 
     reply, err := redis.String(conn.Do(command, key))
-    if  err != nil {
+    if err != nil {
         return ""
     }
 
