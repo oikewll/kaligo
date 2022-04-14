@@ -4,6 +4,7 @@ import (
     "encoding/json"
     "time"
 
+    "github.com/owner888/kaligo/logs"
     "github.com/gomodule/redigo/redis"
 )
 
@@ -108,6 +109,14 @@ func (r *Redis) Int64(key string) int64 {
     return reply.(int64)
 }
 
+func (r *Redis) Uint(key string) uint {
+    reply, found := r.Get(key);
+    if  !found {
+        return 0
+    }
+    return reply.(uint)
+}
+
 func (r *Redis) Uint64(key string) uint64 {
     reply, found := r.Get(key);
     if  !found {
@@ -122,6 +131,14 @@ func (r *Redis) Float64(key string) float64 {
         return 0
     }
     return reply.(float64)
+}
+
+func (r *Redis) Bool(key string) bool {
+    reply, found := r.Get(key);
+    if  !found {
+        return false
+    }
+    return reply.(bool)
 }
 
 // Has 判断key是否存在
@@ -191,18 +208,50 @@ func (r *Redis) pop(command, key string) string {
     return reply
 }
 
-func (r *Redis) LPush(key string, value string) {
-    r.push("LPUSH", key, value)
+func (r *Redis) LPush(key string, value any) {
+    var valueStr string
+    switch v := value.(type) {
+    case string:
+        valueStr = v
+    default:
+        jsonStr, _ := json.Marshal(v)
+        valueStr = string(jsonStr)
+    }
+    r.push("LPUSH", key, valueStr)
 }
 
-func (r *Redis) RPush(key string, value string) {
-    r.push("RPUSH", key, value)
+func (r *Redis) RPush(key string, value any) {
+    var valueStr string
+    switch v := value.(type) {
+    case string:
+        valueStr = v
+    default:
+        jsonStr, _ := json.Marshal(v)
+        valueStr = string(jsonStr)
+    }
+    r.push("RPUSH", key, valueStr)
 }
 
-func (r *Redis) LPop(key string) string {
-    return r.pop("LPOP", key)
+// user := &User{}
+// LPop("user", &user)
+func (r *Redis) LPop(key string, value any) (err error) {
+    valueStr := r.pop("LPOP", key)
+    switch v := value.(type) {
+    case *string:
+        value = v
+    default:
+        err = json.Unmarshal([]byte(valueStr), value)
+    }
+    return
 }
 
-func (r *Redis) RPop(key string) string {
-    return r.pop("RPOP", key)
+func (r *Redis) RPop(key string, value any) (err error) {
+    valueStr := r.pop("RPOP", key)
+    switch v := value.(type) {
+    case *string:
+        value = v
+    default:
+        err = json.Unmarshal([]byte(valueStr), value)
+    }
+    return
 }

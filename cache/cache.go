@@ -46,17 +46,21 @@ type Cache interface {
     String(key string) string
     Int(key string) int
     Int64(key string) int64
+    Uint(key string) uint
     Uint64(key string) uint64
     Float64(key string) float64
+    Bool(key string) bool
     Set(key string, value any, timeout time.Duration) error
     Has(key string) bool
     Del(key string) error
     Incr(key string, args ...uint64) int64
     Decr(key string, args ...uint64) int64
-    LPush(key string, value string) 
-    RPush(key string, value string)
-    LPop(key string) string
-    RPop(key string) string
+    LPush(key string, value any) 
+    RPush(key string, value any)
+    LPop(key string, value any) (err error)
+    RPop(key string, value any) (err error)
+    // LPop(key string) string
+    // RPop(key string) string
     // LPushObject(key string, value any)
     // RPushObject(key string, value any)
     // LPopObject(key string) any
@@ -77,12 +81,12 @@ func New(param ...string) (Cache, error) {
     } else if driver == "redis" {
         return NewRedis(&RedisOpts{
             Host:        fmt.Sprintf("%s:%d", config.Get[string]("cache.redis.host"), config.Get[int]("cache.redis.port")),
-            Password:    config.Get[string]("cache.redis.password"),
-            Database:    config.Get[int]("cache.redis.database"),
-            MaxIdle:     config.Get[int]("cache.redis.max_idle"),
-            MaxActive:   config.Get[int]("cache.redis.max_active"),
-            IdleTimeout: config.Get[int]("cache.redis.idle_timeout"),
-            Wait:        config.Get[bool]("cache.redis.wait"),
+            Password:    config.String("cache.redis.password"),
+            Database:    config.Int("cache.redis.database"),
+            MaxIdle:     config.Int("cache.redis.max_idle"),
+            MaxActive:   config.Int("cache.redis.max_active"),
+            IdleTimeout: config.Int("cache.redis.idle_timeout"),
+            Wait:        config.Bool("cache.redis.wait"),
         }), nil
     } else if driver == "memcache" {
         return NewMemcache(strings.Join(config.Get[[]string]("host"), ",")), nil

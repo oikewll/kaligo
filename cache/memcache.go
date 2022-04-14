@@ -69,6 +69,14 @@ func (mem *Memcache) Int64(key string) int64 {
     return reply.(int64)
 }
 
+func (mem *Memcache) Uint(key string) uint {
+    reply, found := mem.Get(key);
+    if  !found {
+        return 0
+    }
+    return reply.(uint)
+}
+
 func (mem *Memcache) Uint64(key string) uint64 {
     reply, found := mem.Get(key);
     if  !found {
@@ -83,6 +91,14 @@ func (mem *Memcache) Float64(key string) float64 {
         return 0
     }
     return reply.(float64)
+}
+
+func (mem *Memcache) Bool(key string) bool {
+    reply, found := mem.Get(key);
+    if  !found {
+        return false
+    }
+    return reply.(bool)
 }
 
 // Has check value exists in memcache.
@@ -114,16 +130,16 @@ func (mem *Memcache) Decr(key string, args ...uint64) int64 {
     return int64(num)
 }
 
-func (mem *Memcache) LPush(key string, value string) {
+func (mem *Memcache) LPush(key string, value any) {
 }
 
-func (mem *Memcache) RPush(key string, value string) {
+func (mem *Memcache) RPush(key string, value any) {
 }
 
-func (mem *Memcache) LPop(key string) string {
-    return ""
+func (mem *Memcache) LPop(key string, value any) (err error) {
+    return
 }
 
-func (mem *Memcache) RPop(key string) string {
-    return ""
+func (mem *Memcache) RPop(key string, value any) (err error) {
+    return
 }
