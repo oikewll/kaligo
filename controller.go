@@ -28,7 +28,7 @@ func New() *Controller {
     return &Controller{}
 }
 
-func runController(controllerType reflect.Type, m string, ctx *Context, params Params) (err error) {
+func runController(controllerType reflect.Type, m string, ctx *Context, params Params) (ret []reflect.Value, err error) {
     // Invoke the request handler
     vc := reflect.New(controllerType)
 
@@ -49,20 +49,21 @@ func runController(controllerType reflect.Type, m string, ctx *Context, params P
     // Request callback
     method = vc.MethodByName(m)
     if !method.IsValid() {
-        return fmt.Errorf("Controller Method not exist")
+        err = fmt.Errorf("Controller Method not exist")
+        return
     }
-    method.Call(args)
+    ret = method.Call(args)
 
     // Finish callback
     method = vc.MethodByName("Finish")
     method.Call(args)
 
-    return err
+    return ret, err
 }
 
 // Init returns a new initialized Controller.
 func (c *Controller) Init(ctx *Context, cn string) {
-    c.Context   = ctx
+    c.Context = ctx
     c.ChildName = cn
 }
 

@@ -241,12 +241,13 @@ func (a *Mux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
     }
 }
 
-func (a *Mux) CallController(controller Interface, method string, params Params) (err error) {
+func (a *Mux) CallController(controller Interface, method string, params Params) (ret []reflect.Value, err error) {
     return a.controllerMethodCall(reflect.Indirect(reflect.ValueOf(controller)).Type(), method, nil, nil, params)
 }
 
-func (a *Mux) controllerMethodCall(controllerType reflect.Type, m string, w http.ResponseWriter, r *http.Request, params Params) (err error) {
+func (a *Mux) controllerMethodCall(controllerType reflect.Type, m string, w http.ResponseWriter, r *http.Request, params Params) (ret []reflect.Value, err error) {
     ctx := a.pool.Get().(*Context)
+    defer a.pool.Put(ctx)
     ctx.Reset()
     if a.DB != nil {
         ctx.DB = &database.DB{Config: a.DB.Config}
@@ -254,11 +255,11 @@ func (a *Mux) controllerMethodCall(controllerType reflect.Type, m string, w http
     ctx.ResponseWriter = w
     ctx.Request = r
     ctx.Params = params
-    if err = runController(controllerType, m, ctx, params); err != nil {
+    ret, err = runController(controllerType, m, ctx, params)
+    if err != nil && w != nil {
         http.NotFound(w, r)
     }
-    a.pool.Put(ctx)
-    return err
+    return ret, err
 }
 
 // Router 接口实现
