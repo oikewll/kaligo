@@ -83,6 +83,9 @@ func (q *Query) CompileConditions(conditions map[string][][]string) string {
                     }
 
                     value = q.Quote(min) + " AND " + q.Quote(max)
+                } else if op == "IN" || op == "NOT IN" {
+                    valueArr := strings.Split(value, ",")
+                    value = q.Quote(valueArr)
                 } else {
                     if q.parameters[value] != "" {
                         // Set the parameter as the value
