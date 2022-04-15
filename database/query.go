@@ -132,7 +132,7 @@ func (q *Query) Execute() (*Query, error) {
 
     // Compile the SQL query
     sqlStr := q.Compile()
-    fmt.Printf("Execute sqlStr = %v\n", sqlStr)
+    logs.Debug(sqlStr)
 
     // make sure we have a SQL type to work with
     if q.queryType == 0 && len(sqlStr) >= 11 {

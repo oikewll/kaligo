@@ -3,7 +3,6 @@ package database
 import (
     "fmt"
     "strings"
-    "github.com/owner888/kaligo/logs"
 )
 
 // Insert is the struct for MySQL DATE type
@@ -77,7 +76,7 @@ func (q *Query) SubSelect(query *Query) *Query {
 // InsertCompile Compile the SQL query and return it.
 func (q *Query) InsertCompile() string {
     var sqlStr string
-    table   := q.I.table
+    table := q.I.table
     columns := q.I.columns
 
     // Start and update query
@@ -141,10 +140,10 @@ func (q *Query) InsertCompile() string {
 // InsertReset the query parameters
 func (q *Query) InsertReset() *Query {
     //fmt.Println("InsertReset")
-    q.I.table    = ""
-    q.I.columns  = nil // gc 回收原有数据，len(), cap() 都为0，序列化成 json 的时候，为 null，如果是 columns[:0] 则 gc 不回收，len() 为0， cap() 不变，json 为 []
-    q.I.values   = nil
-    q.I.updates  = nil
+    q.I.table = ""
+    q.I.columns = nil // gc 回收原有数据，len(), cap() 都为0，序列化成 json 的时候，为 null，如果是 columns[:0] 则 gc 不回收，len() 为0， cap() 不变，json 为 []
+    q.I.values = nil
+    q.I.updates = nil
     q.parameters = nil
 
     return q

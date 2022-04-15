@@ -4,7 +4,6 @@ import (
     "fmt"
     "strconv"
     "strings"
-    "github.com/owner888/kaligo/logs"
 )
 
 // Select is the struct for MySQL DATE type
@@ -52,7 +51,7 @@ func (q *Query) ForUpdate(forUpdate bool) *Query {
 // @param string joinType type of JOIN: INNER, RIGHT, LEFT, etc
 func (q *Query) Join(table string, joinType string) *Query {
     //s.lastJoin = &Join{table: table, joinType: joinType}
-    q.lastJoin = NewJoin(table, joinType);
+    q.lastJoin = NewJoin(table, joinType)
     q.joinObjs = append(q.joinObjs, q.lastJoin)
 
     return q
@@ -175,12 +174,12 @@ func (q *Query) Offset(number int) *Query {
     return q
 }
 
-func arrayUnique(arr []string) []string{
+func arrayUnique(arr []string) []string {
     size := len(arr)
     result := make([]string, 0, size)
     temp := map[string]struct{}{}
-    for i:=0; i < size; i++ {
-        if _,ok := temp[arr[i]]; ok != true {
+    for i := 0; i < size; i++ {
+        if _, ok := temp[arr[i]]; ok != true {
             temp[arr[i]] = struct{}{}
             result = append(result, arr[i])
         }
@@ -206,12 +205,12 @@ func (q *Query) SelectCompile() string {
     if len(q.S.selects) == 0 {
         sqlStr += "*"
     } else {
-        var selects []string    
+        var selects []string
         for _, v := range q.S.selects {
             switch c := v.(type) {
             case string:
                 selects = append(selects, c)
-            case Expression:    // type Expression string
+            case Expression: // type Expression string
                 selects = append(selects, string(c))
             default:
                 logs.Warn("Select Columns Type Error: %T = %v", c, c)
@@ -222,7 +221,7 @@ func (q *Query) SelectCompile() string {
 
         for k, v := range selects {
             // Is the column need decrypt ???
-            for _, table := range  q.S.froms {
+            for _, table := range q.S.froms {
                 if cryptFields, ok := q.cryptFields[table]; ok && q.Dialector.Name() == "mysql" && q.cryptKey != "" && InSlice(v, &cryptFields) {
                     selects[k] = fmt.Sprintf("AES_DECRYPT(%s, \"%s\") AS %v", q.QuoteIdentifier(v), q.cryptKey, q.QuoteIdentifier(v))
                 } else {

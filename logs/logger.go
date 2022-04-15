@@ -37,11 +37,18 @@ var (
 type Logger interface {
     LogMode(Level) Logger
     //Info(context.Context, string, ...any)
-    Debug(string, ...any)
-    Info(string, ...any)
-    Warn(string, ...any)
-    Error(string, ...any)
-    Critical(string, ...any)
+    Debug(...any)
+    Info(...any)
+    Warn(...any)
+    Error(...any)
+    Critical(...any)
+    Debugf(string, ...any)
+    Infof(string, ...any)
+    Warnf(string, ...any)
+    Errorf(string, ...any)
+    Criticalf(string, ...any)
+    Panic(msg string, data ...any)
+    Fatal(msg string, data ...any)
     Trace(begin time.Time, fc func() (sql string, rowsAffected int64), err error)
 }
 
@@ -68,38 +75,71 @@ func New(prefix string, level Level, parant Logger) Logger {
     return &logger{Prefix: prefix, Level: level, parent: parant}
 }
 
-func (l *logger) LogMode(Level) Logger {
+func (l *logger) LogMode(level Level) Logger {
+    l.Level = level
     return l
 }
 
-func (l *logger) Debug(msg string, data ...any) {
+func (l *logger) Debug(data ...any) {
+    l.Debugf("", data...)
+}
+
+func (l *logger) Info(data ...any) {
+    l.Infof("", data...)
+}
+
+func (l *logger) Warn(data ...any) {
+    l.Warnf("", data...)
+}
+
+func (l *logger) Error(data ...any) {
+    l.Errorf("", data...)
+}
+
+func (l *logger) Critical(data ...any) {
+    l.Criticalf("", data...)
+}
+
+func (l *logger) Debugf(msg string, data ...any) {
     if l.Level >= LevelDebug {
         l.getWriter().Write(l.getFormatter().Printf(l.Prefix, LevelDebug, msg, data...))
     }
 }
 
-func (l *logger) Info(msg string, data ...any) {
+func (l *logger) Infof(msg string, data ...any) {
     if l.Level >= LevelInfo {
         l.getWriter().Write(l.getFormatter().Printf(l.Prefix, LevelInfo, msg, data...))
     }
 }
 
-func (l *logger) Warn(msg string, data ...any) {
+func (l *logger) Warnf(msg string, data ...any) {
     if l.Level >= LevelWarn {
         l.getWriter().Write(l.getFormatter().Printf(l.Prefix, LevelWarn, msg, data...))
     }
 }
 
-func (l *logger) Error(msg string, data ...any) {
+func (l *logger) Errorf(msg string, data ...any) {
     if l.Level >= LevelError {
         l.getWriter().Write(l.getFormatter().Printf(l.Prefix, LevelError, msg, data...))
     }
 }
 
-func (l *logger) Critical(msg string, data ...any) {
+func (l *logger) Criticalf(msg string, data ...any) {
     if l.Level >= LevelCritical {
         l.getWriter().Write(l.getFormatter().Printf(l.Prefix, LevelCritical, msg, data...))
     }
+}
+
+// Panic 输出 Critical 日志并 panic
+func (l *logger) Panic(msg string, data ...any) {
+    l.Criticalf(msg, data...)
+    panic(fmt.Sprintf(msg, data...))
+}
+
+// Fatal 输出 Critical 日志并退出程序
+func (l *logger) Fatal(msg string, data ...any) {
+    l.Criticalf(msg, data...)
+    os.Exit(1)
 }
 
 func (l *logger) getWriter() Writer {
@@ -120,54 +160,54 @@ func (l *logger) Trace(begin time.Time, fc func() (sql string, rowsAffected int6
 
 }
 
+// ====== 以下是 root logger 的快捷方式 ======
+
 func Debug(data ...any) {
-    root.Debug("", data...)
+    root.Debug(data...)
 }
 
 func Info(data ...any) {
-    root.Info("", data...)
+    root.Info(data...)
 }
 
 func Warn(data ...any) {
-    root.Warn("", data...)
+    root.Warn(data...)
 }
 
 func Error(data ...any) {
-    root.Error("", data...)
+    root.Error(data...)
 }
 
 func Critical(data ...any) {
-    root.Critical("", data...)
+    root.Critical(data...)
 }
 
 func Debugf(msg string, data ...any) {
-    root.Debug(msg, data...)
+    root.Debugf(msg, data...)
 }
 
 func Infof(msg string, data ...any) {
-    root.Info(msg, data...)
+    root.Infof(msg, data...)
 }
 
 func Warnf(msg string, data ...any) {
-    root.Warn(msg, data...)
+    root.Warnf(msg, data...)
 }
 
 func Errorf(msg string, data ...any) {
-    root.Error(msg, data...)
+    root.Errorf(msg, data...)
 }
 
 func Criticalf(msg string, data ...any) {
-    root.Critical(msg, data...)
+    root.Criticalf(msg, data...)
 }
 
 // Panic 输出 Critical 日志并 panic
 func Panic(msg string, data ...any) {
-    Criticalf(msg, data...)
-    panic(fmt.Sprintf(msg, data...))
+    root.Panic(msg, data...)
 }
 
 // Fatal 输出 Critical 日志并退出程序
 func Fatal(msg string, data ...any) {
-    Criticalf(msg, data...)
-    os.Exit(1)
+    root.Fatal(msg, data...)
 }
