@@ -2,6 +2,7 @@ package kaligo
 
 import (
     "encoding/json"
+    "errors"
     "io"
     "io/ioutil"
     "mime/multipart"
@@ -26,6 +27,8 @@ import (
 
 // Context is use for ServeHTTP goroutine
 type Context struct {
+    mux *Mux
+
     ResponseWriter http.ResponseWriter
     Request        *http.Request
 
@@ -65,6 +68,14 @@ func (c *Context) Reset() {
     c.QueryCache = nil
     c.FormCache = nil
     c.sameSite = 0
+}
+
+// CallController 调用其他接口（非异步）
+func (a *Context) CallController(controller Interface, method string, params Params) (ret any, err error) {
+    if a.mux != nil {
+        return a.mux.CallController(controller, method, params)
+    }
+    return nil, errors.New("服务未初始化")
 }
 
 // FullPath returns a matched route full path. For not found routes

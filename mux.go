@@ -241,7 +241,7 @@ func (a *Mux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
     }
 }
 
-func (a *Mux) CallController(controller Interface, method string, params Params) (ret []reflect.Value, err error) {
+func (a *Mux) CallController(controller Interface, method string, params Params) (ret any, err error) {
     return a.controllerMethodCall(reflect.Indirect(reflect.ValueOf(controller)).Type(), method, nil, nil, params)
 }
 
@@ -249,6 +249,7 @@ func (a *Mux) controllerMethodCall(controllerType reflect.Type, m string, w http
     ctx := a.pool.Get().(*Context)
     defer a.pool.Put(ctx)
     ctx.Reset()
+    ctx.mux = a
     if a.DB != nil {
         ctx.DB = &database.DB{Config: a.DB.Config}
     }
