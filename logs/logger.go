@@ -14,7 +14,7 @@ var ErrRecordNotFound = errors.New("record not found")
 type Level int
 
 const (
-    _ Level = iota
+    LevelDefault Level = iota
     // LevelSilent is the default log level
     LevelSilent
     // LevelError  is the critical log level
@@ -30,7 +30,7 @@ const (
 )
 
 var (
-    root Logger = &logger{formatter: &ConsoleFormatter{}, writer: &ConsoleWriter{}, Level: LevelDebug}
+    root Logger = &logger{formatter: &ConsoleFormatter{}, writer: &ConsoleWriter{}, Level: LevelInfo}
 )
 
 // Logger logger interface
@@ -101,31 +101,31 @@ func (l *logger) Critical(data ...any) {
 }
 
 func (l *logger) Debugf(msg string, data ...any) {
-    if l.Level >= LevelDebug {
+    if l.getLevel() >= LevelDebug {
         l.getWriter().Write(l.getFormatter().Printf(l.Prefix, LevelDebug, msg, data...))
     }
 }
 
 func (l *logger) Infof(msg string, data ...any) {
-    if l.Level >= LevelInfo {
+    if l.getLevel() >= LevelInfo {
         l.getWriter().Write(l.getFormatter().Printf(l.Prefix, LevelInfo, msg, data...))
     }
 }
 
 func (l *logger) Warnf(msg string, data ...any) {
-    if l.Level >= LevelWarn {
+    if l.getLevel() >= LevelWarn {
         l.getWriter().Write(l.getFormatter().Printf(l.Prefix, LevelWarn, msg, data...))
     }
 }
 
 func (l *logger) Errorf(msg string, data ...any) {
-    if l.Level >= LevelError {
+    if l.getLevel() >= LevelError {
         l.getWriter().Write(l.getFormatter().Printf(l.Prefix, LevelError, msg, data...))
     }
 }
 
 func (l *logger) Criticalf(msg string, data ...any) {
-    if l.Level >= LevelCritical {
+    if l.getLevel() >= LevelCritical {
         l.getWriter().Write(l.getFormatter().Printf(l.Prefix, LevelCritical, msg, data...))
     }
 }
@@ -140,6 +140,13 @@ func (l *logger) Panic(msg string, data ...any) {
 func (l *logger) Fatal(msg string, data ...any) {
     l.Criticalf(msg, data...)
     os.Exit(1)
+}
+
+func (l *logger) getLevel() Level {
+    if l.Level == LevelDefault {
+        return l.parent.(*logger).getLevel()
+    }
+    return l.Level
 }
 
 func (l *logger) getWriter() Writer {
@@ -161,6 +168,11 @@ func (l *logger) Trace(begin time.Time, fc func() (sql string, rowsAffected int6
 }
 
 // ====== 以下是 root logger 的快捷方式 ======
+
+func LogMode(level Level) Logger {
+    root.LogMode(level)
+    return root
+}
 
 func Debug(data ...any) {
     root.Debug(data...)
