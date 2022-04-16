@@ -129,6 +129,11 @@ func (q *Query) Compile() string {
 // Execute the current query on the given database.
 func (q *Query) Execute() (*Query, error) {
     var err error
+    defer func() {
+        if err != nil {
+            logs.Error(err)
+        }
+    }()
 
     // Compile the SQL query
     sqlStr := q.Compile()
