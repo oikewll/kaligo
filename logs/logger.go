@@ -4,6 +4,7 @@ import (
     "errors"
     "fmt"
     "os"
+    "strings"
     "time"
 )
 
@@ -165,6 +166,29 @@ func (l *logger) getFormatter() Formatter {
 
 func (l *logger) Trace(begin time.Time, fc func() (sql string, rowsAffected int64), err error) {
 
+}
+
+// ====== Public 工具类方法 ======
+
+// ParseLevel string 转 Level debug > info > warn > error > critical > silent
+func ParseLevel(level string) Level {
+    level = strings.ToLower(level)
+    switch level {
+    case "silent":
+        return LevelSilent
+    case "critical":
+        return LevelCritical
+    case "error":
+        return LevelError
+    case "warn":
+        return LevelWarn
+    case "info":
+        return LevelInfo
+    case "debug":
+        return LevelDebug
+    default:
+        return LevelDefault
+    }
 }
 
 // ====== 以下是 root logger 的快捷方式 ======
