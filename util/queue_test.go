@@ -9,8 +9,8 @@ import (
 func TestQueue(t *testing.T) {
     q := NewQueue[int](3, 1, QueueFuncExecutor[int](func(i *QueueContext[int]) bool {
         time.Sleep(time.Millisecond * 200)
-        fmt.Println(i.data)
-        return i.data%2 == 0
+        fmt.Println(i.Data)
+        return i.Data%2 == 0
     }))
     add := func(start int) {
         for i := start; i < start+10; i++ {

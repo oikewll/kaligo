@@ -8,9 +8,9 @@ import (
     "os"
     "path/filepath"
     "regexp"
-    "runtime"
-    "syscall"
 )
+
+var umask = func(mask int) int { return 0 }
 
 // FileInit 初始化文件目录
 func FileInit(file string) (err error) {
@@ -19,13 +19,9 @@ func FileInit(file string) (err error) {
         dir := filepath.Dir(file)
         if dir != "." {
             // 递归创建目录
-            if runtime.GOOS == "linux" {
-                mask := syscall.Umask(0)
-                defer syscall.Umask(mask)
-                err = os.MkdirAll(dir, 0766)
-            } else {
-                err = os.MkdirAll(dir, 0766)
-            }
+            mask := umask(0)
+            defer umask(mask)
+            err = os.MkdirAll(dir, 0766)
         }
     }
     return
