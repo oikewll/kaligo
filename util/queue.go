@@ -13,8 +13,8 @@ func (f QueueFuncExecutor[T]) Exec(ctx *QueueContext[T]) bool {
 }
 
 type QueueContext[T JobData] struct {
-    data  T
-    retry int
+    Data  T
+    Retry int
 }
 
 // Queue 队列，消费订阅模式，支持并发，重试
@@ -38,7 +38,7 @@ func NewQueue[T JobData](concurrency int, retry int, executor QueueExecutor[T]) 
 // Add 添加任务
 func (w *Queue[T]) Add(data ...T) {
     for _, v := range data {
-        w.add(&QueueContext[T]{data: v})
+        w.add(&QueueContext[T]{Data: v})
     }
 }
 
@@ -59,8 +59,8 @@ func (w *Queue[T]) exec(j *QueueContext[T]) {
     go func(j *QueueContext[T]) {
         ret := w.Executor.Exec(j)
         if !ret {
-            if j.retry < w.Retry {
-                j.retry++
+            if j.Retry < w.Retry {
+                j.Retry++
                 w.add(j)
             }
         }
