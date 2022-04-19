@@ -17,6 +17,18 @@ type Url struct {
     Extras any // 自定义数据
 }
 
+func (u *Url) String() string {
+    urlStr := u.UrlStr
+    if len(u.Params) > 0 && u.Method == http.MethodGet {
+        param := url.Values{}
+        for k, v := range u.Params {
+            param.Set(k, v)
+        }
+        urlStr = urlStr + "?" + param.Encode()
+    }
+    return urlStr
+}
+
 type Worker struct {
     count    int           // 协程数量
     channel  chan struct{} // 空结构体变量的内存占用大小为 0，而 bool 类型内存占用大小为 1
