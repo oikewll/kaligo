@@ -142,11 +142,11 @@ func (j *Join) Compile(db *DB) string {
 
 // JoinReset the query parameters
 // 好像没啥用？SELECT、UPDATE这两个有使用到的，最后都会把 joinObjs、lastJoin 清除了啊
-//func (j *Join) JoinReset() *Join {
-//j.joinType = ""
-//j.table    = ""
-//j.alias    = ""
-//j.onValues = nil
-
-//return j
-//}
+// func (j *Join) JoinReset() *Join {
+//     j.joinType = ""
+//     j.table    = ""
+//     j.alias    = ""
+//     j.onValues = nil
+//
+//     return j
+// }

@@ -13,14 +13,14 @@ type Where struct {
     limit    int
 }
 
-// Where Alias of andWhere
-func (q *Query) Where(column string, op string, value any) *Query {
-    return q.AndWhere(column, op, value)
-}
-
 func (q *Query) WhereWrapper(wrapper func(*Query)) *Query {
     wrapper(q)
     return q
+}
+
+// Where Alias of andWhere
+func (q *Query) Where(column string, op string, value any) *Query {
+    return q.AndWhere(column, op, value)
 }
 
 // AndWhere Creates a new "AND WHERE" condition for the query.
@@ -28,7 +28,7 @@ func (q *Query) WhereWrapper(wrapper func(*Query)) *Query {
 // @description 查询条件函数
 // @auth   seatle 2021/07/22 11:40
 // @param  column string 字段名
-// @param  op     string 操作符 >、=、<、>=、<=
+// @param  op     string 操作符 >、=、<、>=、<=、IN、LIKE
 // @param  value  string 查询值
 // @return w     *Where Where对象
 func (q *Query) AndWhere(column string, op string, value any) *Query {
