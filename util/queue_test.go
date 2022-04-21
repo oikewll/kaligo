@@ -20,5 +20,5 @@ func TestQueue(t *testing.T) {
     }
     go add(0)
     go add(10)
-    q.Run(false)
+    go q.Run(false)
 }
