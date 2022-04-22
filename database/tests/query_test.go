@@ -1,7 +1,7 @@
 package tests
 
 import (
-    "fmt"
+    "log"
     "os"
     "testing"
 
@@ -18,9 +18,14 @@ func TestMain(m *testing.M) {
     os.Exit(code)
 }
 
+func TestMigrator(t *testing.T) {
+    databases := db.Migrator().CurrentDatabase()
+    log.Printf("jsonStr = %v\n", database.FormatJSON(databases))
+}
+
 func TestUpdate(t *testing.T) {
     sql := db.Insert("keywords").Columns([]string{`word`, `creator`}).Values([]string{"电影网站", "1"}).OnDuplicateKeyUpdate(map[string]string{`creator`: "3"}).Compile()
-    fmt.Println(sql)
+    log.Printf("%v", sql)
 }
 
 func TestConfig(t *testing.T) {

@@ -6,18 +6,16 @@ package tests
 // Insert -> Builder -> Query -> Connection
 
 import (
-	//"encoding/json"
-	//"fmt"
 	"testing"
+    "log"
 
-	//"database/sql"
-	//_ "github.com/go-sql-driver/mysql"
-	//_ "github.com/mattn/go-sqlite3"
-	//"github.com/owner888/kaligo/config"
+	// "database/sql"
+	// _ "github.com/go-sql-driver/mysql"
+	// _ "github.com/mattn/go-sqlite3"
+	// "github.com/owner888/kaligo/config"
 	// "github.com/owner888/kaligo/database"
 	// sqlite "github.com/owner888/kaligo/database/driver/sqlite"
-
-	//mysql "github.com/owner888/kaligo/database/driver/mysql"
+	// mysql "github.com/owner888/kaligo/database/driver/mysql"
 	// "github.com/owner888/kaligo/model"
 	//"strconv"
 	//"strings"
@@ -48,6 +46,8 @@ type User struct {
 }
 
 func TestDB(t *testing.T) {
+
+    log.Printf("%v", "TestDB")
 
     //var sqlStr string
     //db, err := database.Open(mysql.Open(config.DBDSN))

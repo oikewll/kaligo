@@ -2,18 +2,11 @@ package database
 
 import (
     // "encoding/json"
-    "os"
-    "log"
-    "testing"
+    // "os"
+    // "log"
+    // "testing"
     // "github.com/stretchr/testify/assert"
 )
-
-// 每个测试函数执行之前会先执行这个，用于初始化，每个测试都是纯净的
-func TestMain(m *testing.M) {
-    // config.Set("cache.config.driver", "memory")
-    log.Printf("%v", "TestMain")
-    os.Exit(m.Run())
-}
 
 // func TestNew(t *testing.T) {
 //     assert.NotNil(t, mux)

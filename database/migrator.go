@@ -5,7 +5,7 @@ import (
 )
 
 type Migrator struct {
-    *DB
+    *Query
 }
 
 // CurrentDatabase is Current Database

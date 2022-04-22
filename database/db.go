@@ -89,6 +89,7 @@ type DB struct {
     StdTx         *sql.Tx // Connection for Transaction
     InTransaction bool    // 是否正在事务执行中
     schema        *Schema
+    migrator      *Migrator
 }
 
 // Open initialize db session based on dialector
@@ -131,7 +132,7 @@ func Open(dialector Dialector) (db *DB, err error) {
     }
     // sql.Open 实际上返回了一个数据库抽象，并没有真的连接上
     if err == nil {
-        // ping 调用完毕后会马上把连接返回给连接池
+        // ping 调用会产生一个链接，然后把连接返回给连接池
         err = db.StdDB.Ping()
     }
 
@@ -198,20 +199,20 @@ func (db *DB) setCharset(charset string) {
 }
 
 // Model specify the model you would like to run db operations
-//    // update all users's name to `hello`
-//    db.Model(&User{}).Update("name", "hello")
-//    // if user's primary key is non-blank, will use it as condition, then will only update the user's name to `hello`
-//    db.Model(&user).Update("name", "hello")
-//func (db *DB) Model(value any) *Query {
-//query := &Query{
-//Model     : value,
-//sqlStr    : "",
-//queryType : 0,
-//DB        : db,
-//StdDB     : db.StdDB,
-//}
-//return query
-//}
+// // update all users's name to `hello`
+// db.Model(&User{}).Update("name", "hello")
+// // if user's primary key is non-blank, will use it as condition, then will only update the user's name to `hello`
+// db.Model(&user).Update("name", "hello")
+// func (db *DB) Model(value any) *Query {
+//     query := &Query{
+//         Model     : value,
+//         sqlStr    : "",
+//         queryType : 0,
+//         DB        : db,
+//         StdDB     : db.StdDB,
+//     }
+//     return query
+// }
 
 // Query func is use for create a new [*Query]
 // Query -> Connection.Query
@@ -390,6 +391,20 @@ func (db *DB) Schema() *Schema {
     //     StdDB     : db.StdDB,
     // }
     // return query
+}
+
+func (db *DB) Migrator() *Migrator {
+    if db.migrator == nil {
+        query := &Query{
+            DB:      db,
+            Context: context.Background(),
+        }
+        db.migrator = &Migrator{
+            Query: query,
+        }
+    }
+    return db.migrator
+
 }
 
 // Expr func is use for create a new [*Expression] which is not escaped. An expression

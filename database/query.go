@@ -14,9 +14,10 @@ import (
 type Query struct {
     *DB
 
-    Error   error // Global error
-    Context context.Context
-    Schema  *Schema
+    Error     error // Global error
+    Context   context.Context
+    Schema   *Schema
+    // Migrator *Migrator
 
     RowsAffected int64 // For select、update、insert
     LastInsertId int64 // Only for insert
