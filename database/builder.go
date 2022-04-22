@@ -49,8 +49,8 @@ func (q *Query) CompileConditions(conditions map[string][][]string) string {
                 // 'name', '=', 'John'
                 // 'age', 'BETWEEN', '10,20'
                 column := condition[0]
-                op := condition[1]
-                value := condition[2]
+                op     := condition[1]
+                value  := condition[2]
                 // value 传 NULL 字符串过来，要把等号(=)换成 IS
                 if value == "NULL" {
                     if op == "=" {
@@ -186,3 +186,5 @@ func (q *Query) CompileOrderBy(columns [][2]string) string {
 
     return "ORDER BY " + strings.Join(sorts, ", ")
 }
+
+/* vim: set expandtab: */

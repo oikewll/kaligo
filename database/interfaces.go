@@ -35,3 +35,5 @@ type Dialector interface {
     //QuoteTo(clause.Writer, string)
     //Explain(sql string, vars ...any) string
 }
+
+/* vim: set expandtab: */

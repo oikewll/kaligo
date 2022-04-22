@@ -10,6 +10,7 @@ import (
 )
 
 // Query is the struct for MySQL DATE type
+// SQL Builder
 type Query struct {
     *DB
 

@@ -8,7 +8,8 @@ type WhereParam struct {
 
 // Where is the struct for MySQL DATE type
 type Where struct {
-    wheres   map[string][][]string  // map["AND"][][]string{column, op, value}
+    params   []WhereParam   // map["AND"][] WhereParam{column, op, value}
+    wheres   map[string][][]string  // map["AND"][] []string{column, op, value} []string{")"}
     orderBys [][2]string
     limit    int
 }
@@ -20,6 +21,7 @@ func (q *Query) WhereWrapper(wrapper func(*Query)) *Query {
 
 // Where Alias of andWhere
 func (q *Query) Where(column string, op string, value any) *Query {
+    // q.W.wheresS = append(q.W.wheresS, struct{column string; op string; value  any }{"id", "=", "1"})
     return q.AndWhere(column, op, value)
 }
 
@@ -96,3 +98,5 @@ func (q *Query) Limit(value int) *Query {
     q.W.limit = value
     return q
 }
+
+/* vim: set expandtab: */

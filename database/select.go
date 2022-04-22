@@ -8,7 +8,6 @@ import (
 
 // Select is the struct for MySQL DATE type
 type Select struct {
-    // selects   []string
     selects   []any
     distinct  bool
     froms     []string
@@ -325,3 +324,5 @@ func (q *Query) SelectReset() *Query {
 
     return q
 }
+
+/* vim: set expandtab: */
