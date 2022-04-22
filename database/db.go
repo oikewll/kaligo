@@ -1,4 +1,11 @@
 package database
+// DB 类 
+// 1、包含go官方的sql操作；
+// 2、包含用于生产 Select、Insert、Update 等 *Query() 类操作方式
+// 3、包含Migrator工具类
+// Query 类实际上是一个 SQLBuilder，用于拼装出 SQL 语句并且调用 DB类执行查询
+// Schema 类用于映射 struct 和 数据库表结构，是一个 ORM 类 
+// Migrator 类是一个操作数据库的工具类
 
 import (
     "context"
