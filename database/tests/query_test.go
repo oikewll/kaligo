@@ -13,7 +13,7 @@ import (
 var db *database.DB
 
 func TestMain(m *testing.M) {
-    db, _ = database.Open(mysql.Open("root:root@tcp(127.0.0.1:3306)/chorme?charset=utf8mb4"))
+    db, _ = database.Open(mysql.Open("root:root@tcp(127.0.0.1:3306)/chrome?charset=utf8mb4"))
     code := m.Run()
     os.Exit(code)
 }
