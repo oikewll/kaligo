@@ -9,9 +9,15 @@ import (
     //"strconv"
     "strings"
 
-    _ "github.com/go-sql-driver/mysql" // use for call mysql init() method
+    "github.com/go-sql-driver/mysql" // use for call mysql init() method
     "github.com/owner888/kaligo/database"
 )
+
+func NewConfig() *mysql.Config {
+    cfg := mysql.NewConfig()
+    cfg.Net = "tcp"
+    return cfg
+}
 
 // DriverName is the default driver name for SQLite.
 const DriverName = "mysql"
