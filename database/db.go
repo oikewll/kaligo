@@ -30,11 +30,13 @@ import (
 //     return instance
 // }
 
-var (
-    once      sync.Once
-    instance  *DB
-    instances map[string]*DB
-)
+// 不需要单例，一个 http 请求会产生一个 goroutine
+// 所有 goroutine 共享一个全局的 db struct 即可，反正真正链接部分是有连接池的
+// var (
+//     once      sync.Once
+//     instance  *DB
+//     instances map[string]*DB
+// )
 
 //var instances = map[string]*DB{}
 
