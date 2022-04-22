@@ -196,6 +196,11 @@ func Bool(key string, defaultValue ...any) bool {
     return util.ToBool(Env(key, defaultValue...))
 }
 
+// StringMapStringSlice 获取 map[string][]string 类型的配置信息
+func StringMapStringSlice(key string, defaultValue ...any) map[string][]string {
+    return util.ToStringMapStringSlice(Env(key, defaultValue...))
+}
+
 // 获取下一级设置的 map，key 不存在或 value 不是 ConfigMap 则返回 nil
 func getConfigMap(config ConfigMap, key string) ConfigMap {
     if val, ok := config.Load(key); ok {

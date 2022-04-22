@@ -95,13 +95,13 @@ func Open(dialector Dialector) (db *DB, err error) {
     cfg := &Config{}
     db = &DB{Config: cfg, InTransaction: false}
 
-    cfg.tablePrefix = config.Get[string]("database.mysql.table_prefix")
-    cfg.cryptKey = config.Get[string]("database.mysql.crypt_key")
-    cfg.cryptFields = config.Get[map[string][]string]("database.mysql.crypt_fields")
+    cfg.tablePrefix = config.String("database.mysql.table_prefix")
+    cfg.cryptKey    = config.String("database.mysql.crypt_key")
+    cfg.cryptFields = config.StringMapStringSlice("database.mysql.crypt_fields")
 
-    //if db.Logger == nil {
-    //db.Logger = logger.Default
-    //}
+    // if db.Logger == nil {
+    //     db.Logger = logger.Default
+    // }
 
     if db.NowFunc == nil {
         db.NowFunc = func() time.Time { return time.Now().Local() }
@@ -120,12 +120,12 @@ func Open(dialector Dialector) (db *DB, err error) {
     }
 
     // 设置最大初始连接数
-    if config.Get[int]("database.mysql.max_open_connections") > 0 {
-        db.StdDB.SetMaxOpenConns(config.Get[int]("database.mysql.max_open_connections"))
+    if config.Int("database.mysql.max_open_connections") > 0 {
+        db.StdDB.SetMaxOpenConns(config.Int("database.mysql.max_open_connections"))
     }
     // 设置最大空闲连接数
-    if config.Get[int]("database.mysql.max_idle_connections") > 0 {
-        db.StdDB.SetMaxIdleConns(config.Get[int]("database.mysql.max_idle_connections"))
+    if config.Int("database.mysql.max_idle_connections") > 0 {
+        db.StdDB.SetMaxIdleConns(config.Int("database.mysql.max_idle_connections"))
     }
     // sql.Open 实际上返回了一个数据库抽象，并没有真的连接上
     if err == nil {
@@ -133,11 +133,11 @@ func Open(dialector Dialector) (db *DB, err error) {
         err = db.StdDB.Ping()
     }
 
-    db.setCharset(config.Get[string]("database.mysql.charset"))
+    db.setCharset(config.String("database.mysql.charset"))
 
-    //if err != nil {
-    //db.Logger.Error(context.Background(), "failed to initialize database, got error %v", err)
-    //}
+    // if err != nil {
+    //     db.Logger.Error(context.Background(), "failed to initialize database, got error %v", err)
+    // }
 
     return
 }
