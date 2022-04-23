@@ -199,7 +199,9 @@ func (c *Context) Header(key, value string) {
 
 // EnableCors 支持 CORS 跨域访问
 func (c *Context) EnableCors() {
-    c.ResponseWriter.Header().Set("Access-Control-Allow-Origin", "*")
+    if c.ResponseWriter != nil {
+        c.ResponseWriter.Header().Set("Access-Control-Allow-Origin", "*")
+    }
 }
 
 // """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
