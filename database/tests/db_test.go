@@ -7,8 +7,6 @@ package tests
 
 import (
 	"testing"
-    "log"
-
 	// "database/sql"
 	// _ "github.com/go-sql-driver/mysql"
 	// _ "github.com/mattn/go-sqlite3"
@@ -46,8 +44,6 @@ type User struct {
 }
 
 func TestDB(t *testing.T) {
-
-    log.Printf("%v", "TestDB")
 
     //var sqlStr string
     //db, err := database.Open(mysql.Open(config.DBDSN))
