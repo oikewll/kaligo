@@ -54,6 +54,11 @@ func (w *Queue[T]) Run(exit bool) {
     }
 }
 
+// Count 等待执行+正在执行的任务数量
+func (w *Queue[T]) Count() int {
+    return len(w.jobs) + len(w.channel)
+}
+
 func (w *Queue[T]) exec(j *QueueContext[T]) {
     w.channel <- struct{}{}
     go func(j *QueueContext[T]) {
