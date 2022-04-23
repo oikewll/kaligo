@@ -50,11 +50,13 @@ func (f *ConsoleFormatter) Printf(prefix string, level Level, format string, a .
     builder.WriteString(Seperator)
     switch level {
     case LevelDebug:
-        builder.WriteString(ansi.BlackLight)
+        builder.WriteString(ansi.White)
         builder.WriteString("Ⓓ DEBUG")
         builder.WriteString(ansi.Reset)
     case LevelInfo:
+        builder.WriteString(ansi.Cyan)
         builder.WriteString("ⓘ INFO ")
+        builder.WriteString(ansi.Reset)
     case LevelWarn:
         builder.WriteString(ansi.Yellow)
         builder.WriteString("ⓦ WARN ")
@@ -64,7 +66,7 @@ func (f *ConsoleFormatter) Printf(prefix string, level Level, format string, a .
         builder.WriteString("ⓧ ERROR")
         builder.WriteString(ansi.Reset)
     case LevelCritical:
-        builder.WriteString(ansi.Red)
+        builder.WriteString(ansi.RedBold)
         builder.WriteString("🅧 CRITICAL")
     }
     builder.WriteString(Seperator)

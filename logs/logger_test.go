@@ -5,6 +5,7 @@ import (
 )
 
 func TestLogLevel(t *testing.T) {
+    LogMode(LevelDebug)
     Critical("Critical message")
     Error("Error message")
     Warn("Warn message")

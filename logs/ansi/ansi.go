@@ -67,6 +67,8 @@ var (
     CyanLight    = foreground.light().color(cyan).String()
     WhiteLight   = foreground.light().color(white).String()
 
+    RedBold = attrs{foreground.color(red), bold}.String()
+
     Reset           = reset.String()                                                   // 重置所有属性
     Clear           = attrs{foreground.color(clear), background.color(clear)}.String() // 清除前景和背景
     ClearForeground = foreground.color(clear).String()
