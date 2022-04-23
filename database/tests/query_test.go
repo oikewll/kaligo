@@ -24,9 +24,14 @@ func TestMigratorCurrentDatabase(t *testing.T) {
     assert.Equal(t, databases, "chrome")
 }
 
+func TestMigratorListDatabases(t *testing.T) {
+    databases, _ := db.Migrator().ListDatabases("chrome")
+    t.Logf("jsonStr = %v\n", database.FormatJSON(databases))
+}
+
 func TestUpdate(t *testing.T) {
-    sql := db.Insert("keywords").Columns([]string{`word`, `creator`}).Values([]string{"电影网站", "1"}).OnDuplicateKeyUpdate(map[string]string{`creator`: "3"}).Compile()
-    logs.Info(sql)
+    q := db.Insert("keywords").Columns([]string{`word`, `creator`}).Values([]string{"电影网站", "1"}).OnDuplicateKeyUpdate(map[string]string{`creator`: "3"})
+    logs.Info(q)
 }
 
 func TestConfig(t *testing.T) {

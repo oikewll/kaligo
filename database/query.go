@@ -88,6 +88,11 @@ func (q *Query) Parameters(params map[string]string) *Query {
     return q
 }
 
+// Alias Compile method
+func (q *Query) String() string {
+    return q.Compile()
+}
+
 // Compile the SQL query and return it. Raplaces and parameters with their
 func (q *Query) Compile() string {
     var sqlStr string
