@@ -31,7 +31,7 @@ const (
 )
 
 var (
-    root Logger = &logger{formatter: &ConsoleFormatter{}, writer: &ConsoleWriter{}, Level: LevelInfo}
+    root Logger = &logger{formatter: &ConsoleFormatter{}, writer: &ConsoleWriter{}, Level: LevelDebug}
 )
 
 // Logger logger interface
