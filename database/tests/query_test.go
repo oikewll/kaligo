@@ -13,20 +13,34 @@ import (
 var db *database.DB
 
 func TestMain(m *testing.M) {
-    logs.LogMode(logs.LevelDebug)
-    db, _ = database.Open(mysql.Open("root:root@tcp(127.0.0.1:3306)/chrome?charset=utf8mb4"))
+    db, _ = database.Open(mysql.Open("root:root@tcp(127.0.0.1:3306)/test?charset=utf8mb4"))
     code := m.Run()
     os.Exit(code)
 }
 
 func TestMigratorCurrentDatabase(t *testing.T) {
     databases := db.Migrator().CurrentDatabase()
-    assert.Equal(t, databases, "chrome")
+    assert.Equal(t, "test", databases)
 }
 
 func TestMigratorListDatabases(t *testing.T) {
-    databases, _ := db.Migrator().ListDatabases("chrome")
-    t.Logf("jsonStr = %v\n", database.FormatJSON(databases))
+    databases, err := db.Migrator().ListDatabases("test")
+    assert.NoError(t, err)
+    assert.Equal(t, []string{"test"}, databases)
+}
+
+func TestMigratorListTables(t *testing.T) {
+    tables, err := db.Migrator().ListTables("user")
+    assert.NoError(t, err)
+    assert.Equal(t, tables, []string{"user"})
+    // logs.Debug(database.FormatJSON(tables))
+}
+
+func TestMigratorListColumns(t *testing.T) {
+    columns, err := db.Migrator().ListColumns("user")
+    assert.NoError(t, err)
+    assert.Equal(t, columns, []database.Column([]database.Column{{Name:"ID", DBName:"id", DataType:"int", Size:0, Precision:0, NotNull:true, DefaultValue:"", Unique:false, PrimaryKey:true, AutoIncrement:true, Comment:"", Readable:true, Creatable:true, Updatable:true, Extra:"auto_increment", CryptKey:""}, {Name:"Username", DBName:"username", DataType:"string", Size:7, Precision:0, NotNull:false, DefaultValue:"", Unique:true, PrimaryKey:false, AutoIncrement:false, Comment:"", Readable:true, Creatable:true, Updatable:true, Extra:"", CryptKey:""}, {Name:"Password", DBName:"password", DataType:"string", Size:12, Precision:0, NotNull:false, DefaultValue:"mr.", Unique:false, PrimaryKey:false, AutoIncrement:false, Comment:"", Readable:true, Creatable:true, Updatable:true, Extra:"", CryptKey:""}, {Name:"Addtime", DBName:"addtime", DataType:"int", Size:0, Precision:0, NotNull:false, DefaultValue:"", Unique:false, PrimaryKey:false, AutoIncrement:false, Comment:"", Readable:true, Creatable:true, Updatable:true, Extra:"", CryptKey:""}}))
+    // logs.Debug(database.FormatJSON(tables))
 }
 
 func TestUpdate(t *testing.T) {
