@@ -11,6 +11,7 @@ import (
 
     "github.com/go-sql-driver/mysql" // use for call mysql init() method
     "github.com/owner888/kaligo/database"
+    // "github.com/owner888/kaligo/logs"
 )
 
 func NewConfig() *mysql.Config {
@@ -195,6 +196,8 @@ func (dialector Dialector) ListIndexes(table, like string, db *database.DB) ([]d
         IndexType    string         `field:"Index_type"`
         Comment      string         `field:"Comment"`
         IndexComment string         `field:"Index_comment"`
+        Visible      string         `field:"Visible"`
+        Expression   sql.NullString `field:"Expression"`
     }
 
     indexes := []database.Indexes{}
@@ -242,6 +245,7 @@ func (dialector Dialector) ListIndexes(table, like string, db *database.DB) ([]d
             indexes = append(indexes, index)
         }
     }
+    // logs.Debug(sqlStr, database.FormatJSON(indexes))
     return indexes, nil
 }
 
