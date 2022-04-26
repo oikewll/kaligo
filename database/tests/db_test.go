@@ -7,41 +7,8 @@ package tests
 
 import (
 	"testing"
-	// "database/sql"
-	// _ "github.com/go-sql-driver/mysql"
-	// _ "github.com/mattn/go-sqlite3"
-	// "github.com/owner888/kaligo/config"
-	// "github.com/owner888/kaligo/database"
-	// sqlite "github.com/owner888/kaligo/database/driver/sqlite"
-	// mysql "github.com/owner888/kaligo/database/driver/mysql"
-	// "github.com/owner888/kaligo/model"
-	//"strconv"
-	//"strings"
-	//"regexp"
-	//"reflect"
-	//"time"
 	//"github.com/goinggo/mapstructure"
-	//"github.com/owner888/kaligo"
-	//"github.com/owner888/kaligo/conf"
-	//"github.com/owner888/kaligo/util"
-	//"github.com/owner888/kaligo/mysql"
-	//"github.com/owner888/kaligo/cache"
 )
-
-type statefulCamable func(name string) error
-
-func (c statefulCamable) Auth(password string) bool{
-    _ = c("test")
-    return true
-}
-
-type User struct {
-    // *model.Model
-    ID   uint   `db:"id"`
-    Name string `db:"name"`
-    Age  uint   `db:"age"`
-    Sex  uint   `db:"sex"`
-}
 
 func TestDB(t *testing.T) {
 
