@@ -24,6 +24,28 @@ func TestMain(m *testing.M) {
     os.Exit(code)
 }
 
+func TestQuery(t *testing.T) {
+    //var sqlStr string
+    //
+    // user := User{
+    //     ID   : 1,
+    //     Name : "test111",
+    //     Age  : 25,
+    //     Sex  : 1,
+    // }
+    // user.DB = db
+    // user.Save()
+
+    var ages []int64
+    _, err := db.Query("SELECT `age` FROM user").Scan(&ages).Execute()
+    assert.Error(t, err)
+    //if q.Error != nil {
+        //t.Logf("q.Error = %v\n", q.Error)
+    //} else {
+        //t.Logf("jsonStr = %v\n", database.FormatJSON(ages))
+    //}
+}
+
 func TestUpdate(t *testing.T) {
     q := db.Insert("keywords").Columns([]string{`word`, `creator`}).Values([]string{"电影网站", "1"}).OnDuplicateKeyUpdate(map[string]string{`creator`: "3"})
     logs.Info(q)

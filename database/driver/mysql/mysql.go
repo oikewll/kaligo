@@ -17,6 +17,7 @@ import (
 func NewConfig() *mysql.Config {
     cfg := mysql.NewConfig()
     cfg.Net = "tcp"
+    // cfg.AllowNativePasswords = true
     return cfg
 }
 

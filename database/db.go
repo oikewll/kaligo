@@ -13,15 +13,11 @@ import (
     "errors"
     "fmt"
     "regexp"
-
-    //"reflect"
     "strings"
     "sync"
     "time"
 
     "github.com/owner888/kaligo/config"
-    //"github.com/owner888/kaligo/util"
-    //"github.com/stretchr/testify/assert"
 )
 
 // type singleton struct {
@@ -80,9 +76,6 @@ type Config struct {
 
     queryCount int // 执行过多少条SQL
 
-    // Logger
-    //Logger logger.Interface
-
     // NowFunc the function to be used when creating a new timestamp
     NowFunc func() time.Time
 
@@ -109,10 +102,6 @@ func Open(dialector Dialector) (db *DB, err error) {
     cfg.cryptKey    = config.String("database.mysql.crypt_key")
     cfg.cryptFields = config.StringMapStringSlice("database.mysql.crypt_fields")
 
-    // if db.Logger == nil {
-    //     db.Logger = logger.Default
-    // }
-
     if db.NowFunc == nil {
         db.NowFunc = func() time.Time { return time.Now().Local() }
     }
@@ -137,18 +126,23 @@ func Open(dialector Dialector) (db *DB, err error) {
     if config.Int("database.mysql.max_idle_connections") > 0 {
         db.StdDB.SetMaxIdleConns(config.Int("database.mysql.max_idle_connections"))
     }
-    // sql.Open 实际上返回了一个数据库抽象，并没有真的连接上
-    if err == nil {
-        // ping 调用会产生一个链接，然后把连接返回给连接池
-        err = db.StdDB.Ping()
+
+    if err != nil {
+        logs.Error("failed to initialize database, got error %v", err)
     }
+
+    // sql.Open 实际上返回了一个数据库抽象，并没有真的连接上
+    // ping 调用会产生一个链接，然后把连接返回给连接池
+    err = db.StdDB.Ping()
 
     db.setCharset(config.String("database.mysql.charset"))
 
-    // if err != nil {
-    //     db.Logger.Error(context.Background(), "failed to initialize database, got error %v", err)
-    // }
-
+    // 初始化SQL
+    if db.initCmds != nil {
+        for _, cmd := range db.initCmds {
+            db.StdDB.Query(cmd)
+        }
+    }
     return
 }
 
@@ -283,22 +277,6 @@ func (db *DB) Select(columns ...any) *Query {
     return query
 }
 
-// func (db *DB) SelectExpression(expr *Expression) *Query {
-//     query := &Query{
-//         S: &Select{
-//             expr:     expr,
-//             distinct: false,
-//             offset:   0,
-//         },
-//         W:         &Where{},
-//         B:         &Builder{},
-//         sqlStr:    "",
-//         queryType: SELECT,
-//         DB:        db,
-//     }
-//     return query
-// }
-
 // Insert func is use for create a new [*Insert]
 // Insert -> Builder -> Query
 //     INSERT INTO `user` (`name`, `age`) VALUES ("test", "25")
@@ -385,19 +363,6 @@ func (db *DB) Schema() *Schema {
         }
     }
     return db.schema
-
-    // query := &Query{
-    //     Schema: &Schema{
-    //         Name : name,
-    //     },
-    //     W: &Where{},
-    //     B: &Builder{},
-    //     sqlStr    : "",
-    //     queryType : DELETE,
-    //     DB        : db,
-    //     StdDB     : db.StdDB,
-    // }
-    // return query
 }
 
 func (db *DB) Migrator() *Migrator {

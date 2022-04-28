@@ -90,7 +90,7 @@ func (q *Query) Parameters(params map[string]string) *Query {
 
 // Alias Compile method
 func (q *Query) String() string {
-    return q.Compile()
+    return q.sqlStr
 }
 
 // Compile the SQL query and return it. Raplaces and parameters with their
