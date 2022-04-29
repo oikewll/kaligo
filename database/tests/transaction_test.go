@@ -2,24 +2,27 @@ package tests
 
 import (
     "testing"
+    "github.com/owner888/kaligo/logs"
+    "github.com/owner888/kaligo/database"
 )
 
 func TestTransaction(t *testing.T) {
-    //db.Transaction(func(tx *database.DB) error {
-        //// 在事务中执行一些 db 操作（从这里开始，您应该使用 'tx' 而不是 'db'）
-        //sqlStr := "insert into user(name, age, sex) values('test222', '30', '1')"
-        ////_, err = db.Exec(sqlStr)
-        //db.Query(sqlStr).Execute()
-        //if err != nil {
-            //t.Logf("%q: %s\n", err, sqlStr)
-            //// 返回任何错误都会回滚事务
-            //return err
-        //}
+    db.Transaction(func(tx *database.DB) error {
+        // 在事务中执行一些 db 操作（从这里开始，您应该使用 'tx' 而不是 'db'）
+        sqlStr := "insert into user(name, age, sex) values('test222', '30', '1')"
+        //_, err = db.Exec(sqlStr)
+        q, err := tx.Query(sqlStr).Execute()
+        if err != nil {
+            logs.Debugf("%q: %s\n", err, sqlStr)
+            // 返回任何错误都会回滚事务
+            return err
+        }
 
-        //t.Logf("RowsAffected = %d: %d\n", tx.RowsAffected, tx.LastInsertId)
-        //// 返回 nil 提交事务
-        //return nil
-    //})
+        logs.Debugf("RowsAffected = %d: %d\n", q.RowsAffected, q.LastInsertId)
+        
+        // 返回 nil 提交事务
+        return nil
+    })
 
 
     // Test Rollback and Rollback
