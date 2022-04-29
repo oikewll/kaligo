@@ -37,19 +37,62 @@ func TestQuery(t *testing.T) {
     // user.Save()
 
     var ages []int64
-    _, err := db.Query("SELECT `age` FROM user").Scan(&ages).Execute()
-    assert.Error(t, err)
-    //if q.Error != nil {
-        //t.Logf("q.Error = %v\n", q.Error)
-    //} else {
-        //t.Logf("jsonStr = %v\n", database.FormatJSON(ages))
-    //}
+    _, err := db.Query("SELECT `age` FROM `user`").Scan(&ages).Execute()
+    assert.NoError(t, err)
+    assert.NotNil(t, ages)
 }
 
-func TestUpdate(t *testing.T) {
-    q := db.Insert("keywords").Columns([]string{`word`, `creator`}).Values([]string{"电影网站", "1"}).OnDuplicateKeyUpdate(map[string]string{`creator`: "3"})
-    logs.Info(q)
+func TestQueryCount(t *testing.T) {
+    var count int64
+    _, err := db.Query("SELECT COUNT(*) FROM `user`").Scan(&count).Execute();
+    assert.NoError(t, err)
 }
+
+func TestQueryBind(t *testing.T) {
+    var user User
+    sqlStr := "SELECT `id`, `name`, `age` FROM `user` WHERE `id` = :id"
+    _, err := db.Query(sqlStr).Bind(":id", "1").Scan(&user).Execute()
+    assert.NoError(t, err)
+
+    var users []User
+    _, err = db.Query("SELECT `id`, `name`, `age`  FROM `user`").Scan(&users).Execute()
+    assert.NoError(t, err)
+
+    // logs.Debug(database.FormatJSON(users))
+}
+
+func TestQueryStringMap(t *testing.T) {
+    result := map[string]interface{}{}
+    _, err := db.Query("SELECT `name`, `age` FROM `user` WHERE `id` = :id").Bind("id", "1").Scan(&result).Execute()
+    assert.NoError(t, err)
+
+    // logs.Debug(database.FormatJSON(result))
+}
+
+func TestQuerySliceStringMap(t *testing.T) {
+    results := []map[string]interface{}{}
+    _, err := db.Select("id", "name", "age").From("user").Scan(&results).Execute()
+    assert.NoError(t, err)
+
+    logs.Debug(database.FormatJSON(results))
+}
+
+// func TestQueryJoin(t *testing.T) {
+//     // users := []map[string]interface{}{}
+//     users := []User{}
+//     _, err := db.Select("user.id", "user.name").From("user").
+//     Join("player", "LEFT").On("user.uid", "=", "player.uid").
+//     Where("player.room_id", "=", "10").
+//     Scan(&users).Execute()
+//     assert.NoError(t, err)
+//
+//     logs.Debug(database.FormatJSON(users))
+// }
+
+// func TestUpdate(t *testing.T) {
+//     q := db.Insert("keywords").Columns([]string{`word`, `creator`}).Values([]string{"电影网站", "1"}).OnDuplicateKeyUpdate(map[string]string{`creator`: "3"})
+//     logs.Info(q)
+// }
 
 func TestConfig(t *testing.T) {
     cfg := mysql.NewConfig()
