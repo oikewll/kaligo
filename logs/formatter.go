@@ -71,6 +71,7 @@ func (f *ConsoleFormatter) Printf(prefix string, level Level, format string, a .
     case LevelCritical:
         builder.WriteString(ansi.RedBold)
         builder.WriteString("🅧 CRITICAL")
+        builder.WriteString(ansi.Reset)
     }
     builder.WriteString(Seperator)
     if len(prefix) > 0 {
@@ -80,20 +81,19 @@ func (f *ConsoleFormatter) Printf(prefix string, level Level, format string, a .
         builder.WriteString(Seperator)
     }
     if fun, file, line, ok := runtime.Caller(StacktraceDepth); ok {
+        builder.WriteString(ansi.Green)
         if showFunction {
             builder.WriteString(fmt.Sprintf("[%v]", extractName(runtime.FuncForPC(fun).Name())))
             builder.WriteString(Seperator)
         }
         builder.WriteString(fmt.Sprintf("(%v:%v)", extractName(file), line))
         builder.WriteString(Seperator)
+        builder.WriteString(ansi.Reset)
     }
     if len(format) > 0 {
         builder.WriteString(fmt.Sprintf(format, a...))
     } else {
         builder.WriteString(fmt.Sprint(a...))
-    }
-    if level == LevelCritical {
-        builder.WriteString(ansi.Reset)
     }
     builder.WriteString(Terminator)
     return builder.String()
