@@ -2,6 +2,7 @@ package logs
 
 import (
     "fmt"
+    "runtime"
     "strconv"
     "strings"
     "time"
@@ -10,8 +11,10 @@ import (
 )
 
 var (
-    Seperator  = " "
-    Terminator = "\n"
+    Seperator       = " "
+    Terminator      = "\n"
+    showFunction    = false
+    StacktraceDepth = 4
 )
 
 // Formatter 格式化日志输出
@@ -76,6 +79,14 @@ func (f *ConsoleFormatter) Printf(prefix string, level Level, format string, a .
         builder.WriteString("]")
         builder.WriteString(Seperator)
     }
+    if fun, file, line, ok := runtime.Caller(StacktraceDepth); ok {
+        if showFunction {
+            builder.WriteString(fmt.Sprintf("[%v]", extractName(runtime.FuncForPC(fun).Name())))
+            builder.WriteString(Seperator)
+        }
+        builder.WriteString(fmt.Sprintf("(%v:%v)", extractName(file), line))
+        builder.WriteString(Seperator)
+    }
     if len(format) > 0 {
         builder.WriteString(fmt.Sprintf(format, a...))
     } else {
@@ -100,4 +111,9 @@ func formatTime(t time.Time) string {
         builder.WriteString(v)
     }
     return builder.String()
+}
+
+func extractName(s string) string {
+    parts := strings.Split(s, "/")
+    return parts[len(parts)-1]
 }
