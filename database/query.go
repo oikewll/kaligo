@@ -128,7 +128,8 @@ func (q *Query) Compile() string {
     }
 
     // 不需要了, 一个Query()一个对象，db.query = &Query{} 以后之前那个就会被回收掉了
-    q.Reset()
+    // 不能 reset，否则下面 Execute 方法找不到值了
+    // q.Reset()
 
     return sqlStr
 }
@@ -199,6 +200,44 @@ func (q *Query) Execute() (*Query, error) {
         }
         defer rows.Close()
         Scan(rows, q)
+
+    } else if q.queryType == INSERT {
+        var stmtIns *sql.Stmt
+        logs.Info("INSERT === ", sqlStr)
+        // Prepare statement for inserting data
+        stmtIns, err = q.StdDB.Prepare(sqlStr)
+        if err != nil {
+            logs.Panic(err.Error())
+        }
+        logs.Info(stmtIns)
+        defer stmtIns.Close()
+
+        for _, group := range q.I.values {
+            var args []any
+            for k, v := range group {
+                if q.parameters[v] != "" {
+                    // Use the parameter value
+                    group[k] = q.parameters[v]
+                }
+
+                column := q.I.columns[k]
+                // Is the column need encrypt ???
+                if cryptFields, ok := q.cryptFields[q.I.table]; ok && q.Dialector.Name() == "mysql" && q.cryptKey != "" && InSlice(column, &cryptFields) {
+                    // group[k] = fmt.Sprintf("AES_ENCRYPT(%s, \"%s\")", q.Quote(v), q.cryptKey)
+                    args = append(args, fmt.Sprintf("AES_ENCRYPT(%s, \"%s\")", v, q.cryptKey))
+                } else {
+                    // group[k] = q.Quote(v)
+                    args = append(args, v)
+                }
+            }
+
+            // logs.Info(args)
+            _, err = stmtIns.Exec(args...)
+            if err != nil {
+                logs.Panic(err.Error())
+            }
+        }
+
     } else {
         var rs sql.Result
         rs, err = q.Exec(sqlStr)

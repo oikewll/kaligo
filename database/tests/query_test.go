@@ -4,7 +4,7 @@ import (
     "os"
     "testing"
 
-    "github.com/owner888/kaligo/logs"
+    // "github.com/owner888/kaligo/logs"
     "github.com/owner888/kaligo/database"
     mysql "github.com/owner888/kaligo/database/driver/mysql"
     "github.com/stretchr/testify/assert"
@@ -74,7 +74,7 @@ func TestQuerySliceStringMap(t *testing.T) {
     _, err := db.Select("id", "name", "age").From("user").Scan(&results).Execute()
     assert.NoError(t, err)
 
-    logs.Debug(database.FormatJSON(results))
+    // logs.Debug(database.FormatJSON(results))
 }
 
 // func TestQueryJoin(t *testing.T) {
@@ -87,11 +87,6 @@ func TestQuerySliceStringMap(t *testing.T) {
 //     assert.NoError(t, err)
 //
 //     logs.Debug(database.FormatJSON(users))
-// }
-
-// func TestUpdate(t *testing.T) {
-//     q := db.Insert("keywords").Columns([]string{`word`, `creator`}).Values([]string{"电影网站", "1"}).OnDuplicateKeyUpdate(map[string]string{`creator`: "3"})
-//     logs.Info(q)
 // }
 
 func TestConfig(t *testing.T) {

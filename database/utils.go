@@ -537,29 +537,29 @@ func LongestStr(values []string) (value string, index int) {
     return value, index
 }
 
-//// AddSlashes is ...
-//// 转义：引号、双引号添加反斜杠
-//func (db *DB) AddSlashes(val string) string {
-//val = strings.Replace(val, "\"", "\\\"", -1)
-//val = strings.Replace(val, "'", "\\'", -1)
-//return val
-//}
-
-//// StripSlashes is ...
-//// 反转义：引号、双引号去除反斜杠
-//func (db *DB) StripSlashes(val string) string {
-//val = strings.Replace(val, "\\\"", "\"", -1)
-//val = strings.Replace(val, "\\'", "'", -1)
-//return val
-//}
-
-//// GetSafeParam is ...
-//// 防止XSS跨站攻击
-//func (db *DB) GetSafeParam(val string) string {
-//val = strings.Replace(val, "&", "&amp;", -1)
-//val = strings.Replace(val, "<", "&lt;", -1)
-//val = strings.Replace(val, ">", "&gt;", -1)
-//val = strings.Replace(val, "\"", "&quot;", -1)
-//val = strings.Replace(val, "'", "&#039;", -1)
-//return val
-//}
+// // AddSlashes is ...
+// // 转义：引号、双引号添加反斜杠
+// func (db *DB) AddSlashes(val string) string {
+//     val = strings.Replace(val, "\"", "\\\"", -1)
+//     val = strings.Replace(val, "'", "\\'", -1)
+//     return val
+// }
+//
+// // StripSlashes is ...
+// // 反转义：引号、双引号去除反斜杠
+// func (db *DB) StripSlashes(val string) string {
+//     val = strings.Replace(val, "\\\"", "\"", -1)
+//     val = strings.Replace(val, "\\'", "'", -1)
+//     return val
+// }
+//
+// // GetSafeParam is ...
+// // 防止XSS跨站攻击
+// func (db *DB) GetSafeParam(val string) string {
+//     val = strings.Replace(val, "&", "&amp;", -1)
+//     val = strings.Replace(val, "<", "&lt;", -1)
+//     val = strings.Replace(val, ">", "&gt;", -1)
+//     val = strings.Replace(val, "\"", "&quot;", -1)
+//     val = strings.Replace(val, "'", "&#039;", -1)
+//     return val
+// }

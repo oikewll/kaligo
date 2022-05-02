@@ -17,6 +17,7 @@ type Insert struct {
 // Columns Set the columns that will be inserted.
 func (q *Query) Columns(columns []string) *Query {
     q.I.columns = append(q.I.columns, columns...) // append和后面的...用法，相当于 php里面的array_meage函数
+
     return q
 }
 
@@ -32,6 +33,7 @@ func (q *Query) Values(values any) *Query {
     default:
         logs.Error("Insert Values: Unknow Type")
     }
+
     return q
 }
 
@@ -61,6 +63,7 @@ func (q *Query) SetValues(pairs map[string]string) *Query {
     }
     q.Columns(keys)
     q.Values(vals)
+
     return q
 }
 
@@ -70,12 +73,14 @@ func (q *Query) SubSelect(query *Query) *Query {
         logs.Panic("Only SELECT queries can be combined with INSERT queries")
     }
     q.I.subQuery = query.sqlStr
+
     return q
 }
 
 // InsertCompile Compile the SQL query and return it.
-func (q *Query) InsertCompile() string {
-    var sqlStr string
+func (q *Query) InsertCompile() (sqlStr string) {
+    var placeholders []string
+
     table := q.I.table
     columns := q.I.columns
 
@@ -84,37 +89,40 @@ func (q *Query) InsertCompile() string {
 
     if len(columns) != 0 {
         columns = arrayUnique(columns)
-        //fmt.Printf("table = %v; columns = %v; cryptFields = %v\n", table, FormatJSON(columns), q.cryptFields)
-        // Add the column names
         for k, v := range columns {
             columns[k] = q.QuoteIdentifier(v)
+            placeholders = append(placeholders, "?")
         }
         sqlStr += " (" + strings.Join(columns, ", ") + ")"
     }
 
+    // logs.Debugf("table = %v; columns = %v; cryptFields = %v\n", table, FormatJSON(columns), q.cryptFields)
+
+    // 子查询为空
     if q.I.subQuery == "" {
-        var groups []string
-        for _, group := range q.I.values {
-            for k, v := range group {
-                if q.parameters[v] != "" {
-                    // Use the parameter value
-                    group[k] = q.parameters[v]
-                }
-
-                column := q.I.columns[k]
-                // Is the column need encrypt ???
-                if cryptFields, ok := q.cryptFields[table]; ok && q.Dialector.Name() == "mysql" && q.cryptKey != "" && InSlice(column, &cryptFields) {
-                    group[k] = fmt.Sprintf("AES_ENCRYPT(%s, \"%s\")", q.Quote(v), q.cryptKey)
-                } else {
-                    group[k] = q.Quote(v)
-                }
-            }
-
-            groups = append(groups, "("+strings.Join(group, ", ")+")")
-        }
+        // var groups []string
+        // for _, group := range q.I.values {
+        //     for k, v := range group {
+        //         if q.parameters[v] != "" {
+        //             // Use the parameter value
+        //             group[k] = q.parameters[v]
+        //         }
+        //
+        //         column := q.I.columns[k]
+        //         // Is the column need encrypt ???
+        //         if cryptFields, ok := q.cryptFields[table]; ok && q.Dialector.Name() == "mysql" && q.cryptKey != "" && InSlice(column, &cryptFields) {
+        //             group[k] = fmt.Sprintf("AES_ENCRYPT(%s, \"%s\")", q.Quote(v), q.cryptKey)
+        //         } else {
+        //             group[k] = q.Quote(v)
+        //         }
+        //     }
+        //
+        //     groups = append(groups, "("+strings.Join(group, ", ")+")")
+        // }
 
         // Add the values
-        sqlStr += " VALUES " + strings.Join(groups, ", ")
+        // sqlStr += " VALUES " + strings.Join(groups, ", ")
+        sqlStr += " VALUES ( " + strings.Join(placeholders, ", ") + " )"
     } else {
         // Add the sub-query
         // INSERT INTO table1 ( `column1` ) SELECT `col1` FROM `table2`
@@ -131,7 +139,9 @@ func (q *Query) InsertCompile() string {
         }
         sqlStr += " ON DUPLICATE KEY UPDATE " + strings.Join(updates, ", ")
     }
-    // fmt.Printf("InsertCompile === %v\n", sqlStr)
+
+    // logs.Info("InsertCompile === ", sqlStr)
+
     q.sqlStr = sqlStr
 
     return sqlStr

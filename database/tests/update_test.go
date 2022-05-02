@@ -16,3 +16,4 @@ func TestUpdate(t *testing.T) {
     logs.Debug("sqlStr = ", sqlStr)
 }
 
+
