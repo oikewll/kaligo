@@ -7,6 +7,7 @@ import (
     "reflect"
     "regexp"
     "strings"
+    "time"
 )
 
 // Query is the struct for MySQL DATE type
@@ -150,9 +151,9 @@ func (q *Query) Execute() (*Query, error) {
         }
     }()
 
+    begin := time.Now()
     // Compile the SQL query
     sqlStr := q.Compile()
-    logs.Debug(sqlStr)
 
     // make sure we have a SQL type to work with
     if q.queryType == 0 && len(sqlStr) >= 11 {
@@ -267,8 +268,14 @@ func (q *Query) Execute() (*Query, error) {
         }
     }
 
+<<<<<<< HEAD
     // 不需要了, 一个Query()一个对象，db.query = &Query{} 以后之前那个就会被回收掉了
     // q.Reset()
+=======
+    logs.Trace(q.DB, begin, func() (sql string, rowsAffected int64) {
+        return sqlStr, q.RowsAffected
+    }, q.Error)
+>>>>>>> bbbd26a7de0bd2ad0855f98f9517f5846712de0c
 
     // Cache the result if needed
     // if  cacheObj != nil && (q.cacheAll || result.count() != 0) {
