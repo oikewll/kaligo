@@ -4,6 +4,7 @@ import (
     "errors"
     "time"
 
+    "github.com/owner888/kaligo/config"
     klogs "github.com/owner888/kaligo/logs"
 )
 
@@ -17,7 +18,7 @@ type logger struct {
 // logs 默认的日志输出
 var logs = &logger{
     klogs.New("DB", klogs.LevelDefault, nil),
-    200 * time.Millisecond,
+    time.Duration(config.Float64("database.mysql.log_slow_time", 200)) * 1000 * time.Millisecond,
     true,
 }
 
