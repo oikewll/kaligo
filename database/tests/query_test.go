@@ -17,10 +17,12 @@ func TestMain(m *testing.M) {
     // db, err := database.Open(sqlite.Open("./test.db"))
     db, _ = database.Open(mysql.Open("root:root@tcp(127.0.0.1:3306)/test?charset=utf8mb4"))
 
+    // 执行增删改查
     code := m.Run()
 
     // 结束前做数据清理工作
     // ...
+
     os.Exit(code)
 }
 

@@ -37,22 +37,6 @@ func (q *Query) Values(values any) *Query {
     return q
 }
 
-// ON DUPLICATE KEY UPDATE
-func (q *Query) OnDuplicateKeyUpdate(updates any) *Query {
-    switch vals := updates.(type) {
-    case map[string]string:
-        q.I.updates = append(q.I.updates, vals)
-    case []map[string]string:
-        for _, v := range vals {
-            q.I.updates = append(q.I.updates, v)
-        }
-    default:
-        logs.Error("Insert OnDuplicateKeyUpdate: Unknow Type")
-    }
-
-    return q
-}
-
 // SetValues is a warpper function for calling Columns() and Values().
 func (q *Query) SetValues(pairs map[string]string) *Query {
     var keys []string
@@ -77,11 +61,27 @@ func (q *Query) SubSelect(query *Query) *Query {
     return q
 }
 
+// ON DUPLICATE KEY UPDATE
+func (q *Query) OnDuplicateKeyUpdate(updates any) *Query {
+    switch vals := updates.(type) {
+    case map[string]string:
+        q.I.updates = append(q.I.updates, vals)
+    case []map[string]string:
+        for _, v := range vals {
+            q.I.updates = append(q.I.updates, v)
+        }
+    default:
+        logs.Error("Insert OnDuplicateKeyUpdate: Unknow Type")
+    }
+
+    return q
+}
+
 // InsertCompile Compile the SQL query and return it.
 func (q *Query) InsertCompile() (sqlStr string) {
     var placeholders []string
 
-    table := q.I.table
+    table   := q.I.table
     columns := q.I.columns
 
     // Start and update query
@@ -91,7 +91,13 @@ func (q *Query) InsertCompile() (sqlStr string) {
         columns = arrayUnique(columns)
         for k, v := range columns {
             columns[k] = q.QuoteIdentifier(v)
-            placeholders = append(placeholders, "?")
+
+            // Is the column need encrypt ???
+            if cryptFields, ok := q.cryptFields[table]; ok && q.Dialector.Name() == "mysql" && q.cryptKey != "" && InSlice(v, &cryptFields) {
+                placeholders = append(placeholders, "AES_ENCRYPT( ?, ? )")
+            } else {
+                placeholders = append(placeholders, "?")
+            }
         }
         sqlStr += " (" + strings.Join(columns, ", ") + ")"
     }

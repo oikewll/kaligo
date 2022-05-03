@@ -463,6 +463,19 @@ func InSlice(a string, list *[]string) bool {
     return false
 }
 
+func arrayUnique(arr []string) []string {
+    size := len(arr)
+    result := make([]string, 0, size)
+    temp := map[string]struct{}{}
+    for i := 0; i < size; i++ {
+        if _, ok := temp[arr[i]]; ok != true {
+            temp[arr[i]] = struct{}{}
+            result = append(result, arr[i])
+        }
+    }
+    return result
+}
+
 // IsNumeric like php isNumeric()
 func IsNumeric(s string) bool {
     _, err := strconv.ParseFloat(s, 64)

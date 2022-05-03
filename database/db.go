@@ -58,28 +58,18 @@ const (
 )
 
 type Config struct {
-    Name        string // Instance name
-    tablePrefix string
-    cryptKey    string
-    cryptFields map[string][]string
-
-    Dialector          // Dialector database dialector
-    StdDB     *sql.DB  // Connection
-    initCmds  []string // SQL commands/queries executed after connect
-
-    timeout time.Duration // Timeout for connect SetConnMaxLifetime(timeout)
-    lastUse time.Time     // The last use time
-
-    debug        bool // Debug logging. You may change it at any time.
-    logSlowQuery bool // 是否记录慢查询
-    logSlowTime  int  // 慢查询时长
-
-    queryCount int // 执行过多少条SQL
-
-    // NowFunc the function to be used when creating a new timestamp
-    NowFunc func() time.Time
-
-    cacheStore *sync.Map
+    Name        string                  // 实例名称
+    tablePrefix string                  // 统一添加的表前缀
+    cryptKey    string                  // 加密KEY
+    cryptFields map[string][]string     // 加密的表字段
+    Dialector                           // Dialector database dialector
+    StdDB       *sql.DB                 // Connection
+    initCmds    []string                // SQL commands/queries executed after connect
+    debug        bool                   // Debug logging. You may change it at any time.
+    logSlowTime  int                    // 记录慢查询时间，单位：秒 (0 不记录)
+    queryCount int                      // 执行过多少条 SQL
+    NowFunc func() time.Time            // 生成当前时间
+    cacheStore *sync.Map                // 用于缓存当前 SQL 结果集
 }
 
 // DB is the struct for MySQL connection handler
@@ -95,12 +85,13 @@ type DB struct {
 // Open initialize db session based on dialector
 // (读+写)连接数据库+选择数据库
 func Open(dialector Dialector) (db *DB, err error) {
-    cfg := &Config{}
-    db = &DB{Config: cfg, InTransaction: false}
 
-    cfg.tablePrefix = config.String("database.mysql.table_prefix")
-    cfg.cryptKey    = config.String("database.mysql.crypt_key")
-    cfg.cryptFields = config.StringMapStringSlice("database.mysql.crypt_fields")
+    db = &DB{Config: &Config{
+        tablePrefix : config.String("database.mysql.table_prefix"),
+        logSlowTime : config.Int("database.mysql.log_slow_time"),  // 记录慢查询时间，单位：秒 (0 不记录) 
+        cryptKey    : config.String("database.mysql.crypt_key"),
+        cryptFields : config.StringMapStringSlice("database.mysql.crypt_fields"),
+    }, InTransaction: false}
 
     if db.NowFunc == nil {
         db.NowFunc = func() time.Time { return time.Now().Local() }

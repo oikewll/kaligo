@@ -22,7 +22,7 @@ func TestMigratorListDatabases(t *testing.T) {
 func TestMigratorListTables(t *testing.T) {
     tables, err := db.Migrator().ListTables("user")
     assert.NoError(t, err)
-    assert.Equal(t, tables, []string{"user"})
+    assert.NotNil(t, tables)
     // logs.Debug(database.FormatJSON(tables))
 }
 

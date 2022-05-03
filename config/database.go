@@ -29,7 +29,7 @@ package config
 //             "max_life_seconds":     5 * 60,
 //             // 慢查询日志
 //             "log_slow_query": true,
-//             "log_slow_time":  1, // 记录慢查询时间，单位：秒
+//             "log_slow_time":  1, // 记录慢查询时间，单位：秒，0 则不记录
 //             "init_cmds": []string{
 //                 "SET NAMES utf8mb4",
 //             },

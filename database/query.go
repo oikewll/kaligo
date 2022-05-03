@@ -17,7 +17,6 @@ type Query struct {
     Error     error // Global error
     Context   context.Context
     Schema   *Schema
-    // Migrator *Migrator
 
     RowsAffected int64 // For select、update、insert
     LastInsertId int64 // Only for insert
@@ -31,15 +30,15 @@ type Query struct {
     D *Delete
     //R *Result
 
-    sqlStr    string    // SQL statement
-    queryType QueryType // Query type
+    sqlStr    string             // SQL statement
+    queryType QueryType          // Query type
 
-    Dest         any           // var user User、var users []User、var result map[string]any、var results []map[string]any、var ages []int64
-    Model        any           // Object：&User{}
-    ReflectValue reflect.Value // reflect.ValueOf(Dest)
-    lifeTime     int           // Cache lifetime
-    cacheKey     string        // Cache key
-    cacheAll     bool          // boolean Cache all results
+    Dest         any             // var user User、var users []User、var result map[string]any、var results []map[string]any、var ages []int64
+    Model        any             // Object：&User{}
+    ReflectValue reflect.Value   // reflect.ValueOf(Dest)
+    lifeTime     int             // Cache lifetime
+    cacheKey     string          // Cache key
+    cacheAll     bool            // boolean Cache all results
 
     joinObjs   []*Join           // join objects
     lastJoin   *Join             // last join statement
@@ -88,6 +87,18 @@ func (q *Query) Parameters(params map[string]string) *Query {
     return q
 }
 
+// SetCryptKey Set crypt key.
+func (q *Query) SetCryptKey(cryptKey string) *Query {
+    q.cryptKey = cryptKey
+    return q
+}
+
+// SetCryptFields Set crypt fields.
+func (q *Query) SetCryptFields(cryptFields map[string][]string) *Query {
+    q.cryptFields = cryptFields
+    return q
+}
+
 // Alias Compile method
 func (q *Query) String() string {
     return q.sqlStr
@@ -126,10 +137,6 @@ func (q *Query) Compile() string {
         // Replace the values in the SQL
         sqlStr = Strtr(sqlStr, values)
     }
-
-    // 不需要了, 一个Query()一个对象，db.query = &Query{} 以后之前那个就会被回收掉了
-    // 不能 reset，否则下面 Execute 方法找不到值了
-    // q.Reset()
 
     return sqlStr
 }
@@ -209,35 +216,36 @@ func (q *Query) Execute() (*Query, error) {
         if err != nil {
             logs.Panic(err.Error())
         }
-        logs.Info(stmtIns)
+        // logs.Info(stmtIns)
         defer stmtIns.Close()
 
-        for _, group := range q.I.values {
-            var args []any
-            for k, v := range group {
-                if q.parameters[v] != "" {
-                    // Use the parameter value
-                    group[k] = q.parameters[v]
-                }
+        var args []any
 
+        for _, group := range q.I.values {
+            for k, v := range group {
                 column := q.I.columns[k]
                 // Is the column need encrypt ???
-                if cryptFields, ok := q.cryptFields[q.I.table]; ok && q.Dialector.Name() == "mysql" && q.cryptKey != "" && InSlice(column, &cryptFields) {
-                    // group[k] = fmt.Sprintf("AES_ENCRYPT(%s, \"%s\")", q.Quote(v), q.cryptKey)
-                    args = append(args, fmt.Sprintf("AES_ENCRYPT(%s, \"%s\")", v, q.cryptKey))
+                if cryptFields, ok := q.cryptFields[q.I.table]; ok && 
+                q.Dialector.Name() == "mysql" && 
+                q.cryptKey != "" && 
+                InSlice(column, &cryptFields) {
+                    args = append(args, v, q.cryptKey)
                 } else {
-                    // group[k] = q.Quote(v)
                     args = append(args, v)
                 }
             }
-
-            // logs.Info(args)
-            _, err = stmtIns.Exec(args...)
-            if err != nil {
-                logs.Panic(err.Error())
-            }
         }
 
+        // logs.Info(args)
+        _, err = stmtIns.Exec(args...)
+        // logs.Debug(stmt.SQL.String())
+
+        // 因为 Query{} 是和 Select 共用的，所以要清一次
+        q.Reset()
+
+        if err != nil {
+            logs.Panic(err.Error())
+        }
     } else {
         var rs sql.Result
         rs, err = q.Exec(sqlStr)
@@ -259,11 +267,14 @@ func (q *Query) Execute() (*Query, error) {
         }
     }
 
+    // 不需要了, 一个Query()一个对象，db.query = &Query{} 以后之前那个就会被回收掉了
+    // q.Reset()
+
     // Cache the result if needed
     // if  cacheObj != nil && (q.cacheAll || result.count() != 0) {
     //     cacheObj.setExpiration(q.lifeTime).SetContents(result.asArray()).Set()
     // }
-    //
+
     // 记录日志
     // db.Logger.Trace(stmt.Context, curTime, func() (string, int64) {
     //     return db.Dialector.Explain(stmt.SQL.String(), stmt.Vars...), db.RowsAffected
@@ -359,6 +370,8 @@ func (q *Query) Reset() *Query {
     q.lifeTime = 0
     q.cacheKey = ""
     q.cacheAll = false
+    q.cryptKey = ""
+    q.cryptFields = nil
 
     // 这里不需要清除，由调用的去清除，SELECT、INSERT、UPDATE、DELETE这些reset去清除
     //q.joinObjs   = nil
