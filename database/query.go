@@ -211,13 +211,11 @@ func (q *Query) Execute() (*Query, error) {
 
     } else if q.queryType == INSERT {
         var stmtIns *sql.Stmt
-        logs.Info("INSERT === ", sqlStr)
         // Prepare statement for inserting data
         stmtIns, err = q.StdDB.Prepare(sqlStr)
         if err != nil {
             logs.Panic(err.Error())
         }
-        // logs.Info(stmtIns)
         defer stmtIns.Close()
 
         var args []any
