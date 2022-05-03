@@ -114,6 +114,9 @@ func (c *Context) FullPath() string {
 
 // ClientIP returns a client ip. returns 127.0.0.1 if request from local machine
 func (c *Context) ClientIP() (ip string) {
+    if c.Request == nil {
+        return ""
+    }
     remoteAddr := c.requestHeader("Remote_addr")
     if remoteAddr == "" {
         remoteAddr = c.Request.RemoteAddr
@@ -186,7 +189,10 @@ func (c *Context) Data(code int, contentType string, data []byte) {
 }
 
 func (c *Context) requestHeader(key string) string {
-    return c.Request.Header.Get(key)
+    if c.Request != nil {
+        return c.Request.Header.Get(key)
+    }
+    return ""
 }
 
 // """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""

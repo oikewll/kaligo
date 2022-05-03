@@ -43,6 +43,8 @@ type Mux struct {
     notFoundCount uint32
 }
 
+var DefaultHandlers = []HandlerFunc{}
+
 // 只会调用一次
 func NewRouter() *Mux {
     mux := &Mux{}
@@ -50,6 +52,7 @@ func NewRouter() *Mux {
     if err != nil {
         panic(err)
     }
+    mux.Handlers = DefaultHandlers
     mux.Cache = cache
     mux.Timer = NewTimer(mux)
     mux.pool.New = func() any {
@@ -259,8 +262,7 @@ func (a *Mux) controllerMethodCall(controllerType reflect.Type, m string, w http
     ctx.ResponseWriter = w
     ctx.Request = r
     ctx.Params = params
-    ctx.handlers = a.Handlers
-    ctx.handlers = append(ctx.handlers, a.ControllerHandler(controllerType, m, params))
+    ctx.handlers = append(a.Handlers, a.ControllerHandler(controllerType, m, params))
     ctx.Next()
     if err != nil && w != nil {
         http.NotFound(w, r)
