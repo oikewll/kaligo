@@ -23,11 +23,14 @@ import (
 // 假如 Router 是一个第三方库接口，如果第三方库新版动了这个接口，我们发现不了，编译也不报错，只有用的时候才报错，但写了这句，就编译不过了
 var _ Router = &Mux{}
 
+// HandlerFunc 中间件
+type HandlerFunc func(*Context)
+
 // var muxCounter uint32
 
 // Mux is use for add Route struct and StaticRoute struct
 type Mux struct {
-    // Handler       http.Handler // http.ServeMux
+    Handlers     []HandlerFunc // 中间件
     routes       []*Route
     staticRoutes []*StaticRoute
     DB           *database.DB
@@ -256,22 +259,31 @@ func (a *Mux) controllerMethodCall(controllerType reflect.Type, m string, w http
     ctx.ResponseWriter = w
     ctx.Request = r
     ctx.Params = params
-    ret, err = runController(controllerType, m, ctx, params)
+    ctx.handlers = a.Handlers
+    ctx.handlers = append(ctx.handlers, a.ControllerHandler(controllerType, m, params))
+    ctx.Next()
     if err != nil && w != nil {
         http.NotFound(w, r)
     }
     return ret, err
 }
 
+func (a *Mux) ControllerHandler(controllerType reflect.Type, m string, params Params) HandlerFunc {
+    return func(ctx *Context) {
+        runController(controllerType, m, ctx, params)
+    }
+}
+
 // Router 接口实现
 
 // Use 添加一个中间件
-func (a *Mux) Use(middlewares ...func(http.Handler) http.Handler) {
-
+func (a *Mux) Use(middlewares ...HandlerFunc) {
+    a.Handlers = append(a.Handlers, middlewares...)
 }
 
 // With adds inline middlewares for an endpoint handler.
-func (a *Mux) With(middlewares ...func(http.Handler) http.Handler) Router {
+func (a *Mux) With(middlewares ...HandlerFunc) Router {
+    a.Use(middlewares...)
     return a
 }
 

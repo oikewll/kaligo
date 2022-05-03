@@ -5,6 +5,7 @@ import (
     "errors"
     "io"
     "io/ioutil"
+    "math"
     "mime/multipart"
     "net/http"
     "net/url"
@@ -24,6 +25,9 @@ import (
 //     Msg  string  `json:"msg"`
 //     Data any     `json:"data"`
 // }
+
+// abortIndex represents a typical value used in abort functions.
+const abortIndex int8 = math.MaxInt8 >> 1
 
 // Context is use for ServeHTTP goroutine
 type Context struct {
@@ -57,6 +61,9 @@ type Context struct {
     // SameSite allows a server to define a cookie attribute making it impossible for
     // the browser to send this cookie along with cross-site requests.
     sameSite http.SameSite
+
+    index    int8
+    handlers []HandlerFunc
 }
 
 var MaxMultipartMemory int64 = 32 << 20 // 32 MiB
@@ -68,6 +75,24 @@ func (c *Context) Reset() {
     c.QueryCache = nil
     c.FormCache = nil
     c.sameSite = 0
+    c.index = -1
+    c.handlers = nil
+}
+
+func (c *Context) Next() {
+    c.index++
+    for c.index < int8(len(c.handlers)) {
+        c.handlers[c.index](c)
+        c.index++
+    }
+}
+
+func (c *Context) IsAborted() bool {
+    return c.index >= abortIndex
+}
+
+func (c *Context) Abort() {
+    c.index = abortIndex
 }
 
 // CallController 调用其他接口（非异步）
