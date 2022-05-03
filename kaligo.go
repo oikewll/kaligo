@@ -12,9 +12,9 @@ type Router interface {
 
     AddStaticRoute(prefix, staticDir string)
 
-    Use(middlewares ...func(http.Handler) http.Handler)
+    Use(middlewares ...HandlerFunc)
 
-    With(middlewares ...func(http.Handler) http.Handler) Router
+    With(middlewares ...HandlerFunc) Router
 }
 
 /* vim: set expandtab: */
