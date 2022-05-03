@@ -15,9 +15,16 @@ import (
 type Query struct {
     *DB
 
+<<<<<<< HEAD
     Error     error // Global error
     Context   context.Context
     Schema   *Schema
+=======
+    Error   error // Global error
+    Context context.Context
+    Schema  *Schema
+    // Migrator *Migrator
+>>>>>>> bbbd26a7de0bd2ad0855f98f9517f5846712de0c
 
     RowsAffected int64 // For select、update、insert
     LastInsertId int64 // Only for insert
@@ -268,6 +275,16 @@ func (q *Query) Execute() (*Query, error) {
         }
     }
 
+<<<<<<< HEAD
+    // 不需要了, 一个Query()一个对象，db.query = &Query{} 以后之前那个就会被回收掉了
+    // q.Reset()
+=======
+    logs.Trace(q.DB, begin, func() (sql string, rowsAffected int64) {
+        return sqlStr, q.RowsAffected
+    }, q.Error)
+>>>>>>> bbbd26a7de0bd2ad0855f98f9517f5846712de0c
+
+    // Cache the result if needed
     // if  cacheObj != nil && (q.cacheAll || result.count() != 0) {
     //     cacheObj.setExpiration(q.lifeTime).SetContents(result.asArray()).Set()
     // }
@@ -276,11 +293,6 @@ func (q *Query) Execute() (*Query, error) {
     // db.Logger.Trace(stmt.Context, curTime, func() (string, int64) {
     //     return db.Dialector.Explain(stmt.SQL.String(), stmt.Vars...), db.RowsAffected
     // }, db.Error)
-    logs.Trace(q.DB, begin, func() (sql string, rowsAffected int64) {
-        return sqlStr, q.RowsAffected
-    }, q.Error)
-
-    // Cache the result if needed
 
     return q, nil
 }
