@@ -7,6 +7,7 @@ import (
     "reflect"
     "regexp"
     "strings"
+    "time"
 )
 
 // Query is the struct for MySQL DATE type
@@ -14,9 +15,9 @@ import (
 type Query struct {
     *DB
 
-    Error     error // Global error
-    Context   context.Context
-    Schema   *Schema
+    Error   error // Global error
+    Context context.Context
+    Schema  *Schema
     // Migrator *Migrator
 
     RowsAffected int64 // For select、update、insert
@@ -143,9 +144,9 @@ func (q *Query) Execute() (*Query, error) {
         }
     }()
 
+    begin := time.Now()
     // Compile the SQL query
     sqlStr := q.Compile()
-    logs.Debug(sqlStr)
 
     // make sure we have a SQL type to work with
     if q.queryType == 0 && len(sqlStr) >= 11 {
@@ -258,6 +259,10 @@ func (q *Query) Execute() (*Query, error) {
             return q, err
         }
     }
+
+    logs.Trace(q.DB, begin, func() (sql string, rowsAffected int64) {
+        return sqlStr, q.RowsAffected
+    }, q.Error)
 
     // Cache the result if needed
     // if  cacheObj != nil && (q.cacheAll || result.count() != 0) {
