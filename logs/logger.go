@@ -5,7 +5,6 @@ import (
     "fmt"
     "os"
     "strings"
-    "time"
 )
 
 // ErrRecordNotFound record not found error
@@ -50,7 +49,6 @@ type Logger interface {
     Criticalf(string, ...any)
     Panic(msg string, data ...any)
     Fatal(msg string, data ...any)
-    Trace(begin time.Time, fc func() (sql string, rowsAffected int64), err error)
 }
 
 type Log struct {
@@ -162,10 +160,6 @@ func (l *logger) getFormatter() Formatter {
         return l.parent.(*logger).getFormatter()
     }
     return l.formatter
-}
-
-func (l *logger) Trace(begin time.Time, fc func() (sql string, rowsAffected int64), err error) {
-
 }
 
 // ====== Public 工具类方法 ======
