@@ -212,6 +212,10 @@ func (q *Query) Execute() (*Query, error) {
     var stmt *sql.Stmt
 
     if q.queryType == SELECT {
+        // testing
+        // sqlStr = "SELECT `age` FROM `user` WHERE `username` = ? And `password` = ?"
+        // Vars = []any{"test/*", "*/"}
+
         stmt, err = q.StdDB.Prepare(sqlStr)
 
         var rows *sql.Rows
