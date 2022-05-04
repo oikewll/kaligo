@@ -52,6 +52,18 @@ func TestQuery(t *testing.T) {
     assert.NotNil(t, ages)
 }
 
+func TestSelectDecrypt(t *testing.T) {
+    var ages []int64
+    _, err := db.Select("age").From("user").Where("id", "=", "1").
+        SetCryptKey("aaa").
+        SetCryptFields(map[string][]string{
+            "user": {"name", "age"},
+        }).
+        Scan(&ages).Execute()
+    assert.NoError(t, err)
+    assert.NotNil(t, ages)
+}
+
 // func TestQueryCount(t *testing.T) {
 //     var count int64
 //     _, err := db.Query("SELECT COUNT(*) FROM `user`").Scan(&count).Execute();
@@ -101,10 +113,10 @@ func TestQuery(t *testing.T) {
 
 func TestConfig(t *testing.T) {
     cfg := mysql.NewConfig()
-    cfg.Addr    = "localhost:3308"
-    cfg.DBName  = "test"
-    cfg.User    = "root"
-    cfg.Passwd  = "pw"
+    cfg.Addr = "localhost:3308"
+    cfg.DBName = "test"
+    cfg.User = "root"
+    cfg.Passwd = "pw"
     dsn := cfg.FormatDSN()
     assert.Equal(t, "root:pw@tcp(localhost:3308)/test", dsn)
 }
