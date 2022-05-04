@@ -106,7 +106,7 @@ func (q *Query) String() string {
 }
 
 // Compile the SQL query and return it. Raplaces and parameters with their
-func (q *Query) Compile() string {
+func (q *Query) Compile(vars *[]any) string {
     var sqlStr string
 
     switch q.queryType {
@@ -133,7 +133,12 @@ func (q *Query) Compile() string {
             if k[0:1] != ":" {
                 k = ":" + k
             }
-            values[k] = q.Quote(v)
+            if vars != nil {
+                values[k] = "?"
+                *vars = append(*vars, v)
+            } else {
+                values[k] = q.Quote(v)
+            }
         }
         // Replace the values in the SQL
         sqlStr = Strtr(sqlStr, values)
@@ -145,8 +150,8 @@ func (q *Query) Compile() string {
 // Execute the current query on the given database.
 func (q *Query) Execute() (*Query, error) {
     var err error
-    var sqlStr string   // Compile SQL
-    var Vars []any      // Prepare(sqlstr).Exec(Vars...)    // Bind(":id", "1")
+    var sqlStr string // Compile SQL
+    var Vars []any    // Prepare(sqlstr).Exec(Vars...)    // Bind(":id", "1")
 
     // 当前函数结束时如果有错误则打印日志
     defer func() {
@@ -157,7 +162,7 @@ func (q *Query) Execute() (*Query, error) {
     }()
 
     curTime := time.Now()
-    sqlStr   = q.Compile()   // Compile the SQL query
+    sqlStr = q.Compile(&Vars) // Compile the SQL query
 
     // make sure we have a SQL type to work with
     if q.queryType == 0 && len(sqlStr) >= 11 {
@@ -210,12 +215,12 @@ func (q *Query) Execute() (*Query, error) {
         stmt, err = q.StdDB.Prepare(sqlStr)
 
         var rows *sql.Rows
-        // rows, err = q.Rows(sqlStr)
-        // if err != nil {
-        //     return q, err
-        // }
-        // defer rows.Close()
-        // Scan(rows, q)
+        rows, err = q.Rows(sqlStr, Vars...)
+        if err != nil {
+            return q, err
+        }
+        defer rows.Close()
+        Scan(rows, q)
 
     } else if q.queryType == INSERT {
         // Prepare statement for inserting data

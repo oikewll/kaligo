@@ -1,10 +1,11 @@
 package database
-// DB 类 
+
+// DB 类
 // 1、包含go官方的sql操作；
 // 2、包含用于生产 Select、Insert、Update 等 *Query() 类操作方式
 // 3、包含Migrator工具类
 // Query 类实际上是一个 SQLBuilder，用于拼装出 SQL 语句并且调用 DB类执行查询
-// Schema 类用于映射 struct 和 数据库表结构，是一个 ORM 类 
+// Schema 类用于映射 struct 和 数据库表结构，是一个 ORM 类
 // Migrator 类是一个操作数据库的工具类
 
 import (
@@ -526,7 +527,7 @@ func (db *DB) Quote(values any) string {
         return "(" + strings.Join(vals, ", ") + ")"
     case *Query:
         // Create a sub-query
-        return "(" + vals.Compile() + ")"
+        return "(" + vals.Compile(nil) + ")"
     case Expression:
         // Use a raw expression
         return string(vals)
@@ -543,7 +544,7 @@ func (db *DB) QuoteTable(values any) string {
     switch vals := values.(type) {
     case *Query:
         // Create a sub-query
-        table = "(" + vals.Compile() + ")"
+        table = "(" + vals.Compile(nil) + ")"
     case string:
         if strings.Index(vals, ".") == -1 {
             // Add the table prefix for tables
@@ -589,7 +590,7 @@ func (db *DB) QuoteIdentifier(values any) string {
         return db.QuoteIdentifier(value) + " AS " + db.QuoteIdentifier(alias)
     case *Query:
         // Create a sub-query
-        return "(" + vals.Compile() + ")"
+        return "(" + vals.Compile(nil) + ")"
     case Expression:
         // Use a raw expression
         return string(vals)
