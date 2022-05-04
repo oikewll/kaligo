@@ -33,13 +33,15 @@ var logs = &logger{
 // Trace 跟踪 SQL 执行时间
 func (l *logger) Trace(db *DB, begin time.Time, fc func() (sql string, rowsAffected int64), err error) {
     elapsed := time.Since(begin)
-    sql, rows := fc()
-    if err != nil && (!errors.Is(err, ErrRecordNotFound) || !l.IgnoreRecordNotFoundError) {
-        l.Errorf("%v %d %s %s", elapsed, rows, err, sql)
-    } else if elapsed > l.SlowThreshold && l.SlowThreshold != 0 {
-        l.Warnf("%v %d %s", elapsed, rows, sql)
-    } else {
-        l.Infof("%v %d %s", elapsed, rows, sql)
+    if err != nil && (!errors.Is(err, ErrRecordNotFound) || !l.IgnoreRecordNotFoundError) && l.Level() >= klogs.LevelError {
+        sql, rows := fc()
+        l.Errorf("%v [%d] %s %s", elapsed, rows, err, sql)
+    } else if elapsed > l.SlowThreshold && l.SlowThreshold != 0 && l.Level() >= klogs.LevelError {
+        sql, rows := fc()
+        l.Warnf("%v [%d] %s", elapsed, rows, sql)
+    } else if l.Level() >= klogs.LevelError {
+        sql, rows := fc()
+        l.Infof("%v [%d] %s", elapsed, rows, sql)
     }
 }
 

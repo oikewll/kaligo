@@ -30,11 +30,12 @@ const (
 )
 
 var (
-    root Logger = &logger{formatter: &ConsoleFormatter{}, writer: &ConsoleWriter{}, Level: LevelDebug}
+    root Logger = &logger{formatter: &ConsoleFormatter{}, writer: &ConsoleWriter{}, level: LevelDebug}
 )
 
 // Logger logger interface
 type Logger interface {
+    Level() Level
     LogMode(Level) Logger
     //Info(context.Context, string, ...any)
     Debug(...any)
@@ -61,7 +62,7 @@ type Log struct {
 type logger struct {
     formatter  Formatter
     writer     Writer
-    Level      Level
+    level      Level
     Prefix     string
     TimeFormat string
     parent     Logger // formatter 和 writer 可以继承自 parent
@@ -71,11 +72,11 @@ func New(prefix string, level Level, parant Logger) Logger {
     if parant == nil {
         parant = root
     }
-    return &logger{Prefix: prefix, Level: level, parent: parant}
+    return &logger{Prefix: prefix, level: level, parent: parant}
 }
 
 func (l *logger) LogMode(level Level) Logger {
-    l.Level = level
+    l.level = level
     return l
 }
 
@@ -100,31 +101,31 @@ func (l *logger) Critical(data ...any) {
 }
 
 func (l *logger) Debugf(msg string, data ...any) {
-    if l.getLevel() >= LevelDebug {
+    if l.Level() >= LevelDebug {
         l.getWriter().Write(l.getFormatter().Printf(l.Prefix, LevelDebug, msg, data...))
     }
 }
 
 func (l *logger) Infof(msg string, data ...any) {
-    if l.getLevel() >= LevelInfo {
+    if l.Level() >= LevelInfo {
         l.getWriter().Write(l.getFormatter().Printf(l.Prefix, LevelInfo, msg, data...))
     }
 }
 
 func (l *logger) Warnf(msg string, data ...any) {
-    if l.getLevel() >= LevelWarn {
+    if l.Level() >= LevelWarn {
         l.getWriter().Write(l.getFormatter().Printf(l.Prefix, LevelWarn, msg, data...))
     }
 }
 
 func (l *logger) Errorf(msg string, data ...any) {
-    if l.getLevel() >= LevelError {
+    if l.Level() >= LevelError {
         l.getWriter().Write(l.getFormatter().Printf(l.Prefix, LevelError, msg, data...))
     }
 }
 
 func (l *logger) Criticalf(msg string, data ...any) {
-    if l.getLevel() >= LevelCritical {
+    if l.Level() >= LevelCritical {
         l.getWriter().Write(l.getFormatter().Printf(l.Prefix, LevelCritical, msg, data...))
     }
 }
@@ -141,11 +142,11 @@ func (l *logger) Fatal(msg string, data ...any) {
     os.Exit(1)
 }
 
-func (l *logger) getLevel() Level {
-    if l.Level == LevelDefault {
-        return l.parent.(*logger).getLevel()
+func (l *logger) Level() Level {
+    if l.level == LevelDefault {
+        return l.parent.(*logger).Level()
     }
-    return l.Level
+    return l.level
 }
 
 func (l *logger) getWriter() Writer {
