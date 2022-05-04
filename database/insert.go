@@ -94,7 +94,7 @@ func (q *Query) InsertCompile() (sqlStr string) {
 
             // Is the column need encrypt ???
             if cryptFields, ok := q.cryptFields[table]; ok && q.Dialector.Name() == "mysql" && q.cryptKey != "" && InSlice(v, &cryptFields) {
-                placeholders = append(placeholders, "ENCODE( ?, ? )")  // ENCODE | AES_ENCRYPT
+                placeholders = append(placeholders, "AES_ENCRYPT( ?, ? )")
             } else {
                 placeholders = append(placeholders, "?")
             }

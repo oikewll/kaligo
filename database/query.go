@@ -145,15 +145,19 @@ func (q *Query) Compile() string {
 // Execute the current query on the given database.
 func (q *Query) Execute() (*Query, error) {
     var err error
+    var sqlStr string   // Compile SQL
+    var Vars []any      // Prepare(sqlstr).Exec(Vars...)
+
+    // 当前函数结束时如果有错误则打印日志
     defer func() {
         if err != nil {
+            // q.AddError(err)
             logs.Error(err)
         }
     }()
 
-    begin := time.Now()
-    // Compile the SQL query
-    sqlStr := q.Compile()
+    curTime := time.Now()
+    sqlStr   = q.Compile()   // Compile the SQL query
 
     // make sure we have a SQL type to work with
     if q.queryType == 0 && len(sqlStr) >= 11 {
@@ -178,7 +182,8 @@ func (q *Query) Execute() (*Query, error) {
     // parse model values
     if q.Model != nil {
         if q.Schema, err = Parse(q.Model, q.cacheStore); err != nil {
-            q.AddError(err)
+            // q.AddError(err)
+            return q, err
         }
     }
 
@@ -199,57 +204,52 @@ func (q *Query) Execute() (*Query, error) {
     // Execute the query
     q.queryCount++
 
+    var stmt *sql.Stmt
+
     if q.queryType == SELECT {
+        stmt, err = q.StdDB.Prepare(sqlStr)
+
         var rows *sql.Rows
-        rows, err = q.Rows(sqlStr)
-        if err != nil {
-            q.AddError(err)
-            return q, err
-        }
-        defer rows.Close()
-        Scan(rows, q)
+        // rows, err = q.Rows(sqlStr)
+        // if err != nil {
+        //     return q, err
+        // }
+        // defer rows.Close()
+        // Scan(rows, q)
 
     } else if q.queryType == INSERT {
-        var stmtIns *sql.Stmt
         // Prepare statement for inserting data
-        stmtIns, err = q.StdDB.Prepare(sqlStr)
+        stmt, err = q.StdDB.Prepare(sqlStr)
         if err != nil {
-            logs.Panic(err.Error())
+            return q, err
         }
-        defer stmtIns.Close()
-
-        var args []any
+        defer stmt.Close()
 
         for _, group := range q.I.values {
             for k, v := range group {
                 column := q.I.columns[k]
                 // Is the column need encrypt ???
-                if cryptFields, ok := q.cryptFields[q.I.table]; ok && 
-                q.Dialector.Name() == "mysql" && 
-                q.cryptKey != "" && 
-                InSlice(column, &cryptFields) {
-                    args = append(args, v, q.cryptKey)
+                if cryptFields, ok := q.cryptFields[q.I.table]; ok && q.Dialector.Name() == "mysql" && q.cryptKey != "" && InSlice(column, &cryptFields) {
+                    Vars = append(Vars, v, q.cryptKey)
                 } else {
-                    args = append(args, v)
+                    Vars = append(Vars, v)
                 }
             }
         }
 
-        // logs.Info(args)
-        _, err = stmtIns.Exec(args...)
-        // logs.Debug(stmt.SQL.String())
+        _, err = stmt.Exec(Vars...)
 
         // 因为 Query{} 是和 Select 共用的，所以要清一次
         q.Reset()
 
         if err != nil {
-            logs.Panic(err.Error())
+            return q, err
         }
     } else {
         var rs sql.Result
         rs, err = q.Exec(sqlStr)
         if err != nil {
-            q.AddError(err)
+            // q.AddError(err)
             return q, err
         }
         var rowsAffected int64 = 0
@@ -261,24 +261,24 @@ func (q *Query) Execute() (*Query, error) {
         q.RowsAffected = rowsAffected
         q.LastInsertId = lastInsertID
         if err != nil {
-            q.AddError(err)
+            // q.AddError(err)
             return q, err
         }
     }
 
+    // Cache the result if needed
     // if  cacheObj != nil && (q.cacheAll || result.count() != 0) {
     //     cacheObj.setExpiration(q.lifeTime).SetContents(result.asArray()).Set()
     // }
 
     // 记录日志
+    // 3.388208ms [0] INSERT INTO `user` (`name`, `age`) VALUES ( AES_ENCRYPT( "test", "aaa" ), AES_ENCRYPT( "20", "aaa" ) )
     // db.Logger.Trace(stmt.Context, curTime, func() (string, int64) {
     //     return db.Dialector.Explain(stmt.SQL.String(), stmt.Vars...), db.RowsAffected
     // }, db.Error)
-    logs.Trace(q.DB, begin, func() (sql string, rowsAffected int64) {
-        return sqlStr, q.RowsAffected
+    logs.Trace(q.DB, curTime, func() (string, int64) {
+        return Explain(sqlStr, Vars...), q.RowsAffected
     }, q.Error)
-
-    // Cache the result if needed
 
     return q, nil
 }
