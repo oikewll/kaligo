@@ -39,7 +39,15 @@ func TestQuery(t *testing.T) {
     // user.Save()
 
     var ages []int64
-    _, err := db.Query("SELECT `age` FROM `user`").Scan(&ages).Execute()
+    // sqlStr = SELECT `age` FROM `user` WHERE `id` = ?";
+    // _, err := db.Query("SELECT `age` FROM `user` WHERE `id` = :id").Scan(&ages).Bind(":id", "1").Execute()
+    // SELECT AES_DECRYPT(`age`, 'aaa') AS `age` FROM `user` WHERE `id` = ?
+    _, err := db.Query("SELECT `age` FROM `user` WHERE `id` = :id").
+    SetCryptKey("aaa").
+    SetCryptFields(map[string][]string{
+        "user":   {"name", "age"},
+    }).
+    Scan(&ages).Bind(":id", "1").Execute()
     assert.NoError(t, err)
     assert.NotNil(t, ages)
 }

@@ -146,7 +146,7 @@ func (q *Query) Compile() string {
 func (q *Query) Execute() (*Query, error) {
     var err error
     var sqlStr string   // Compile SQL
-    var Vars []any      // Prepare(sqlstr).Exec(Vars...)
+    var Vars []any      // Prepare(sqlstr).Exec(Vars...)    // Bind(":id", "1")
 
     // 当前函数结束时如果有错误则打印日志
     defer func() {
