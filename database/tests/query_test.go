@@ -38,30 +38,10 @@ func TestQuery(t *testing.T) {
     // user.DB = db
     // user.Save()
 
-    var ages []int64
-    // sqlStr = SELECT `age` FROM `user` WHERE `id` = ?";
-    // _, err := db.Query("SELECT `age` FROM `user` WHERE `id` = :id").Scan(&ages).Bind(":id", "1").Execute()
-    // SELECT AES_DECRYPT(`age`, 'aaa') AS `age` FROM `user` WHERE `id` = ?
-    _, err := db.Query("SELECT `age` FROM `user` WHERE `id` = :id").
-        // SetCryptKey("aaa").
-        // SetCryptFields(map[string][]string{
-        //     "user": {"name", "age"},
-        // }).
-        Scan(&ages).Bind(":id", "1 or 1=1").Execute()
-    assert.NoError(t, err)
-    assert.NotNil(t, ages)
-}
-
-func TestSelectDecrypt(t *testing.T) {
-    var ages []int64
-    _, err := db.Select("age").From("user").Where("id", "=", "1").
-        SetCryptKey("aaa").
-        SetCryptFields(map[string][]string{
-            "user": {"name", "age"},
-        }).
-        Scan(&ages).Execute()
-    assert.NoError(t, err)
-    assert.NotNil(t, ages)
+    // var ages []int64
+    // _, err := db.Query("SELECT `sex` FROM `user` WHERE `id` = :id").Scan(&ages).Bind(":id", "1 or 1=1").Execute()
+    // assert.NoError(t, err)
+    // assert.NotNil(t, ages)
 }
 
 // func TestQueryCount(t *testing.T) {

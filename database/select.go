@@ -12,7 +12,8 @@ type Select struct {
     distinct  bool
     froms     []string
     groupBys  []string
-    havings   map[string][][]string
+    // havings   map[string][][]string
+    havings   map[string][]WhereParam   // map["AND"][] WhereParam{column, op, value}
     offset    int
     forUpdate bool
 }
@@ -116,14 +117,20 @@ func (q *Query) Having(column string, op string, value string) *Query {
 
 // AndHaving Creates a new "AND HAVING" condition for the query.
 func (q *Query) AndHaving(column string, op string, value string) *Query {
-    q.S.havings["AND"] = append(q.S.havings["AND"], []string{column, op, value})
+    // q.S.havings["AND"] = append(q.S.havings["AND"], []string{column, op, value})
+
+    if q.S.havings == nil {
+        q.S.havings = make(map[string][]WhereParam)
+    }
+    q.S.havings["AND"] = append(q.S.havings["AND"], WhereParam{column, op, value})
 
     return q
 }
 
 // OrHaving Creates a new "AND HAVING" condition for the query.
 func (q *Query) OrHaving(column string, op string, value string) *Query {
-    q.S.havings["OR"] = append(q.S.havings["OR"], []string{column, op, value})
+    // q.S.havings["OR"] = append(q.S.havings["OR"], []string{column, op, value})
+    q.S.havings["OR"] = append(q.S.havings["OR"], WhereParam{column, op, value})
 
     return q
 }
@@ -135,14 +142,16 @@ func (q *Query) HavingOpen() *Query {
 
 // AndHavingOpen Opens a new "AND HAVING (...)" grouping.
 func (q *Query) AndHavingOpen() *Query {
-    q.S.havings["AND"] = append(q.S.havings["AND"], []string{"("})
+    // q.S.havings["AND"] = append(q.S.havings["AND"], []string{"("})
+    q.S.havings["AND"] = append(q.S.havings["AND"], WhereParam{column: "("})
 
     return q
 }
 
 // OrHavingOpen Opens a new "OR HAVING (...)" grouping.
 func (q *Query) OrHavingOpen() *Query {
-    q.S.havings["OR"] = append(q.S.havings["OR"], []string{"("})
+    // q.S.havings["OR"] = append(q.S.havings["OR"], []string{"("})
+    q.S.havings["OR"] = append(q.S.havings["OR"], WhereParam{column: ")"})
 
     return q
 }
@@ -154,14 +163,16 @@ func (q *Query) HavingClose() *Query {
 
 // AndHavingClose Opens a new "AND HAVING (...)" grouping.
 func (q *Query) AndHavingClose() *Query {
-    q.S.havings["AND"] = append(q.S.havings["AND"], []string{")"})
+    // q.S.havings["AND"] = append(q.S.havings["AND"], []string{")"})
+    q.S.havings["AND"] = append(q.S.havings["AND"], WhereParam{column: ")"})
 
     return q
 }
 
 // OrHavingClose Opens a new "OR HAVING (...)" grouping.
 func (q *Query) OrHavingClose() *Query {
-    q.S.havings["OR"] = append(q.S.havings["OR"], []string{")"})
+    // q.S.havings["OR"] = append(q.S.havings["OR"], []string{")"})
+    q.S.havings["OR"] = append(q.S.havings["OR"], WhereParam{column: ")"})
 
     return q
 }
@@ -234,11 +245,15 @@ func (q *Query) SelectCompile() string {
     // Builder.CompileSet()
     //sqlStr += s.CompileSet(db, s.sets)
 
-    if len(q.W.wheres) != 0 {
+    // if len(q.W.wheres) != 0 {
+    if len(q.W.params) != 0 {
         // Add selection conditions
         // Builder.CompileConditions()
         // Where.wheres 参数
-        sqlStr += " WHERE " + q.CompileConditions(q.W.wheres)
+        // sqlStr += " WHERE " + q.CompileConditions(q.W.wheres)
+        conditionsStr, values := q.CompileConditions(q.W.params)
+        sqlStr += " WHERE " + conditionsStr
+        q.W.values = append(q.W.values, values)
     }
 
     if len(q.S.groupBys) != 0 {
@@ -254,7 +269,11 @@ func (q *Query) SelectCompile() string {
         // Add filtering conditions
         // Builder.CompileConditions()
         // Where.havings 参数
-        sqlStr += " HAVING " + q.CompileConditions(q.S.havings)
+        // sqlStr += " HAVING " + q.CompileConditions(q.S.havings)
+        conditionsStr, values := q.CompileConditions(q.S.havings)
+        sqlStr += " WHERE " + conditionsStr
+        // 值全部捅到 Where.values
+        q.W.values = append(q.W.values, values)
     }
 
     if len(q.W.orderBys) != 0 {
@@ -279,7 +298,7 @@ func (q *Query) SelectCompile() string {
         if q.InTransaction == true {
             sqlStr += " FOR UPDATE"
         } else {
-            logs.Warn("SELECT xxx FOR UPDATE can't use for non-transactional environment")
+            logs.Warn("SELECT ... FOR UPDATE can't use for non-transactional environment")
         }
     }
 
@@ -301,7 +320,7 @@ func (q *Query) SelectReset() *Query {
     q.S.offset    = 0
     q.S.forUpdate = false
 
-    q.W.wheres    = nil
+    // q.W.wheres    = nil
     q.W.orderBys  = nil
     q.W.limit     = 0
 

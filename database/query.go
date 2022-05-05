@@ -52,6 +52,7 @@ func (q *Query) QueryType() QueryType {
 }
 
 // AddError add error to db
+// XXX 这个全局有点多余
 func (q *Query) AddError(err error) error {
     if q.Error == nil {
         q.Error = err
@@ -211,12 +212,21 @@ func (q *Query) Execute() (*Query, error) {
 
     var stmt *sql.Stmt
 
+    logs.Info(q.queryType)
+
     if q.queryType == SELECT {
         // testing
         // sqlStr = "SELECT `age` FROM `user` WHERE `username` = ? And `password` = ?"
         // Vars = []any{"test/*", "*/"}
+        // Vars = []any{1}
 
         stmt, err = q.StdDB.Prepare(sqlStr)
+
+        logs.Infof("%T", q.W.values)
+        Vars = q.W.values
+
+        logs.Info("SELECT === ", sqlStr)
+        logs.Info(Vars)
 
         var rows *sql.Rows
         rows, err = q.Rows(sqlStr, Vars...)

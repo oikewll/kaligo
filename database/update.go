@@ -47,9 +47,13 @@ func (q *Query) UpdateCompile() string {
     // Add the columns to update
     sqlStr += " SET " + q.CompileSet(q.U.sets)
 
-    if len(q.W.wheres) != 0 {
+    // if len(q.W.wheres) != 0 {
+    if len(q.W.params) != 0 {
         // Add selection conditions
-        sqlStr += " WHERE " + q.CompileConditions(q.W.wheres)
+        // sqlStr += " WHERE " + q.CompileConditions(q.W.wheres)
+        conditionsStr, values := q.CompileConditions(q.W.params)
+        sqlStr += " WHERE " + conditionsStr
+        q.W.values = append(q.W.values, values)
     }
 
     if len(q.W.orderBys) != 0 {
@@ -73,7 +77,8 @@ func (q *Query) UpdateReset() *Query {
     q.U.table = ""
     q.U.sets = nil
 
-    q.W.wheres = nil
+    // q.W.wheres = nil
+    q.W.params = nil
     q.W.orderBys = nil
     q.W.limit = 0
 

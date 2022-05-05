@@ -22,22 +22,23 @@ func (q *Query) CompileJoin(joins []*Join) string {
 }
 
 // CompileConditions Compiles an array of conditions into an SQL partial. Used for WHERE and HAVING
-func (q *Query) CompileConditions(conditions map[string][][]string) string {
+func (q *Query) CompileConditions(conditions map[string][]WhereParam) (string, []any) {
     var lastCondition string
     var sqlStr string
+    var values []any
 
     for logic, group := range conditions {
         // Process groups of conditions
         for _, condition := range group {
-            conditionStr := strings.Join(condition, "")
-            if conditionStr == "(" {
+            // conditionStr := strings.Join(condition, "")
+            if condition.column == "(" {
                 if sqlStr != "" && lastCondition != "(" {
                     // Include logic operator
                     sqlStr += " " + logic + " "
                 }
 
                 sqlStr += "("
-            } else if conditionStr == ")" {
+            } else if condition.column == ")" {
                 sqlStr += ")"
             } else {
                 if sqlStr != "" && lastCondition != "(" {
@@ -48,9 +49,9 @@ func (q *Query) CompileConditions(conditions map[string][][]string) string {
                 // Split the condition
                 // 'name', '=', 'John'
                 // 'age', 'BETWEEN', '10,20'
-                column := condition[0]
-                op     := condition[1]
-                value  := condition[2]
+                column := condition.column
+                op     := condition.op
+                value  := condition.value
                 // value 传 NULL 字符串过来，要把等号(=)换成 IS
                 if value == "NULL" {
                     if op == "=" {
@@ -65,36 +66,81 @@ func (q *Query) CompileConditions(conditions map[string][][]string) string {
                 // Database operators are always uppercase
                 op = strings.ToUpper(op)
 
+                var min, max any    
+
                 //if (op == "BETWEEN" || op == "NOT BETWEEN") && is_array(value) {
                 if op == "BETWEEN" || op == "NOT BETWEEN" {
-                    ////BETWEEN always has exactly two arguments
-                    valueArr := strings.Split(value, ",")
-                    // trim一下兼容有空格写法：10,20 和 10, 20 都兼容
-                    min := strings.TrimSpace(valueArr[0])
-                    max := strings.TrimSpace(valueArr[1])
-                    if q.parameters[min] != "" {
-                        // Set the parameter as the minimum
-                        min = q.parameters[min]
+                    // BETWEEN always has exactly two arguments
+                    switch v := value.(type) {                    
+                    case string:
+                        valueArr := strings.Split(v, ",")
+                        // trim一下兼容有空格写法：10,20 和 10, 20 都兼容
+                        min = strings.TrimSpace(valueArr[0])
+                        max = strings.TrimSpace(valueArr[1])
+                    case []string:
+                        min = strings.TrimSpace(v[0])
+                        max = strings.TrimSpace(v[1])
+                    case []int:
+                        min = v[0]
+                        max = v[1]
+                    case []int64:
+                        min = v[0]
+                        max = v[1]
+                    case []float64:
+                        min = v[0]
+                        max = v[1]
+                    default:
+                        logs.Error("Unsupported BETWEEN Type.")
                     }
 
-                    if q.parameters[max] != "" {
-                        // Set the parameter as the maximum
-                        max = q.parameters[max]
-                    }
+                    // if q.parameters[min] != "" {
+                    //     // Set the parameter as the minimum
+                    //     min = q.parameters[min]
+                    // }
+                    //
+                    // if q.parameters[max] != "" {
+                    //     // Set the parameter as the maximum
+                    //     max = q.parameters[max]
+                    // }
+                    // value = q.Quote(min) + " AND " + q.Quote(max)
+                    value = "? AND ?"
+                    values = append(values, min, max)
 
-                    value = q.Quote(min) + " AND " + q.Quote(max)
                 } else if op == "IN" || op == "NOT IN" {
-                    valueArr := strings.Split(value, ",")
-                    value = q.Quote(valueArr)
-                } else {
-                    if q.parameters[value] != "" {
-                        // Set the parameter as the value
-                        value = q.parameters[value]
+                    // valueArr := strings.Split(value, ",")
+                    // value = q.Quote(valueArr)
+                    switch v := value.(type) {                    
+                    case string:
+                        valueArr := strings.Split(v, ",")
+                        min = strings.TrimSpace(valueArr[0])
+                        max = strings.TrimSpace(valueArr[1])
+                    case []string:
+                        min = strings.TrimSpace(v[0])
+                        max = strings.TrimSpace(v[1])
+                    case []int:
+                        min = v[0]
+                        max = v[1]
+                    case []int64:
+                        min = v[0]
+                        max = v[1]
+                    case []float64:
+                        min = v[0]
+                        max = v[1]
+                    default:
+                        logs.Error("Unsupported IN Or NOT IN Type.")
                     }
-
-                    // Quote the entire value normally
-                    value = q.Quote(value)
+                    values = append(values, min, max)
                 }
+
+                // } else {
+                //     if q.parameters[value] != "" {
+                //         // Set the parameter as the value
+                //         value = q.parameters[value]
+                //     }
+                //
+                //     // Quote the entire value normally
+                //     value = q.Quote(value)
+                // }
 
                 // Is the column need decrypt ???
                 var tables []string
@@ -112,14 +158,15 @@ func (q *Query) CompileConditions(conditions map[string][][]string) string {
                 }
 
                 // Append the statement to the query
-                sqlStr += column + " " + op + " " + value
+                // sqlStr += column + " " + op + " " + value
+                sqlStr += fmt.Sprintf("%s %s ?", column, op)
             }
 
-            lastCondition = conditionStr
+            // lastCondition = conditionStr
         }
     }
 
-    return sqlStr
+    return sqlStr, values
 }
 
 // CompileSet Compiles an array of set values into an SQL partial. Used for UPDATE

@@ -8,8 +8,9 @@ type WhereParam struct {
 
 // Where is the struct for MySQL DATE type
 type Where struct {
-    params   []WhereParam   // map["AND"][] WhereParam{column, op, value}
-    wheres   map[string][][]string  // map["AND"][] []string{column, op, value} []string{")"}
+    // wheres   map[string][][]string  // map["AND"][] []string{column, op, value} []string{")"}
+    params   map[string][]WhereParam   // map["AND"][] WhereParam{column, op, value}
+    values   []any
     orderBys [][2]string
     limit    int
 }
@@ -34,16 +35,22 @@ func (q *Query) Where(column string, op string, value any) *Query {
 // @param  value  string 查询值
 // @return w     *Where Where对象
 func (q *Query) AndWhere(column string, op string, value any) *Query {
-    if q.W.wheres == nil {
-        q.W.wheres = make(map[string][][]string)
+    // if q.W.wheres == nil {
+    //     q.W.wheres = make(map[string][][]string)
+    // }
+    // q.W.wheres["AND"] = append(q.W.wheres["AND"], []string{column, op, ToString(value)})
+
+    if q.W.params == nil {
+        q.W.params = make(map[string][]WhereParam)
     }
-    q.W.wheres["AND"] = append(q.W.wheres["AND"], []string{column, op, ToString(value)})
+    q.W.params["AND"] = append(q.W.params["AND"], WhereParam{column, op, value})
     return q
 }
 
 // OrWhere Creates a new "OR WHERE" condition for the query.
 func (q *Query) OrWhere(column string, op string, value string) *Query {
-    q.W.wheres["OR"] = append(q.W.wheres["OR"], []string{column, op, ToString(value)})
+    // q.W.wheres["OR"] = append(q.W.wheres["OR"], []string{column, op, ToString(value)})
+    q.W.params["OR"] = append(q.W.params["OR"], WhereParam{column, op, value})
     return q
 }
 
@@ -54,13 +61,15 @@ func (q *Query) WhereOpen() *Query {
 
 // AndWhereOpen Opens a new "AND WHERE (...)" grouping.
 func (q *Query) AndWhereOpen() *Query {
-    q.W.wheres["AND"] = append(q.W.wheres["AND"], []string{"("})
+    // q.W.wheres["AND"] = append(q.W.wheres["AND"], []string{"("})
+    q.W.params["AND"] = append(q.W.params["AND"], WhereParam{column: "("})
     return q
 }
 
 // OrWhereOpen Opens a new "OR WHERE (...)" grouping.
 func (q *Query) OrWhereOpen() *Query {
-    q.W.wheres["OR"] = append(q.W.wheres["OR"], []string{"("})
+    // q.W.wheres["OR"] = append(q.W.wheres["OR"], []string{"("})
+    q.W.params["OR"] = append(q.W.params["OR"], WhereParam{column: "("})
     return q
 }
 
@@ -71,13 +80,15 @@ func (q *Query) WhereClose() *Query {
 
 // AndWhereClose Closes an open "AND WHERE (...)" grouping.
 func (q *Query) AndWhereClose() *Query {
-    q.W.wheres["AND"] = append(q.W.wheres["AND"], []string{")"})
+    // q.W.wheres["AND"] = append(q.W.wheres["AND"], []string{")"})
+    q.W.params["AND"] = append(q.W.params["AND"], WhereParam{column: ")"})
     return q
 }
 
 // OrWhereClose Closes an open "OR WHERE (...)" grouping.
 func (q *Query) OrWhereClose() *Query {
-    q.W.wheres["OR"] = append(q.W.wheres["OR"], []string{")"})
+    // q.W.wheres["OR"] = append(q.W.wheres["OR"], []string{")"})
+    q.W.params["OR"] = append(q.W.params["OR"], WhereParam{column: ")"})
     return q
 }
 
