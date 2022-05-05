@@ -2,6 +2,12 @@
 // SET GLOBAL general_log=on;
 // SET GLOBAL general_log_file='/tmp/general.log';
 // tail -f /tmp/general.log
+
+// Select -> Where -> Builder -> Query -> Connection
+// Update -> Where -> Builder -> Query -> Connection
+// Delete -> Where -> Builder -> Query -> Connection
+// Insert -> Builder -> Query -> Connection
+
 package tests
 
 import (
@@ -19,7 +25,7 @@ var db *database.DB
 func TestMain(m *testing.M) {
     // 开始前做初始化工作
     // db, err := database.Open(sqlite.Open("./test.db"))
-    db, _ = database.Open(mysql.Open("root:root@tcp(127.0.0.1:3306)/test?charset=utf8mb4"))
+    db, _ = database.Open(mysql.Open("root:root@tcp(127.0.0.1:3306)/test?charset=utf8mb4&parseTime=true"))
 
     // 执行增删改查
     code := m.Run()
