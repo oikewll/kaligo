@@ -84,7 +84,7 @@ func (q *Query) InsertCompile() (sqlStr string) {
     table   := q.I.table
     columns := q.I.columns
 
-    // Start and update query
+    // Start and insert query
     sqlStr = "INSERT INTO " + q.QuoteTable(table)
 
     if len(columns) != 0 {
@@ -106,28 +106,6 @@ func (q *Query) InsertCompile() (sqlStr string) {
 
     // 子查询为空
     if q.I.subQuery == "" {
-        // var groups []string
-        // for _, group := range q.I.values {
-        //     for k, v := range group {
-        //         if q.parameters[v] != "" {
-        //             // Use the parameter value
-        //             group[k] = q.parameters[v]
-        //         }
-        //
-        //         column := q.I.columns[k]
-        //         // Is the column need encrypt ???
-        //         if cryptFields, ok := q.cryptFields[table]; ok && q.Dialector.Name() == "mysql" && q.cryptKey != "" && InSlice(column, &cryptFields) {
-        //             group[k] = fmt.Sprintf("AES_ENCRYPT(%s, \"%s\")", q.Quote(v), q.cryptKey)
-        //         } else {
-        //             group[k] = q.Quote(v)
-        //         }
-        //     }
-        //
-        //     groups = append(groups, "("+strings.Join(group, ", ")+")")
-        // }
-
-        // Add the values
-        // sqlStr += " VALUES " + strings.Join(groups, ", ")
         sqlStr += " VALUES ( " + strings.Join(placeholders, ", ") + " )"
     } else {
         // Add the sub-query
@@ -146,8 +124,6 @@ func (q *Query) InsertCompile() (sqlStr string) {
         sqlStr += " ON DUPLICATE KEY UPDATE " + strings.Join(updates, ", ")
     }
 
-    // logs.Info("InsertCompile === ", sqlStr)
-
     q.sqlStr = sqlStr
 
     return sqlStr
@@ -155,11 +131,10 @@ func (q *Query) InsertCompile() (sqlStr string) {
 
 // InsertReset the query parameters
 func (q *Query) InsertReset() *Query {
-    //fmt.Println("InsertReset")
-    q.I.table = ""
-    q.I.columns = nil // gc 回收原有数据，len(), cap() 都为0，序列化成 json 的时候，为 null，如果是 columns[:0] 则 gc 不回收，len() 为0， cap() 不变，json 为 []
-    q.I.values = nil
-    q.I.updates = nil
+    q.I.table    = ""
+    q.I.columns  = nil // gc 回收原有数据，len(), cap() 都为0，序列化成 json 的时候，为 null，如果是 columns[:0] 则 gc 不回收，len() 为0， cap() 不变，json 为 []
+    q.I.values   = nil
+    q.I.updates  = nil
     q.parameters = nil
 
     return q

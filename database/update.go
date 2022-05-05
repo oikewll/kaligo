@@ -50,20 +50,17 @@ func (q *Query) UpdateCompile() string {
     // if len(q.W.wheres) != 0 {
     if len(q.W.params) != 0 {
         // Add selection conditions
-        // sqlStr += " WHERE " + q.CompileConditions(q.W.wheres)
         conditionsStr, values := q.CompileConditions(q.W.params)
         sqlStr += " WHERE " + conditionsStr
         q.W.values = append(q.W.values, values...)
     }
 
     if len(q.W.orderBys) != 0 {
-        // Add sorting
         sqlStr += " " + q.CompileOrderBy(q.W.orderBys)
     }
 
     // SQLite does not support LIMIT for DELETE、UPDATE
     if q.W.limit != 0 && q.Dialector.Name() != "sqlite" {
-        // Add limiting
         sqlStr += " LIMIT " + strconv.Itoa(q.W.limit)
     }
 
@@ -77,7 +74,6 @@ func (q *Query) UpdateReset() *Query {
     q.U.table = ""
     q.U.sets = nil
 
-    // q.W.wheres = nil
     q.W.params = nil
     q.W.orderBys = nil
     q.W.limit = 0

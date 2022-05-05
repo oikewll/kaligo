@@ -1,3 +1,7 @@
+// 开始前先全局打开日志调试
+// SET GLOBAL general_log=on;
+// SET GLOBAL general_log_file='/tmp/general.log';
+// tail -f /tmp/general.log
 package tests
 
 import (
@@ -27,17 +31,6 @@ func TestMain(m *testing.M) {
 }
 
 func TestQuery(t *testing.T) {
-    //var sqlStr string
-    //
-    // user := User{
-    //     ID   : 1,
-    //     Name : "test111",
-    //     Age  : 25,
-    //     Sex  : 1,
-    // }
-    // user.DB = db
-    // user.Save()
-
     // var ages []int64
     // _, err := db.Query("SELECT `sex` FROM `user` WHERE `id` = :id").Scan(&ages).Bind(":id", "1 or 1=1").Execute()
     // assert.NoError(t, err)

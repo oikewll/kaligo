@@ -213,11 +213,6 @@ func (q *Query) Execute() (*Query, error) {
     var stmt *sql.Stmt
 
     if q.queryType == SELECT {
-        // testing
-        // sqlStr = "SELECT `age` FROM `user` WHERE `username` = ? And `password` = ?"
-        // Vars = []any{"test/*", "*/"}
-        // Vars = []any{1}
-
         stmt, err = q.StdDB.Prepare(sqlStr)
 
         if q.W != nil {
@@ -233,7 +228,6 @@ func (q *Query) Execute() (*Query, error) {
         Scan(rows, q)
 
     } else if q.queryType == INSERT {
-        // Prepare statement for inserting data
         stmt, err = q.StdDB.Prepare(sqlStr)
         if err != nil {
             return q, err
@@ -325,20 +319,6 @@ func (q *Query) Execute() (*Query, error) {
         if err != nil {
             return q, err
         }
-
-        // var result sql.Result
-        // result, err = q.Exec(sqlStr)
-        // if err != nil {
-        //     return q, err
-        // }
-        // var rowsAffected int64 = 0
-        // var lastInsertID int64 = 0
-        // rowsAffected, err = result.RowsAffected()
-        // q.RowsAffected = rowsAffected
-        // q.LastInsertId = lastInsertID
-        // if err != nil {
-        //     return q, err
-        // }
     }
 
     // Cache the result if needed

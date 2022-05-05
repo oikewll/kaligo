@@ -9,9 +9,6 @@ import (
 
 
 func TestInsert(t *testing.T) {
-    // SET GLOBAL general_log=on;
-    // SET GLOBAL general_log_file='/tmp/general.log';
-
     // q, err := db.Insert("user", []string{"username", "password", "age"}).
     // Values([]string{"test111", "test111passwd", "2"}).
     // Execute()
