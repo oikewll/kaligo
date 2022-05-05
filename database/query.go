@@ -31,19 +31,19 @@ type Query struct {
     D *Delete
     //R *Result
 
-    sqlStr    string             // SQL statement
-    queryType QueryType          // Query type
+    sqlStr    string            // SQL statement
+    queryType QueryType         // Query type
 
-    Dest         any             // var user User、var users []User、var result map[string]any、var results []map[string]any、var ages []int64
-    Model        any             // Object：&User{}
-    ReflectValue reflect.Value   // reflect.ValueOf(Dest)
-    lifeTime     int             // Cache lifetime
-    cacheKey     string          // Cache key
-    cacheAll     bool            // boolean Cache all results
+    Dest         any            // var user User、var users []User、var result map[string]any、var results []map[string]any、var ages []int64
+    Model        any            // Object：&User{}
+    ReflectValue reflect.Value  // reflect.ValueOf(Dest)
+    lifeTime     int            // Cache lifetime
+    cacheKey     string         // Cache key
+    cacheAll     bool           // boolean Cache all results
 
-    joinObjs   []*Join           // join objects
-    lastJoin   *Join             // last join statement
-    parameters map[string]string // Quoted query parameters
+    joinObjs   []*Join          // join objects
+    lastJoin   *Join            // last join statement
+    parameters map[string]any   // Quoted query parameters
 }
 
 // QueryType get the type of the query
@@ -71,9 +71,9 @@ func (q *Query) Cached(lifeTime int, cacheKey string, cacheAll bool) *Query {
 }
 
 // Bind a variable to a parameter in the query.
-func (q *Query) Bind(param string, value string) *Query {
+func (q *Query) Bind(param string, value any) *Query {
     if q.parameters == nil {
-        q.parameters = make(map[string]string)
+        q.parameters = make(map[string]any)
     }
     // Bind a value to a variable
     q.parameters[param] = value
@@ -107,8 +107,8 @@ func (q *Query) String() string {
 }
 
 // Compile the SQL query and return it. Raplaces and parameters with their
-func (q *Query) Compile(vars *[]any) string {
-    var sqlStr string
+func (q *Query) Compile() string {
+    var sqlStr string    
 
     switch q.queryType {
     case SELECT:
@@ -126,22 +126,22 @@ func (q *Query) Compile(vars *[]any) string {
     q.sqlStr = strings.TrimSpace(q.sqlStr)
     sqlStr = q.sqlStr
 
+    // 只用于 Query 请求的 Bind 方法
+    // _, err := db.Query("SELECT `age` FROM `user` WHERE `id` = :id").Bind(":id", 1).Scan(&ages).Execute()
     if q.parameters != nil {
         // Quote all of the values
-        values := make(map[string]string, len(q.parameters))
+        values := make(map[string]any, len(q.parameters))
         for k, v := range q.parameters {
             // 如果前面没有:，前面加 :，用于替换
             if k[0:1] != ":" {
                 k = ":" + k
             }
-            if vars != nil {
-                values[k] = "?"
-                *vars = append(*vars, v)
-            } else {
-                values[k] = q.Quote(v)
-            }
+            // values[k] = q.Quote(v)
+            values[k] = "?"
+            q.W.values = append(q.W.values, v)
         }
         // Replace the values in the SQL
+        // 把 :id 换成 ?
         sqlStr = Strtr(sqlStr, values)
     }
 
@@ -163,7 +163,7 @@ func (q *Query) Execute() (*Query, error) {
     }()
 
     curTime := time.Now()
-    sqlStr = q.Compile(&Vars) // Compile the SQL query
+    sqlStr = q.Compile() // Compile the SQL query
 
     // make sure we have a SQL type to work with
     if q.queryType == 0 && len(sqlStr) >= 11 {
@@ -212,8 +212,6 @@ func (q *Query) Execute() (*Query, error) {
 
     var stmt *sql.Stmt
 
-    logs.Info(q.queryType)
-
     if q.queryType == SELECT {
         // testing
         // sqlStr = "SELECT `age` FROM `user` WHERE `username` = ? And `password` = ?"
@@ -222,8 +220,9 @@ func (q *Query) Execute() (*Query, error) {
 
         stmt, err = q.StdDB.Prepare(sqlStr)
 
-        logs.Infof("%T", q.W.values)
-        Vars = q.W.values
+        if q.W != nil {
+            Vars = q.W.values
+        }
 
         logs.Info("SELECT === ", sqlStr)
         logs.Info(Vars)

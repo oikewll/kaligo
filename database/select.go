@@ -253,7 +253,7 @@ func (q *Query) SelectCompile() string {
         // sqlStr += " WHERE " + q.CompileConditions(q.W.wheres)
         conditionsStr, values := q.CompileConditions(q.W.params)
         sqlStr += " WHERE " + conditionsStr
-        q.W.values = append(q.W.values, values)
+        q.W.values = append(q.W.values, values...)
     }
 
     if len(q.S.groupBys) != 0 {
@@ -271,9 +271,9 @@ func (q *Query) SelectCompile() string {
         // Where.havings 参数
         // sqlStr += " HAVING " + q.CompileConditions(q.S.havings)
         conditionsStr, values := q.CompileConditions(q.S.havings)
-        sqlStr += " WHERE " + conditionsStr
+        sqlStr += " HAVING " + conditionsStr
         // 值全部捅到 Where.values
-        q.W.values = append(q.W.values, values)
+        q.W.values = append(q.W.values, values...)
     }
 
     if len(q.W.orderBys) != 0 {

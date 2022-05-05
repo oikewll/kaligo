@@ -22,10 +22,8 @@ func (q *Query) CompileJoin(joins []*Join) string {
 }
 
 // CompileConditions Compiles an array of conditions into an SQL partial. Used for WHERE and HAVING
-func (q *Query) CompileConditions(conditions map[string][]WhereParam) (string, []any) {
+func (q *Query) CompileConditions(conditions map[string][]WhereParam) (sqlStr string, Vars []any) {
     var lastCondition string
-    var sqlStr string
-    var values []any
 
     for logic, group := range conditions {
         // Process groups of conditions
@@ -104,7 +102,7 @@ func (q *Query) CompileConditions(conditions map[string][]WhereParam) (string, [
                     // }
                     // value = q.Quote(min) + " AND " + q.Quote(max)
                     value = "? AND ?"
-                    values = append(values, min, max)
+                    Vars = append(Vars, min, max)
 
                 } else if op == "IN" || op == "NOT IN" {
                     // valueArr := strings.Split(value, ",")
@@ -129,9 +127,10 @@ func (q *Query) CompileConditions(conditions map[string][]WhereParam) (string, [
                     default:
                         logs.Error("Unsupported IN Or NOT IN Type.")
                     }
-                    values = append(values, min, max)
+                    Vars = append(Vars, min, max)
+                } else {
+                    Vars = append(Vars, value)
                 }
-
                 // } else {
                 //     if q.parameters[value] != "" {
                 //         // Set the parameter as the value
@@ -166,7 +165,7 @@ func (q *Query) CompileConditions(conditions map[string][]WhereParam) (string, [
         }
     }
 
-    return sqlStr, values
+    return sqlStr, Vars
 }
 
 // CompileSet Compiles an array of set values into an SQL partial. Used for UPDATE

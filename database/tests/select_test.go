@@ -10,7 +10,7 @@ import (
 func TestSelectDecrypt(t *testing.T) {
     logs.Info("TestSelectDecrypt")
 
-    var ages []int64
+    var ages int64
     _, err := db.Select("age").From("user").Where("id", "=", 1).
     SetCryptKey("aaa").
     SetCryptFields(map[string][]string{

@@ -527,7 +527,7 @@ func (db *DB) Quote(values any) string {
         return "(" + strings.Join(vals, ", ") + ")"
     case *Query:
         // Create a sub-query
-        return "(" + vals.Compile(nil) + ")"
+        return "(" + vals.Compile() + ")"
     case Expression:
         // Use a raw expression
         return string(vals)
@@ -544,7 +544,7 @@ func (db *DB) QuoteTable(values any) string {
     switch vals := values.(type) {
     case *Query:
         // Create a sub-query
-        table = "(" + vals.Compile(nil) + ")"
+        table = "(" + vals.Compile() + ")"
     case string:
         if strings.Index(vals, ".") == -1 {
             // Add the table prefix for tables
@@ -590,7 +590,7 @@ func (db *DB) QuoteIdentifier(values any) string {
         return db.QuoteIdentifier(value) + " AS " + db.QuoteIdentifier(alias)
     case *Query:
         // Create a sub-query
-        return "(" + vals.Compile(nil) + ")"
+        return "(" + vals.Compile() + ")"
     case Expression:
         // Use a raw expression
         return string(vals)
