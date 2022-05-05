@@ -224,9 +224,6 @@ func (q *Query) Execute() (*Query, error) {
             Vars = q.W.values
         }
 
-        logs.Info("SELECT === ", sqlStr)
-        logs.Info(Vars)
-
         var rows *sql.Rows
         rows, err = q.Rows(sqlStr, Vars...)
         if err != nil {
@@ -255,7 +252,16 @@ func (q *Query) Execute() (*Query, error) {
             }
         }
 
-        _, err = stmt.Exec(Vars...)
+        var result sql.Result
+        result, err = stmt.Exec(Vars...)
+
+        var rowsAffected int64 = 0
+        var lastInsertID int64 = 0
+
+        lastInsertID, err = result.LastInsertId()
+
+        q.RowsAffected = rowsAffected
+        q.LastInsertId = lastInsertID
 
         // 因为 Query{} 是和 Select 共用的，所以要清一次
         q.Reset()
@@ -263,25 +269,76 @@ func (q *Query) Execute() (*Query, error) {
         if err != nil {
             return q, err
         }
-    } else {
-        var rs sql.Result
-        rs, err = q.Exec(sqlStr)
+
+    // } else {    // DELETE & UPDATE
+    } else if q.queryType == DELETE {
+        if q.W != nil {
+            Vars = q.W.values
+        }
+
+        stmt, err = q.StdDB.Prepare(sqlStr)
         if err != nil {
-            // q.AddError(err)
             return q, err
         }
+        defer stmt.Close()
+
+        var result sql.Result
+        result, err = stmt.Exec(Vars...)
+
         var rowsAffected int64 = 0
         var lastInsertID int64 = 0
-        if q.queryType == INSERT {
-            lastInsertID, err = rs.LastInsertId()
-        }
-        rowsAffected, err = rs.RowsAffected()
+
+        lastInsertID, err = result.LastInsertId()
+
         q.RowsAffected = rowsAffected
         q.LastInsertId = lastInsertID
+
+        q.Reset()
+
         if err != nil {
-            // q.AddError(err)
             return q, err
         }
+    } else {
+        if q.W != nil {
+            Vars = q.W.values
+        }
+
+        stmt, err = q.StdDB.Prepare(sqlStr)
+        if err != nil {
+            return q, err
+        }
+        defer stmt.Close()
+
+        var result sql.Result
+        result, err = stmt.Exec(Vars...)
+
+        var rowsAffected int64 = 0
+        var lastInsertID int64 = 0
+
+        rowsAffected, err = result.RowsAffected()
+
+        q.RowsAffected = rowsAffected
+        q.LastInsertId = lastInsertID
+
+        q.Reset()
+
+        if err != nil {
+            return q, err
+        }
+
+        // var result sql.Result
+        // result, err = q.Exec(sqlStr)
+        // if err != nil {
+        //     return q, err
+        // }
+        // var rowsAffected int64 = 0
+        // var lastInsertID int64 = 0
+        // rowsAffected, err = result.RowsAffected()
+        // q.RowsAffected = rowsAffected
+        // q.LastInsertId = lastInsertID
+        // if err != nil {
+        //     return q, err
+        // }
     }
 
     // Cache the result if needed

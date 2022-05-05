@@ -53,7 +53,7 @@ func (q *Query) UpdateCompile() string {
         // sqlStr += " WHERE " + q.CompileConditions(q.W.wheres)
         conditionsStr, values := q.CompileConditions(q.W.params)
         sqlStr += " WHERE " + conditionsStr
-        q.W.values = append(q.W.values, values)
+        q.W.values = append(q.W.values, values...)
     }
 
     if len(q.W.orderBys) != 0 {

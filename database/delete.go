@@ -30,7 +30,8 @@ func (q *Query) DeleteCompile() string {
         // sqlStr += " WHERE " + q.CompileConditions(q.W.wheres)
         conditionsStr, values := q.CompileConditions(q.W.params)
         sqlStr += " WHERE " + conditionsStr
-        q.W.values = append(q.W.values, values)
+        q.W.values = append(q.W.values, values...)
+        logs.Error("W values === ", q.W.values)
     }
 
     if len(q.W.orderBys) != 0 {
