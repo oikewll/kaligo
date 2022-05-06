@@ -8,8 +8,8 @@ import (
 
 
 func TestUpdate(t *testing.T) {
-    sets := map[string]string{"name":"demo111"}
-    _, err := db.Update("user").Set(sets).Where("id", "=", 1).Execute()
+    sets := map[string]string{"username":"demo111"}
+    _, err := db.Update("demo_user").Set(sets).Where("id", "=", 1).Execute()
     assert.NoError(t, err)
 
 }

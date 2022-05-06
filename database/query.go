@@ -228,6 +228,8 @@ func (q *Query) Execute() (*Query, error) {
         Scan(rows, q)
 
     } else if q.queryType == INSERT {
+        var insVars [][]any    
+
         stmt, err = q.StdDB.Prepare(sqlStr)
         if err != nil {
             return q, err
@@ -235,19 +237,25 @@ func (q *Query) Execute() (*Query, error) {
         defer stmt.Close()
 
         for _, group := range q.I.values {
+            var Vars []any    
             for k, v := range group {
                 column := q.I.columns[k]
                 // Is the column need encrypt ???
                 if cryptFields, ok := q.cryptFields[q.I.table]; ok && q.Dialector.Name() == "mysql" && q.cryptKey != "" && InSlice(column, &cryptFields) {
-                    Vars = append(Vars, v, q.cryptKey)
+                    Vars = append(Vars, v, q.cryptKey)  // 加密的方式会多一个 key
                 } else {
                     Vars = append(Vars, v)
                 }
             }
+            insVars = append(insVars, Vars)
         }
 
+        logs.Error("INSERT === ", q.I.values, insVars)
+
         var result sql.Result
-        result, err = stmt.Exec(Vars...)
+        for _, value := range insVars {
+            result, err = stmt.Exec(value...)
+        }
 
         var rowsAffected int64 = 0
         var lastInsertID int64 = 0

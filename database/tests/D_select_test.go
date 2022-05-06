@@ -10,13 +10,13 @@ import (
 func TestSelectDecrypt(t *testing.T) {
     logs.Info("TestSelectDecrypt")
 
-    var ages int64
-    _, err := db.Select("age").From("user").Where("id", "=", 1).
+    var gender int64
+    _, err := db.Select("gender").From("demo_user").Where("id", "=", 1).
     SetCryptKey("aaa").
     SetCryptFields(map[string][]string{
-        "user": {"name", "age"},
+        "user": {"realname"},
     }).
-    Scan(&ages).Execute()
+    Scan(&gender).Execute()
     assert.NoError(t, err)
-    assert.NotNil(t, ages)
+    assert.NotNil(t, gender)
 }

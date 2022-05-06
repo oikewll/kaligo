@@ -721,6 +721,8 @@ func (db *DB) ProcessCharset(charset string, isDefault bool, args ...string) str
         charset = " DEFAULT " + charset
     }
 
+    // logs.Error(charset)
+
     if collation != "" {
         if isDefault {
             charset += " DEFAULT"

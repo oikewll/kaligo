@@ -12,7 +12,7 @@ func TestDelete(t *testing.T) {
     // 暂时不支持DELETE JOIN写法
     //sqlStr := db.Delete("user").Join("player", "LEFT").On("user.uid", "=", "player.uid").Where("player.id", "=", "test").Compile()
 
-    _, err := db.Delete("user").Where("id", "=", 2).Execute()
+    _, err := db.Delete("demo_user").Where("id", "=", 2).Execute()
     assert.NoError(t, err)
 }
 

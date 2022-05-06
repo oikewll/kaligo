@@ -9,14 +9,14 @@ import (
 type Insert struct {
     table    string
     columns  []string
-    values   [][]string
-    updates  []map[string]string
+    values   [][]any
+    updates  []map[string]any
     subQuery string // 子查询
 }
 
 // Columns Set the columns that will be inserted.
 func (q *Query) Columns(columns []string) *Query {
-    q.I.columns = append(q.I.columns, columns...) // append和后面的...用法，相当于 php里面的array_meage函数
+    q.I.columns = append(q.I.columns, columns...) // append 和后面的 ... 用法，相当于 php 里面的 array_meage() 函数
 
     return q
 }
@@ -24,12 +24,14 @@ func (q *Query) Columns(columns []string) *Query {
 // Values Adds values. Multiple value sets can be added.
 func (q *Query) Values(values any) *Query {
     switch vals := values.(type) {
-    case []string:
+    case []any:
         q.I.values = append(q.I.values, vals)
-    case [][]string:
-        for _, v := range vals {
-            q.I.values = append(q.I.values, v)
-        }
+    case [][]any:
+        q.I.values = append(q.I.values, vals...)
+        // for _, v := range vals {
+        //     q.I.values = append(q.I.values, v)
+        // }
+        // logs.Error(q.I.values)
     default:
         logs.Error("Insert Values: Unknow Type")
     }
@@ -64,9 +66,9 @@ func (q *Query) SubSelect(query *Query) *Query {
 // ON DUPLICATE KEY UPDATE
 func (q *Query) OnDuplicateKeyUpdate(updates any) *Query {
     switch vals := updates.(type) {
-    case map[string]string:
+    case map[string]any:
         q.I.updates = append(q.I.updates, vals)
-    case []map[string]string:
+    case []map[string]any:
         for _, v := range vals {
             q.I.updates = append(q.I.updates, v)
         }

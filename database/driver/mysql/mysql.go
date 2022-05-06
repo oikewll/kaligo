@@ -592,7 +592,19 @@ func (dialector Dialector) ProcessFields(fields []map[string]any, prefix string,
         }
 
         if value, ok := dict["DEFAULT"]; ok {
-            sqlStr += " DEFAULT " + db.Quote(value.(string))
+            defaultStr := value.(string)
+            if defaultStr != "CURRENT_TIMESTAMP" {
+                defaultStr = db.Quote(defaultStr)
+            }
+            sqlStr += " DEFAULT " + defaultStr
+        }
+
+        if value, ok := dict["EXTRA"]; ok {
+            defaultStr := value.(string)
+            if defaultStr != "ON UPDATE CURRENT_TIMESTAMP" {
+                defaultStr = db.Quote(defaultStr)
+            }
+            sqlStr += " " + defaultStr
         }
 
         if value, ok := dict["NOTNULL"]; ok && value.(bool) == true {
@@ -624,5 +636,7 @@ func (dialector Dialector) ProcessFields(fields []map[string]any, prefix string,
         sqlFields = append(sqlFields, sqlStr)
     }
 
-    return strings.Join(sqlFields, ", ")
+    sqlSql := strings.Join(sqlFields, ", ")
+    // logs.Error(sqlSql)
+    return sqlSql
 }
