@@ -227,6 +227,11 @@ func (db *DB) Query(sqlStr string, args ...QueryType) *Query {
     // 生成一个新的 Query 对象，一个SQL一个 Query 对象
     //q := new(Query)
     query := &Query{
+        // 下面四个用户 q.Reset() 的时候能够找到对应的 Reset() 函数
+        S: &Select{},
+        I: &Insert{},
+        D: &Delete{},
+        U: &Update{},
         sqlStr:    sqlStr,
         queryType: queryType,
         DB:        db,
@@ -249,8 +254,8 @@ func (db *DB) Query(sqlStr string, args ...QueryType) *Query {
 //     select("id AS user_id")
 //     SELECT `id`, `name` FROM `user`
 //     Select("id", "name").From("user")
-//     SELECT `id`, `name` FROM `user` LEFT JOIN `player` ON `user`.`uid`=`player`.`uid` WHERE `player`.`room_id`="10"
-//     Select("id", "name").From("user").Join("player", "LEFT").On("user.uid", "=", "player.uid").Where("player.room_id", "=", "10")
+//     SELECT `id`, `name` FROM `user` LEFT JOIN `player` ON `user`.`uid`=`player`.`uid` WHERE `player`.`room_id`=10
+//     Select("id", "name").From("user").Join("player", "LEFT").On("user.uid", "=", "player.uid").Where("player.room_id", "=", 10)
 // @param columns []string  columns to select
 // @return *Query
 func (db *DB) Select(columns ...any) *Query {
@@ -271,9 +276,9 @@ func (db *DB) Select(columns ...any) *Query {
 
 // Insert func is use for create a new [*Insert]
 // Insert -> Builder -> Query
-//     INSERT INTO `user` (`name`, `age`) VALUES ("test", "25")
-//     Insert("user", []string{"name", "age"}).Values([]string{"test", "25"})
-//     Insert("user", []string{"name", "age"}).Values([][]string{{"test", "25"}, {"demo", "30"}})
+//     INSERT INTO `user` (`name`, `age`) VALUES ("test", 25)
+//     Insert("user", []string{"name", "age"}).Values([]any{"test", 25})
+//     Insert("user", []string{"name", "age"}).Values([][]any{{"test", 25}, {"demo", 30}})
 // @param table   string   table to insert into
 // @param columns []string list of column names
 // @return *Query
@@ -302,7 +307,7 @@ func (db *DB) Insert(table string, args ...[]string) *Query {
 //     UPDATE `user` SET `name`="test", `age`="25" WHERE `id`="1"
 //     sets := map[string]string{"name":"demo", "age": "25"}
 //     Update("user").Set(sets).Where("id", "=", "1")
-//     Update("user").Join("player", "LEFT").On("user.uid", "=", "player.uid").Set(sets).Where("player.room_id", "=", "10")
+//     Update("user").Join("player", "LEFT").On("user.uid", "=", "player.uid").Set(sets).Where("player.room_id", "=", 10)
 // @param table   string    table to update
 // @return *Query
 func (db *DB) Update(table string) *Query {
@@ -321,9 +326,9 @@ func (db *DB) Update(table string) *Query {
 
 // Delete func is use for create a new [*Delete]
 // Delete -> Where -> Builder -> Query
-//     DELETE FROM `user` WHERE `id`="1"
-//     Delete("user").Where("id", "=", "1")
-//     Delete("user").Join("player", "LEFT").On("user.uid", "=", "player.uid").Where("player.id", "=", "test")
+//     DELETE FROM `user` WHERE `id`=1
+//     Delete("user").Where("id", "=", 1)
+//     Delete("user").Join("player", "LEFT").On("user.uid", "=", "player.uid").Where("player.id", "=", 1)
 // @param table   string    table to delete from
 // @return *Query
 func (db *DB) Delete(table string) *Query {
@@ -357,6 +362,7 @@ func (db *DB) Schema() *Schema {
     return db.schema
 }
 
+// Migrator is 数据库工具类，后面要支持版本迁移
 func (db *DB) Migrator() *Migrator {
     if db.migrator == nil {
         query := &Query{
@@ -600,6 +606,7 @@ func (db *DB) QuoteIdentifier(values any) string {
 }
 
 // Escape is use for Escapes special characters in the txt, so it is safe to place returned string
+// 用于 bind params 以后这个就没什么用了
 func (db *DB) Escape(sql string) string {
     dest := make([]byte, 0, 2*len(sql))
     var escape byte
@@ -642,7 +649,7 @@ func (db *DB) Escape(sql string) string {
     return "'" + string(dest) + "'"
 }
 
-// ProcessForeignKeys is
+// ProcessForeignKeys is 处理外建
 func (db *DB) ProcessForeignKeys(foreignKeys []map[string]any) string {
     var fkList []string
     for _, definition := range foreignKeys {
@@ -701,7 +708,7 @@ func (db *DB) ProcessForeignKeys(foreignKeys []map[string]any) string {
     return ", " + strings.Join(fkList, ",")
 }
 
-// ProcessCharset is
+// ProcessCharset is 处理字符集
 func (db *DB) ProcessCharset(charset string, isDefault bool, args ...string) string {
 
     var collation string

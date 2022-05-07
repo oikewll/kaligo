@@ -38,18 +38,18 @@ func TestInsertCryptData(t *testing.T) {
 func TestInsertFromSelect(t *testing.T) {
     // 全部字段复制
     // q := db.Query("SELECT * FROM `demo_user`", database.SELECT)
-    // _, err := db.Insert("user_tmp").SubSelect(q).Execute()
+    // _, err := db.Insert("demo_user_tmp").SubSelect(q).Execute()
     // assert.NoError(t, err)
 
     // // 只复制 id、username 两个字段
-    // q  = db.Query("SELECT `id`, `name` FROM `user`", database.SELECT)
-    // sqlStr = db.Insert("user_tmp", []string{"id", "username"}).SubSelect(q).Compile()
+    // q  = db.Query("SELECT `id`, `username` FROM `user`", database.SELECT)
+    // sqlStr = db.Insert("demo_user_tmp", []string{"id", "username"}).SubSelect(q).Compile()
     // logs.Debug("sqlStr = ", sqlStr)
 }
 
 // TO DO
 // func TestInsertOnDuplicateKeyUpdate(t *testing.T) {
-//     q := db.Insert("keywords").Columns([]string{`word`, `creator`}).Values([]any{"电影网站", 1}).OnDuplicateKeyUpdate(map[string]any{`creator`: "3"})
+//     q := db.Insert("demo_user").Columns([]string{`username`, `creator`}).Values([]any{"demoname", 1}).OnDuplicateKeyUpdate(map[string]any{`creator`: 3})
 //     logs.Info(q)
 // }
 

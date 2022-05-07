@@ -24,6 +24,9 @@ func TestMigratorListDatabases(t *testing.T) {
 func TestMigratorDropTable(t *testing.T) {
     err := db.Migrator().DropTable("demo_user")
     assert.NoError(t, err)
+
+    err = db.Migrator().DropTable("demo_player")
+    assert.NoError(t, err)
 }
 
 // 如果 demo_user 表不存在则创建表
@@ -68,20 +71,20 @@ func TestMigratorCreateTable(t *testing.T) {
     // soda migrate up
     // soda migrate down
 
+    // 用户表
     fields := []map[string]interface{}{
         {
             "name": "id",
             "type": "int",
-            "constraint": 11,
-            "notnull": true,
-            "comment": "ID",
             "unsigned": true,
+            "notnull": true,
             "auto_increment": true,
+            "comment": "ID",
         },
         {
             "name": "username",
             "type": "varchar",
-            "constraint": 50,
+            "constraint": 20,
             "comment": "账号",
         },
         {
@@ -93,7 +96,7 @@ func TestMigratorCreateTable(t *testing.T) {
         {
             "name": "testname",
             "type": "varchar",
-            "constraint": 60,
+            "constraint": 20,
             "comment": "后面会被删除的测试字段",
         },
         {
@@ -123,6 +126,51 @@ func TestMigratorCreateTable(t *testing.T) {
         },
     }
     err = db.Migrator().CreateTable("demo_user", fields, []string{"id"})
+    assert.NoError(t, err)
+
+    // 玩家表
+    fields = []map[string]interface{}{
+        {
+            "name": "id",
+            "type": "int",
+            "unsigned": true,
+            "notnull": true,
+            "auto_increment": true,
+            "comment": "ID",
+        },
+        {
+            "name": "uid",
+            "type": "int",
+            "default": "0",
+            "comment": "用户ID",
+        },
+        {
+            "name": "room_id",
+            "type": "int",
+            "default": "0",
+            "comment": "房间ID",
+        },
+        {
+            "name": "create_at",
+            "type": "datetime",
+            "default": "CURRENT_TIMESTAMP",
+            "comment": "创建时间",
+        },
+        {
+            "name": "update_at",
+            "type": "datetime",
+            "default": "CURRENT_TIMESTAMP",
+            "extra": "ON UPDATE CURRENT_TIMESTAMP",
+            "comment": "修改时间",
+        },
+        {
+            "name": "delete_at",
+            "type": "datetime",
+            "comment": "删除时间",
+        },
+    }
+
+    err = db.Migrator().CreateTable("demo_player", fields, []string{"id"})
     assert.NoError(t, err)
 }
 
@@ -196,19 +244,19 @@ func TestMigratorDropIndex(t *testing.T) {
 
 // 添加外建
 func TestMigratorAddForeignKey(t *testing.T) {
-    // err := db.Migrator().AddForeignKey("demo_user", []map[string]interface{}{
-    //     {
-    //         "constraint": "fk_uid",
-    //         "key": "uid",
-    //         "reference": map[string]string {
-    //             "table" : "player", // 要关联的表
-    //             "column": "uid",    // 要关联的表的字段
-    //         },
-    //         "on_update": "CASCADE",
-    //         "on_delete": "RESTRICT",
-    //     },
-    // })
-    // assert.NoError(t, err)
+    err := db.Migrator().AddForeignKey("demo_player", []map[string]interface{}{
+        {
+            "constraint": "fk_uid",
+            "key": "uid",
+            "reference": map[string]string {
+                "table" : "demo_user",    // 要关联的表
+                "column": "id",           // 要关联的表的字段
+            },
+            "on_update": "CASCADE",
+            "on_delete": "RESTRICT",
+        },
+    })
+    assert.NoError(t, err)
 }
 
 // 删除外键
