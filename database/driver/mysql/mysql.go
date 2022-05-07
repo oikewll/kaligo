@@ -11,7 +11,7 @@ import (
 
     "github.com/go-sql-driver/mysql" // will call mysql.init() method
     "github.com/owner888/kaligo/database"
-    "github.com/owner888/kaligo/logs"
+    // "github.com/owner888/kaligo/logs"
 )
 
 func NewConfig() *mysql.Config {
@@ -480,7 +480,7 @@ func (dialector Dialector) DropIndex(table, indexName string, db *database.DB) (
 // AddForeignKey Adds a single foreign key to a table
 func (dialector Dialector) AddForeignKey(table string, foreignKey []map[string]any, db *database.DB) (err error) {
     sqlStr := "ALTER TABLE " + db.QuoteTable(table) + " ADD " + strings.TrimLeft(db.ProcessForeignKeys(foreignKey), ",")
-    logs.Error(sqlStr)
+
     _, err = db.Exec(sqlStr)
     return err
 }

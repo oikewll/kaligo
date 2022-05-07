@@ -22,10 +22,11 @@ func TestMigratorListDatabases(t *testing.T) {
 
 // 如果存在 demo_user 数据表，则删除
 func TestMigratorDropTable(t *testing.T) {
-    err := db.Migrator().DropTable("demo_user")
+    // 必须先删除 player 表，因为 player 表有外键约束挂到 user 表上去了
+    err := db.Migrator().DropTable("demo_player")
     assert.NoError(t, err)
 
-    err = db.Migrator().DropTable("demo_player")
+    err = db.Migrator().DropTable("demo_user")
     assert.NoError(t, err)
 }
 
@@ -141,6 +142,7 @@ func TestMigratorCreateTable(t *testing.T) {
         {
             "name": "uid",
             "type": "int",
+            "unsigned": true,   // user 表的id是这个类型，这里也要一样，否则无法建立外键约束
             "default": "0",
             "comment": "用户ID",
         },
@@ -242,8 +244,10 @@ func TestMigratorDropIndex(t *testing.T) {
     assert.NoError(t, err)
 }
 
-// 添加外建
+// 添加外键约束
 func TestMigratorAddForeignKey(t *testing.T) {
+    // ALTER TABLE <数据表名> ADD CONSTRAINT <外键名>
+    // FOREIGN KEY(<列名>) REFERENCES <主表名> (<列名>);
     err := db.Migrator().AddForeignKey("demo_player", []map[string]interface{}{
         {
             "constraint": "fk_uid",
@@ -259,10 +263,10 @@ func TestMigratorAddForeignKey(t *testing.T) {
     assert.NoError(t, err)
 }
 
-// 删除外键
+// 删除外键约束
 func TestMigratorDropForeignKey(t *testing.T) {
-    // err := db.Migrator().DropForeignKey("demo_user", "fk_uid")
-    // assert.NoError(t, err)
+    err := db.Migrator().DropForeignKey("demo_player", "fk_uid")
+    assert.NoError(t, err)
 }
 
 // 重命名表明
