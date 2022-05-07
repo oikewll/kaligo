@@ -1469,3 +1469,12 @@ func locationEqual(a, b *time.Location) bool {
 
     return tA.Equal(tB)
 }
+
+type IntSlice []int
+
+func TestFlat(t *testing.T) {
+    s := [][]int{{1, 2}, {3, 4}}
+    assert.Equal(t, []int{1, 2, 3, 4}, FlatSlice(s))
+    ss := []IntSlice{{1, 2}, {3, 4}}
+    assert.Equal(t, IntSlice{1, 2, 3, 4}, FlatSlice(ss))
+}

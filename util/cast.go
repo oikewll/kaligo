@@ -4,7 +4,9 @@
 // Package util provides easy and safe casting in Go.
 package util
 
-import "time"
+import (
+    "time"
+)
 
 // To is use for all type
 func To[T any](i any) (t T) {
@@ -247,6 +249,14 @@ func MapSlice[T, U any](from []T, transformer func(T) U) []U {
     ret := make([]U, len(from))
     for i, v := range from {
         ret[i] = transformer(v)
+    }
+    return ret
+}
+
+func FlatSlice[T ~[]E, E any](from []T) T {
+    ret := make([]E, 0)
+    for _, v := range from {
+        ret = append(ret, v...)
     }
     return ret
 }
