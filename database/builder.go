@@ -35,6 +35,7 @@ func (q *Query) CompileConditions(conditions map[string][]WhereParam) (sqlStr st
         tables = append(tables, q.D.table)
     }
 
+    // AND|OR, []
     for logic, group := range conditions {
         // Process groups of conditions
         for _, condition := range group {
@@ -127,7 +128,7 @@ func (q *Query) CompileConditions(conditions map[string][]WhereParam) (sqlStr st
                     Vars = append(Vars, min, max)
                 } else {
                     for _, table := range tables {
-                        if cryptFields, ok := q.cryptFields[table]; ok && q.cryptKey != "" && InSlice(column, &cryptFields) {
+                        if cryptFields, ok := q.cryptFields[table]; ok && q.Dialector.Name() == "mysql" && q.cryptKey != "" && InSlice(column, &cryptFields) {
                             Vars = append(Vars, q.cryptKey, value)
                         } else {
                             Vars = append(Vars, value)
@@ -137,7 +138,7 @@ func (q *Query) CompileConditions(conditions map[string][]WhereParam) (sqlStr st
 
                 // Is the column need decrypt ???
                 for _, table := range tables {
-                    if cryptFields, ok := q.cryptFields[table]; ok && q.cryptKey != "" && InSlice(column, &cryptFields) {
+                    if cryptFields, ok := q.cryptFields[table]; ok && q.Dialector.Name() == "mysql" && q.cryptKey != "" && InSlice(column, &cryptFields) {
                         column = fmt.Sprintf("AES_DECRYPT(%s, ?)", q.QuoteIdentifier(column))
                     } else {
                         column = q.QuoteIdentifier(column)

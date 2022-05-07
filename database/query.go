@@ -165,12 +165,16 @@ func (q *Query) Execute() (*Query, error) {
     curTime := time.Now()   // current timestamp
     sqlStr   = q.Compile()  // Compile the SQL query
 
+    var needReset bool = true   
     // make sure we have a SQL type to work with
     if q.queryType == 0 && len(sqlStr) >= 11 {
         // get the SQL statement type without having to duplicate the entire statement
         stmt := regexp.MustCompile(`[\s]+`).Split(strings.TrimLeft(sqlStr[0:11], "("), 2)
         switch strings.ToUpper(stmt[0]) {
-        case "DESCRIBE", "EXECUTE", "EXPLAIN", "SELECT", "SHOW":
+        case "DESCRIBE", "EXECUTE", "EXPLAIN", "SHOW":
+            q.queryType = SELECT
+            needReset = false
+        case "SELECT":
             q.queryType = SELECT
         case "INSERT":
             q.queryType = INSERT
@@ -231,10 +235,6 @@ func (q *Query) Execute() (*Query, error) {
         }
         defer rows.Close()
         Scan(rows, q)
-
-        // Query() 这种查询方式不能 Reset，因为不存在 SelectReset() 方法
-        // q.Reset()
-
     } else {    // 执行 Exec()，// INSERT & DELETE & UPDATE
         var rowsAffected int64 = 0
         var lastInsertID int64 = 0
@@ -291,9 +291,6 @@ func (q *Query) Execute() (*Query, error) {
         q.RowsAffected = rowsAffected
         q.LastInsertId = lastInsertID
 
-        // 因为 Query{} 是和 Select 共用的，所以要清一次
-        q.Reset()
-
         if err != nil {
             return q, err
         }
@@ -309,6 +306,11 @@ func (q *Query) Execute() (*Query, error) {
     // db.Logger.Trace(stmt.Context, curTime, func() (string, int64) {
     //     return db.Dialector.Explain(stmt.SQL.String(), stmt.Vars...), db.RowsAffected
     // }, db.Error)
+
+    // "DESCRIBE", "EXECUTE", "EXPLAIN", "SHOW" 这几个不需要 Reset，都是完整的 SQL
+    if needReset {
+        q.Reset()
+    }
 
     return q, nil
 }
