@@ -260,6 +260,7 @@ func (q *Query) Execute() (*Query, error) {
             lastInsertID, err = result.LastInsertId()
             rowsAffected, err = result.RowsAffected()
 
+            // 日志需要支持 [][]any，目前只支持 []any 类型
             for _, Vars := range insVars {
                 logs.Trace(q.DB, curTime, func() (string, int64) {
                     return Explain(sqlStr, Vars...), q.RowsAffected
