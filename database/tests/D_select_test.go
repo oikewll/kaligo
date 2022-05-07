@@ -7,6 +7,15 @@ import (
     "github.com/stretchr/testify/assert"
 )
 
+// 查询数据
+func TestSelect(t *testing.T) {
+    var username string
+    _, err := db.Select("username").From("demo_user").Where("id", "=", 1).
+    Scan(&username).Execute()
+    assert.NoError(t, err)
+    assert.NotNil(t, username)
+}
+
 // 查询数据 DECODE
 func TestSelectDecrypt(t *testing.T) {
     var realname string
@@ -19,7 +28,6 @@ func TestSelectDecrypt(t *testing.T) {
     assert.NoError(t, err)
     assert.NotNil(t, realname)
 }
-
 
 // 查询条件 DECODE
 func TestSelectWhereDecrypt(t *testing.T) {

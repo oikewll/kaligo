@@ -28,7 +28,7 @@ func TestInsertCryptData(t *testing.T) {
     SetCryptFields(map[string][]string{
         "demo_user": {"realname"},
     }).
-    Values([]any{"test", 1}).
+    Values([]any{"demoname", 1}).
     Execute()
 
     assert.NoError(t, err)

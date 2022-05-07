@@ -12,7 +12,6 @@ type Select struct {
     distinct  bool
     froms     []string
     groupBys  []string
-    // havings   map[string][][]string
     havings   map[string][]WhereParam   // map["AND"][] WhereParam{column, op, value}
     offset    int
     forUpdate bool

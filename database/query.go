@@ -8,6 +8,8 @@ import (
     "regexp"
     "strings"
     "time"
+
+    // "github.com/owner888/kaligo/util"
 )
 
 // Query is the struct for MySQL DATE type
@@ -160,8 +162,8 @@ func (q *Query) Execute() (*Query, error) {
         }
     }()
 
-    curTime := time.Now()
-    sqlStr = q.Compile() // Compile the SQL query
+    curTime := time.Now()   // current timestamp
+    sqlStr   = q.Compile()  // Compile the SQL query
 
     // make sure we have a SQL type to work with
     if q.queryType == 0 && len(sqlStr) >= 11 {
@@ -260,13 +262,18 @@ func (q *Query) Execute() (*Query, error) {
             lastInsertID, err = result.LastInsertId()
             rowsAffected, err = result.RowsAffected()
 
+            
+            // logs.Trace(q.DB, curTime, func() (string, int64) {
+            //     return Explain(sqlStr, util.CastSlice[[]any, any](insVars)...), q.RowsAffected
+            // }, q.Error)
+
             // 日志需要支持 [][]any，目前只支持 []any 类型
             for _, Vars := range insVars {
                 logs.Trace(q.DB, curTime, func() (string, int64) {
                     return Explain(sqlStr, Vars...), q.RowsAffected
                 }, q.Error)
             }
-        } else {
+        } else {    // DELETE & UPDATE
             var Vars []any    
             if q.W != nil {
                 Vars = q.W.values

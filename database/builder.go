@@ -25,6 +25,16 @@ func (q *Query) CompileJoin(joins []*Join) string {
 func (q *Query) CompileConditions(conditions map[string][]WhereParam) (sqlStr string, Vars []any) {
     var lastCondition string
 
+    var tables []string
+    // SELECT & UPDATE & DELETE 都可以带 Where 条件
+    if q.queryType == SELECT {
+        tables = append(tables, q.S.froms...)
+    } else if q.queryType == UPDATE {
+        tables = append(tables, q.U.table)
+    } else if q.queryType == DELETE {
+        tables = append(tables, q.D.table)
+    }
+
     for logic, group := range conditions {
         // Process groups of conditions
         for _, condition := range group {
@@ -90,23 +100,10 @@ func (q *Query) CompileConditions(conditions map[string][]WhereParam) (sqlStr st
                     default:
                         logs.Error("Unsupported BETWEEN Type.")
                     }
-
-                    // if q.parameters[min] != "" {
-                    //     // Set the parameter as the minimum
-                    //     min = q.parameters[min]
-                    // }
-                    //
-                    // if q.parameters[max] != "" {
-                    //     // Set the parameter as the maximum
-                    //     max = q.parameters[max]
-                    // }
-                    // value = q.Quote(min) + " AND " + q.Quote(max)
                     value = "? AND ?"
                     Vars = append(Vars, min, max)
 
                 } else if op == "IN" || op == "NOT IN" {
-                    // valueArr := strings.Split(value, ",")
-                    // value = q.Quote(valueArr)
                     switch v := value.(type) {                    
                     case string:
                         valueArr := strings.Split(v, ",")
@@ -129,35 +126,25 @@ func (q *Query) CompileConditions(conditions map[string][]WhereParam) (sqlStr st
                     }
                     Vars = append(Vars, min, max)
                 } else {
-                    Vars = append(Vars, value)
+                    for _, table := range tables {
+                        if cryptFields, ok := q.cryptFields[table]; ok && q.cryptKey != "" && InSlice(column, &cryptFields) {
+                            Vars = append(Vars, q.cryptKey, value)
+                        } else {
+                            Vars = append(Vars, value)
+                        }
+                    }
                 }
-                // } else {
-                //     if q.parameters[value] != "" {
-                //         // Set the parameter as the value
-                //         value = q.parameters[value]
-                //     }
-                //
-                //     // Quote the entire value normally
-                //     value = q.Quote(value)
-                // }
 
                 // Is the column need decrypt ???
-                var tables []string
-                if q.queryType == SELECT {
-                    tables = append(tables, q.S.froms...)
-                } else if q.queryType == UPDATE {
-                    tables = append(tables, q.U.table)
-                }
                 for _, table := range tables {
                     if cryptFields, ok := q.cryptFields[table]; ok && q.cryptKey != "" && InSlice(column, &cryptFields) {
-                        column = fmt.Sprintf("AES_DECRYPT(%s, \"%s\")", q.QuoteIdentifier(column), q.cryptKey)
+                        column = fmt.Sprintf("AES_DECRYPT(%s, ?)", q.QuoteIdentifier(column))
                     } else {
                         column = q.QuoteIdentifier(column)
                     }
                 }
 
                 // Append the statement to the query
-                // sqlStr += column + " " + op + " " + value
                 sqlStr += fmt.Sprintf("%s %s ?", column, op)
             }
 
