@@ -308,9 +308,7 @@ func (q *Query) Execute() (*Query, error) {
     // }, db.Error)
 
     // "DESCRIBE", "EXECUTE", "EXPLAIN", "SHOW" 这几个不需要 Reset，都是完整的 SQL
-    if needReset {
-        q.Reset()
-    }
+    q.Reset(needReset)
 
     return q, nil
 }
@@ -383,17 +381,19 @@ func (q *Query) Find(value any) *Query {
 }
 
 // Reset the query parameters
-func (q *Query) Reset() *Query {
-    switch q.queryType {
-    case SELECT:
-        q.SelectReset()
-    case INSERT:
-        q.InsertReset()
-    case UPDATE:
-        q.UpdateReset()
-    case DELETE:
-        q.DeleteReset()
-    default:
+func (q *Query) Reset(needReset bool) *Query {
+    if needReset {
+        switch q.queryType {
+        case SELECT:
+            q.SelectReset()
+        case INSERT:
+            q.InsertReset()
+        case UPDATE:
+            q.UpdateReset()
+        case DELETE:
+            q.DeleteReset()
+        default:
+        }
     }
 
     //q.Dest      = nil
@@ -405,7 +405,7 @@ func (q *Query) Reset() *Query {
     q.cryptKey = ""
     q.cryptFields = nil
 
-    // 这里不需要清除，由调用的去清除，SELECT、INSERT、UPDATE、DELETE这些reset去清除
+    // 这里不需要清除，由调用的去清除，SELECT、INSERT、UPDATE、DELETE 这些 Reset() 去清除
     //q.joinObjs   = nil
     //q.lastJoin   = nil
     //q.parameters = nil
