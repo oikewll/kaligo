@@ -1,51 +1,131 @@
 package tpl
 
 import (
+    "bytes"
+    "fmt"
     "html/template"
-    "net/http"
+    "io"
+    "io/ioutil"
+    "log"
+    "os"
+    "path/filepath"
+    "strings"
+    "sync"
+    "time"
+
+    "github.com/owner888/kaligo/util"
 )
 
-var (
-    args map[string]any
-    tpls map[string]string
-)
-
-// Assign is the function for set the corresponding value of the key value, if not add, if there is a key change
-func Assign(key string, val any) bool {
-
-    if len(args) == 0 {
-        args = make(map[string]any)
-    }
-    args[key] = val
-    return true
+type Tpl struct {
+    *template.Template
+    dir        string
+    ext        string
+    debug      bool
+    funcs      template.FuncMap
+    loadedAt   time.Time
+    mu         sync.Mutex
+    reloadTime int
 }
 
-// Layout is the function for set the corresponding value of the key value, if not add, if there is a key change
-func Layout(key string, val string) bool {
-
-    if len(tpls) == 0 {
-        tpls = make(map[string]string)
+func NewTmpl(dir, ext string, debug bool, funcs template.FuncMap, reloadTime int) (tpl *Tpl, err error) {
+    if dir, err = filepath.Abs(dir); err != nil {
+        return
     }
-    tpls[key] = val
-    return true
+    tpl = new(Tpl)
+    tpl.dir = dir
+    tpl.ext = ext
+    tpl.debug = debug
+    tpl.funcs = funcs
+    tpl.reloadTime = reloadTime
+    if err = tpl.Load(); err != nil {
+        tpl = nil
+        return
+    }
+    if tpl.debug {
+        var buf bytes.Buffer
+        for _, tmpl := range tpl.Templates() {
+            buf.WriteString("\t- ")
+            buf.WriteString(tmpl.Name())
+            buf.WriteString("\n")
+        }
+        //log.Printf("[Omux-debug] Loaded HTML Templates (%d): \n%s\n", len(tpl.Templates()), buf.String())
+    }
+
+    reload_ticker := time.NewTicker(time.Second * time.Duration(reloadTime))
+    go func() {
+        for range reload_ticker.C {
+            err := tpl.Load()
+            if err != nil {
+                log.Printf("tpl reload error:%v", err.Error())
+            }
+        }
+    }()
+
+    return
 }
 
-// Display is the function for parse template files
-func Display(w http.ResponseWriter, tpl string) error {
+func (t *Tpl) Load() (err error) {
 
-    t, err := template.ParseFiles("template/" + tpl)
-    if err != nil {
-        return err
-    }
-
-    for _, v := range tpls {
-        t, err = t.ParseGlob("template/" + v)
+    t.loadedAt = time.Now()
+    var root = template.New("").Funcs(t.funcs)
+    var walkFunc = func(path string, info os.FileInfo, err error) (_ error) {
         if err != nil {
             return err
         }
+        if !info.Mode().IsRegular() {
+            return
+        }
+        if filepath.Ext(path) != t.ext {
+            return
+        }
+        var rel string
+        if rel, err = filepath.Rel(t.dir, path); err != nil {
+            return err
+        }
+        rel = strings.TrimSuffix(rel, t.ext)
+        var (
+            nt = root.New(filepath.ToSlash(rel))
+            b  []byte
+        )
+        if b, err = ioutil.ReadFile(path); err != nil {
+            return err
+        }
+        _, err = nt.Parse(string(b))
+        return err
     }
 
-    //t.ExecuteTemplate(w, tpl, args)
-    t.Execute(w, args)
-    return err
+    if err = filepath.Walk(t.dir, walkFunc); err != nil {
+        return
+    }
+
+    t.Template = root
+    return
+}
+
+func (t *Tpl) Render(w io.Writer, name string, data interface{}) (err error) {
+    t.mu.Lock()
+    defer t.mu.Unlock()
+    if t.debug == true {
+        if err = t.Load(); err != nil {
+            return
+        }
+    }
+    tpf := filepath.Join(t.dir, name+t.ext)
+    if !util.FileExists(tpf) {
+        msg := "Template html paht not :%s"
+        data = fmt.Sprintf(msg, name+t.ext)
+        name = "error/404"
+        log.Printf(msg, tpf)
+    }
+    err = t.ExecuteTemplate(w, name, data)
+    return
+}
+
+func (t *Tpl) ReLoad() (err error) {
+    t.mu.Lock()
+    defer t.mu.Unlock()
+    if err = t.Load(); err != nil {
+        return
+    }
+    return
 }

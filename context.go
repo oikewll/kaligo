@@ -175,6 +175,11 @@ func (c *Context) JSON(code int, obj any) {
     c.Render(code, render.JSON{Data: obj})
 }
 
+func (c *Context) HTML(code int, name string, obj interface{}) {
+    instance := c.mux.HTMLRender.Instance(name, obj)
+    c.Render(code, instance)
+}
+
 // String writes the given string into the response body.
 func (c *Context) String(code int, format string, values ...any) {
     c.Render(code, render.String{Format: format, Data: values})

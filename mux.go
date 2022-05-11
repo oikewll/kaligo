@@ -3,6 +3,7 @@ package kaligo
 import (
     "context"
     "fmt"
+    "html/template"
     "log"
     "net/http"
     "os"
@@ -16,6 +17,8 @@ import (
 
     "github.com/owner888/kaligo/cache"
     "github.com/owner888/kaligo/database"
+    "github.com/owner888/kaligo/render"
+    "github.com/owner888/kaligo/tpl"
     "github.com/owner888/kaligo/util"
 )
 
@@ -37,6 +40,14 @@ type Mux struct {
     Cache        cache.Cache // interface 本身是指针，不需要用 *cache.Cache，struct 才需要
     pool         sync.Pool   // Context 复用
     Timer        *Timer
+
+    // 模版页面函数映射
+    //
+    //  mux.FuncMap["strLen"] = func(str string) int { return len(str) }
+    //
+    //  <span>{{strLen $aStr}}</div>
+    FuncMap    template.FuncMap
+    HTMLRender render.HTMLRender
     // 统计
     requestCount  uint32
     responseCount uint32
@@ -52,6 +63,7 @@ func NewRouter() *Mux {
     if err != nil {
         panic(err)
     }
+    mux.FuncMap = template.FuncMap{}
     mux.Handlers = DefaultHandlers
     mux.Cache = cache
     mux.Timer = NewTimer(mux)
@@ -274,6 +286,15 @@ func (a *Mux) ControllerHandler(controllerType reflect.Type, m string, params Pa
     return func(ctx *Context) {
         runController(controllerType, m, ctx, params)
     }
+}
+
+func (mux *Mux) SetHTMLTemplate(dir string, ext string, reloadTime int) (*tpl.Tpl, error) {
+    t, err := tpl.NewTmpl(dir, ext, true, mux.FuncMap, reloadTime)
+    if err != nil {
+        return nil, err
+    }
+    mux.HTMLRender = render.HTML{Template: t.Template, Tpl: t}
+    return t, nil
 }
 
 // Router 接口实现
