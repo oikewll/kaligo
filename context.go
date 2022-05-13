@@ -175,7 +175,7 @@ func (c *Context) JSON(code int, obj any) {
     c.Render(code, render.JSON{Data: obj})
 }
 
-func (c *Context) HTML(code int, name string, obj interface{}) {
+func (c *Context) HTML(code int, name string, obj any) {
     instance := c.mux.HTMLRender.Instance(name, obj)
     c.Render(code, instance)
 }
