@@ -11,11 +11,20 @@ body {
     align-items: stretch;
 }
 
-.home-content {
+.content {
     display: flex;
     align-items: center;
     justify-content: center;
     flex: 1;
+}
+
+.nav {
+    display: flex;
+    flex-direction: row;
+}
+
+.nav li {
+    margin-right: 40px;
 }
 
 .index-title {
@@ -25,6 +34,13 @@ body {
 .center {
     text-align: center;
 }
+
+.header {
+    height: 50px;
+    display: flex;
+    justify-content: center;
+}
+
 .footer {
     height: 50px;
 }

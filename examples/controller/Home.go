@@ -18,8 +18,9 @@ func (c *Home) Index() {
         tplName = "index"
     }
     data := kaligo.H{
-        "title": "Hello, Kaligo!",
-        "year":  fmt.Sprintf("%v", time.Now().Year()),
+        "title":   "Hello, Kaligo!",
+        "year":    fmt.Sprintf("%v", time.Now().Year()),
+        "tplName": tplName,
     }
     c.HTML(http.StatusOK, tplName, data)
 }
