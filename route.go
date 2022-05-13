@@ -1,6 +1,7 @@
 package kaligo
 
 import (
+    "errors"
     "reflect"
     "regexp"
     // "net/http"
@@ -14,6 +15,21 @@ type Route struct {
     ControllerType reflect.Type
     // Middlewares returns the list of middlewares in use by the router.
     // Middlewares() Middlewares
+}
+
+func (r *Route) IsMethodsValid() (bool, error) {
+    var err error
+    c := reflect.New(r.ControllerType)
+    for _, v := range r.Methods {
+        m := c.MethodByName(v)
+        if !m.IsValid() {
+            if err == nil {
+                err = errors.New("路由方法不存在: ")
+            }
+            err = errors.New(err.Error() + v + ",")
+        }
+    }
+    return err == nil, err
 }
 
 // StaticRoute is a Router's route

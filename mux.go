@@ -17,6 +17,7 @@ import (
 
     "github.com/owner888/kaligo/cache"
     "github.com/owner888/kaligo/database"
+    "github.com/owner888/kaligo/logs"
     "github.com/owner888/kaligo/render"
     "github.com/owner888/kaligo/tpl"
     "github.com/owner888/kaligo/util"
@@ -153,6 +154,9 @@ func (a *Mux) AddRoute(pattern string, m map[string]string, c Interface) {
         Methods:        m,
         Params:         params,
         ControllerType: reflect.Indirect(reflect.ValueOf(c)).Type(),
+    }
+    if ok, err := route.IsMethodsValid(); !ok {
+        logs.Panic(err.Error())
     }
 
     a.routes = append(a.routes, route)
