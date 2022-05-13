@@ -24,10 +24,10 @@ type Tpl struct {
     funcs      template.FuncMap
     loadedAt   time.Time
     mu         sync.Mutex
-    reloadTime int
+    reloadTime time.Duration
 }
 
-func NewTmpl(dir, ext string, debug bool, funcs template.FuncMap, reloadTime int) (tpl *Tpl, err error) {
+func NewTmpl(dir, ext string, debug bool, funcs template.FuncMap, reloadTime time.Duration) (tpl *Tpl, err error) {
     if dir, err = filepath.Abs(dir); err != nil {
         return
     }
@@ -51,7 +51,7 @@ func NewTmpl(dir, ext string, debug bool, funcs template.FuncMap, reloadTime int
         //log.Printf("[Omux-debug] Loaded HTML Templates (%d): \n%s\n", len(tpl.Templates()), buf.String())
     }
 
-    reload_ticker := time.NewTicker(time.Second * time.Duration(reloadTime))
+    reload_ticker := time.NewTicker(reloadTime)
     go func() {
         for range reload_ticker.C {
             err := tpl.Load()

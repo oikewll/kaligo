@@ -14,6 +14,7 @@ import (
     "strings"
     "sync"
     "sync/atomic"
+    "time"
 
     "github.com/owner888/kaligo/cache"
     "github.com/owner888/kaligo/database"
@@ -292,7 +293,7 @@ func (a *Mux) ControllerHandler(controllerType reflect.Type, m string, params Pa
     }
 }
 
-func (mux *Mux) SetHTMLTemplate(dir string, ext string, reloadTime int) (*tpl.Tpl, error) {
+func (mux *Mux) SetHTMLTemplate(dir string, ext string, reloadTime time.Duration) (*tpl.Tpl, error) {
     t, err := tpl.NewTmpl(dir, ext, true, mux.FuncMap, reloadTime)
     if err != nil {
         return nil, err
