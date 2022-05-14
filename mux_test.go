@@ -73,6 +73,20 @@ func TestMultipart(t *testing.T) {
     mux.ServeHTTP(w, r)
 }
 
+func TestQueryMap(t *testing.T) {
+    mux := NewRouter()
+    mux.AddRoute("/", map[string]string{http.MethodPost: "Index", http.MethodGet: "Index"}, &TestController{})
+    w := httptest.NewRecorder()
+    r := httptest.NewRequest(http.MethodPost, "/?both=GET&id=main&id=omit&array[]=first&array[]=second&ids[a]=hi&ids[b]=3.14", nil)
+    r.Header.Set("Content-Type", string(util.MIMEPostForm))
+    testHandlder = func(c *TestController) {
+        assert.Equal(t, []string{"main", "omit"}, c.QueryArray("id"))
+        assert.Equal(t, []string{"first", "second"}, c.QueryArray("array[]"))
+        assert.Equal(t, map[string]string{"a": "hi", "b": "3.14"}, c.QueryMap("ids"))
+    }
+    mux.ServeHTTP(w, r)
+}
+
 // 1、其他编程语言不常看到的：把map的value设置成函数，可以实现工厂模式
 // 2、golang不具备set，但是可以用map来实现
 //func TestMapWithFuncValue(t *testing.T) {

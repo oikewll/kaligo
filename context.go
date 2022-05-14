@@ -308,6 +308,36 @@ func (c *Context) QueryValue(key string, defaultValue ...string) string {
     return c.getDefaultValue(defaultValue...)
 }
 
+// QueryArray returns a slice of strings for a given query key.
+// The length of the slice depends on the number of params with the given key.
+func (c *Context) QueryArray(key string) (values []string) {
+    c.initQueryCache()
+    values, _ = c.QueryCache[key]
+    return
+}
+
+// QueryMap returns a map for a given query key.
+func (c *Context) QueryMap(key string) (dicts map[string]string) {
+    c.initQueryCache()
+    dicts, _ = c.get(c.QueryCache, key)
+    return
+}
+
+// get is an internal method and returns a map which satisfy conditions.
+func (c *Context) get(m map[string][]string, key string) (map[string]string, bool) {
+    dicts := make(map[string]string)
+    exist := false
+    for k, v := range m {
+        if i := strings.IndexByte(k, '['); i >= 1 && k[0:i] == key {
+            if j := strings.IndexByte(k[i+1:], ']'); j >= 1 {
+                exist = true
+                dicts[k[i+1:][:j]] = v[0]
+            }
+        }
+    }
+    return dicts, exist
+}
+
 func (c *Context) initFormCache() {
     if c.FormCache == nil {
         c.FormCache = util.DefaultMIMEParsers.ParseValues(c.Request)
