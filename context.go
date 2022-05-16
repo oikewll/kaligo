@@ -180,6 +180,10 @@ func (c *Context) HTML(code int, name string, obj any) {
     c.Render(code, instance)
 }
 
+func (c *Context) View(name string, obj interface{}) {
+    c.HTML(http.StatusOK, name, obj)
+}
+
 // String writes the given string into the response body.
 func (c *Context) String(code int, format string, values ...any) {
     c.Render(code, render.String{Format: format, Data: values})
