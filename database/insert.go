@@ -28,10 +28,6 @@ func (q *Query) Values(values any) *Query {
         q.I.values = append(q.I.values, vals)
     case [][]any:
         q.I.values = append(q.I.values, vals...)
-        // for _, v := range vals {
-        //     q.I.values = append(q.I.values, v)
-        // }
-        // logs.Error(q.I.values)
     default:
         logs.Error("Insert Values: Unknow Type")
     }
@@ -69,9 +65,7 @@ func (q *Query) OnDuplicateKeyUpdate(updates any) *Query {
     case map[string]any:
         q.I.updates = append(q.I.updates, vals)
     case []map[string]any:
-        for _, v := range vals {
-            q.I.updates = append(q.I.updates, v)
-        }
+        q.I.updates = append(q.I.updates, vals...)
     default:
         logs.Error("Insert OnDuplicateKeyUpdate: Unknow Type")
     }

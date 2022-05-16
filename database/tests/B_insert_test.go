@@ -2,18 +2,23 @@ package tests
 
 import (
     "testing"
-    "github.com/owner888/kaligo/logs"
+    // "github.com/owner888/kaligo/logs"
     // "github.com/owner888/kaligo/database"
     "github.com/stretchr/testify/assert"
 )
 
 
 func TestInsert(t *testing.T) {
-    _, err := db.Insert("demo_user", []string{"username", "password", "gender"}).
+    q, err := db.Insert("demo_user", []string{"username", "password", "gender"}).
     Values([]any{"test1", "test1passwd", 2}).
     Execute()
     assert.NoError(t, err)
     // logs.Debug("LastInsertId = ", q.LastInsertId)
+
+    _, err = db.Insert("demo_player", []string{"uid", "room_id"}).
+    Values([]any{q.LastInsertId, 1}).
+    Execute()
+    assert.NoError(t, err)
 }
 
 func TestInsertMutil(t *testing.T) {
@@ -23,7 +28,7 @@ func TestInsertMutil(t *testing.T) {
 }
 
 func TestInsertCryptData(t *testing.T) {
-    q, err := db.Insert("demo_user", []string{"realname", "gender"}).
+    _, err := db.Insert("demo_user", []string{"realname", "gender"}).
     SetCryptKey("aaa").
     SetCryptFields(map[string][]string{
         "demo_user": {"realname"},
@@ -32,7 +37,7 @@ func TestInsertCryptData(t *testing.T) {
     Execute()
 
     assert.NoError(t, err)
-    logs.Debug("LastInsertId = ", q.LastInsertId)
+    // logs.Debug("LastInsertId = ", q.LastInsertId)
 }
 
 func TestInsertFromSelect(t *testing.T) {
