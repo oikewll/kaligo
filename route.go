@@ -24,7 +24,7 @@ func (r *Route) IsMethodsValid() (bool, error) {
         m := c.MethodByName(v)
         if !m.IsValid() {
             if err == nil {
-                err = errors.New("路由方法不存在: ")
+                err = errors.New("Routing method does not exist: ")
             }
             err = errors.New(err.Error() + v + ",")
         }
