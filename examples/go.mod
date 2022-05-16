@@ -8,6 +8,7 @@ require github.com/owner888/kaligo v0.0.0-00010101000000-000000000000
 
 require (
 	github.com/bradfitz/gomemcache v0.0.0-20220106215444-fb4bf637b56d // indirect
+	github.com/go-sql-driver/mysql v1.6.0 // indirect
 	github.com/gomodule/redigo v2.0.0+incompatible // indirect
 	github.com/jinzhu/now v1.1.2 // indirect
 	github.com/kr/text v0.2.0 // indirect

@@ -17,6 +17,17 @@ func AddRoutes(r kaligo.Router) {
         http.MethodPost: "Logout",
     }, &User{})
 
+    r.AddRoute("todo", map[string]string{
+        http.MethodGet:    "List",
+        http.MethodPost:   "Create",
+        http.MethodPut:    "Update",
+        http.MethodDelete: "Delete",
+    }, &Todo{})
+
+    r.AddRoute("todo/:id", map[string]string{
+        http.MethodGet: "Detail",
+    }, &Todo{})
+
     r.AddRoute("/", map[string]string{http.MethodGet: "Index"}, &Home{})
     r.AddRoute("/home/:tplName", map[string]string{http.MethodGet: "Index"}, &Home{})
 
