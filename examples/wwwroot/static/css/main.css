@@ -1,4 +1,4 @@
-html, 
+html,
 body {
     height: 100%;
     margin: 0;
@@ -43,4 +43,22 @@ body {
 
 .footer {
     height: 50px;
+}
+
+#todo {
+    width: 100%;
+    max-width: 640px;
+    align-self: flex-start;
+    padding-top: 44px;
+}
+
+#todo .table {
+    padding-top: 20px;
+}
+
+#todo .el-dialog {
+    width: 420px;
+}
+#todo .el-input {
+    width: 100%;
 }

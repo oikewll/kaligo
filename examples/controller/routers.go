@@ -9,22 +9,22 @@ import (
 )
 
 func AddRoutes(r kaligo.Router) {
-    r.AddRoute("user/login", map[string]string{
+    r.AddRoute("/user/login", map[string]string{
         http.MethodPost: "Login",
     }, &User{})
 
-    r.AddRoute("user/logout", map[string]string{
+    r.AddRoute("/api/user/logout", map[string]string{
         http.MethodPost: "Logout",
     }, &User{})
 
-    r.AddRoute("todo", map[string]string{
+    r.AddRoute("/api/todo", map[string]string{
         http.MethodGet:    "List",
         http.MethodPost:   "Create",
         http.MethodPut:    "Update",
         http.MethodDelete: "Delete",
     }, &Todo{})
 
-    r.AddRoute("todo/:id", map[string]string{
+    r.AddRoute("api/todo/:id", map[string]string{
         http.MethodGet: "Detail",
     }, &Todo{})
 

@@ -1,7 +1,8 @@
 package model
 
 type User struct {
-	Name string
+    Name string
+    Base
 }
 
 func (m User) List() {
