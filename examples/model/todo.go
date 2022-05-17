@@ -5,10 +5,10 @@ import (
 )
 
 type Todo struct {
-    Title string `json:"title"`
-    Date  string `json:"date"`
-    Done  bool   `json:"done"`
-    Id    ID     `json:"id"`
+    Title string `db:"title"`
+    Date  string `db:"date"`
+    Done  bool   `db:"done"`
+    Id    ID     `db:"id"`
 }
 
 func (m *Todo) table() string { return "todo" }

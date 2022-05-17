@@ -9,8 +9,8 @@ import (
 func result(ctx *kaligo.Context, data any, err error) {
     if err != nil {
         ctx.JSON(http.StatusBadRequest, kaligo.H{
-            "code":    -1,
-            "message": err.Error(),
+            "code": -1,
+            "msg":  err.Error(),
         })
     } else if data != nil {
         ctx.JSON(http.StatusOK, kaligo.H{

@@ -1,7 +1,6 @@
 const App = {
     data() {
         return {
-            message: "Hello Element Plus",
             api: '/api/todo',
             table: null,
             tableData: [],

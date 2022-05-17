@@ -8,7 +8,7 @@ import (
 
 func Auth(c *kaligo.Context) {
     if !GetSession(c).IsValid() {
-        c.JSON(http.StatusUnauthorized, kaligo.H{"code": -1, "message": "not authorized"})
+        c.JSON(http.StatusUnauthorized, kaligo.H{"code": -1, "msg": "not authorized"})
         c.Abort()
         return
     }

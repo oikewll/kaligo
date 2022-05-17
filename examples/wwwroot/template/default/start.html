@@ -23,7 +23,7 @@ type Index struct {
 }
 
 func (c *Index) Index() {
-    c.JSON(http.StatusOK, kaligo.H{"message": "Hello, Kaligo!"})
+    c.JSON(http.StatusOK, kaligo.H{"msg": "Hello, Kaligo!"})
 }
 
 func main() {
