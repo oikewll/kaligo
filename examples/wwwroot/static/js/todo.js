@@ -8,6 +8,8 @@ const App = {
             selected: [],
             form: {},
             dialogFormVisible: false,
+            isLogin: false,
+            login: {}
         };
     },
     computed: {
@@ -48,8 +50,15 @@ const App = {
                 .then(response => (this.tableData = response.data.data))
                 .catch(console.log)
         },
+        handleLogin() {
+            this.isLogin = true
+        },
+        handleLogout() {
+            this.isLogin = false
+        },
     },
     mounted: function () {
+        axios.defaults.withCredentials = true
         this.handleList()
     }
 };

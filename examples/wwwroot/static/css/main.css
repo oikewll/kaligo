@@ -48,8 +48,15 @@ body {
 #todo {
     width: 100%;
     max-width: 640px;
+    height: 100%;
     align-self: flex-start;
     padding-top: 44px;
+    display: flex;
+    justify-content: center;
+}
+
+#todo .list {
+    width: 100%;
 }
 
 #todo .table {
@@ -61,4 +68,10 @@ body {
 }
 #todo .el-input {
     width: 100%;
+}
+
+.login {
+    align-self: center;
+    justify-self: center;
+    width: 320px;
 }

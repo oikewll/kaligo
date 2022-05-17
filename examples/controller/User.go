@@ -7,7 +7,8 @@ type User struct {
 }
 
 func (c *User) Login() {
-
+    username := c.FormValue("username")
+    c.SetCookie("access_token", username, 1000, "/", "", true, true)
 }
 
 func (c *User) Logout() {

@@ -2,6 +2,7 @@ package main
 
 import (
     "examples/controller"
+    "examples/middleware/auth"
     "examples/model"
     "flag"
     "fmt"
@@ -56,5 +57,6 @@ func run(db *database.DB) {
     r := kaligo.NewRouter()
     r.AddDB(db)
     controller.AddRoutes(r)
+    r.Use(auth.Auth)
     kaligo.Run(r, ":"+config.String("app.server.port", "80"))
 }
