@@ -1,129 +1,148 @@
 package util
 
 import (
-    "archive/tar"
-    "compress/gzip"
-    "fmt"
+    "archive/zip"
+	"path/filepath"
+    "strings"
     "io"
     "os"
 )
 
-func zip(zipname, openfile string) {
-    // file write
-    fw, err := os.Create(zipname)
-    if err != nil {
-        panic(err)
-    }
-    defer fw.Close()
+func Zip(dst, src string) (err error) {
+	// 创建准备写入的文件
+	fw, err := os.Create(dst)
+	defer fw.Close()
+	if err != nil {
+		return err
+	}
 
-    // gzip write
-    gw := gzip.NewWriter(fw)
-    defer gw.Close()
+	// 通过 fw 来创建 zip.Write
+	zw := zip.NewWriter(fw)
+	defer zw.Close()
 
-    // tar write
-    tw := tar.NewWriter(gw)
-    defer tw.Close()
+	// 下面来将文件写入 zw ，因为有可能会有很多个目录及文件，所以递归处理
+	return filepath.Walk(src, func(path string, fi os.FileInfo, errBack error) (err error) {
+		if errBack != nil {
+			return errBack
+		}
 
-    // 打开文件夹
-    dir, err := os.Open(openfile)
-    if err != nil {
-        panic(nil)
-    }
-    defer dir.Close()
+		if src == path {
+			return
+		}
 
-    // 读取文件列表
-    fis, err := dir.Readdir(0)
-    if err != nil {
-        panic(err)
-    }
+		// 通过文件信息，创建 zip 的文件信息
+		fh, err := zip.FileInfoHeader(fi)
+		if err != nil {
+			return
+		}
 
-    // 遍历文件列表
-    for _, fi := range fis {
-        // 逃过文件夹, 我这里就不递归了
-        if fi.IsDir() {
-            continue
-        }
+		// 替换文件信息中的文件名
+		fh.Name = strings.TrimPrefix(path, string(filepath.Separator))
 
-        // 打印文件名称
-        fmt.Println(fi.Name())
+		// 这步开始没有加，会发现解压的时候说它不是个目录
+		if fi.IsDir() {
+			fh.Name += "/"
+		}
 
-        // 打开文件
-        fr, err := os.Open(dir.Name() + "/" + fi.Name())
-        if err != nil {
-            panic(err)
-        }
-        defer fr.Close()
+		// 写入文件信息，并返回一个 Write 结构
+		w, err := zw.CreateHeader(fh)
+		if err != nil {
+			return
+		}
 
-        // 信息头
-        h := new(tar.Header)
-        h.Name = fi.Name()
-        h.Size = fi.Size()
-        h.Mode = int64(fi.Mode())
-        h.ModTime = fi.ModTime()
+		// 检测，如果不是标准文件就只写入头信息，不写入文件数据到 w
+		// 如目录，也没有数据需要写
+		if !fh.Mode().IsRegular() {
+			return nil
+		}
 
-        // 写信息头
-        err = tw.WriteHeader(h)
-        if err != nil {
-            panic(err)
-        }
-
-        // 写文件
-        _, err = io.Copy(tw, fr)
-        if err != nil {
-            panic(err)
-        }
-    }
-
-    fmt.Println("tar.gz ok")
+		// 打开要压缩的文件
+		fr, err := os.Open(path)
+		defer fr.Close()
+		if err != nil {
+			return
+		}
+		// 将打开的文件 Copy 到 w
+		_, err = io.Copy(w, fr)
+		if err != nil {
+			return
+		}
+		return nil
+	})
 }
 
+func Unzip(zipFile string, destDir string) error {
+	zipReader, err := zip.OpenReader(zipFile)
+	if err != nil {
+		return err
+	}
+	defer zipReader.Close()
 
-func unzip(zipname, openfile string) {
-    // file read
-    fr, err := os.Open(zipname)
-    if err != nil {
-        panic(err)
-    }
-    defer fr.Close()
+	for _, f := range zipReader.File {
+		fpath := filepath.Join(destDir, f.Name)
+		if f.FileInfo().IsDir() {
+			os.MkdirAll(fpath, os.ModePerm)
+		} else {
+			if err = os.MkdirAll(filepath.Dir(fpath), os.ModePerm); err != nil {
+				return err
+			}
 
-    // gzip read
-    gr, err := gzip.NewReader(fr)
-    if err != nil {
-        panic(err)
-    }
-    defer gr.Close()
+			inFile, err := f.Open()
+			if err != nil {
+				return err
+			}
+			defer inFile.Close()
 
-    // tar read
-    tr := tar.NewReader(gr)
+			outFile, err := os.OpenFile(fpath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, os.ModePerm)
+			if err != nil {
+				return err
+			}
+			defer outFile.Close()
 
-    // 读取文件
-    for {
-        h, err := tr.Next()
-        if err == io.EOF {
-            break
-        }
-        if err != nil {
-            panic(err)
-        }
-
-        // 显示文件
-        fmt.Println(h.Name)
-
-        // 打开文件
-        fw, err := os.OpenFile(openfile + h.Name, os.O_CREATE | os.O_WRONLY, 0644/*os.FileMode(h.Mode)*/)
-        if err != nil {
-            panic(err)
-        }
-        defer fw.Close()
-
-        // 写文件
-        _, err = io.Copy(fw, tr)
-        if err != nil {
-            panic(err)
-        }
-
-    }
-
-    fmt.Println("un tar.gz ok")
+			_, err = io.Copy(outFile, inFile)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }
 
+func ZipFile(dst, src string) (err error) {
+	fi, err := os.Stat(src)
+	if err != nil {
+		return err
+	}
+	// 创建准备写入的文件
+	fw, err := os.Create(dst)
+	defer fw.Close()
+	if err != nil {
+		return err
+	}
+	// 通过 fw 来创建 zip.Write
+	zw := zip.NewWriter(fw)
+	defer zw.Close()
+	fh, err := zip.FileInfoHeader(fi)
+	if err != nil {
+		return
+	}
+	fh.Name = filepath.Base(src)
+
+	// 写入文件信息，并返回一个 Write 结构
+	w, err := zw.CreateHeader(fh)
+	if err != nil {
+		return
+	}
+	// 打开要压缩的文件
+	fr, err := os.Open(src)
+	defer fr.Close()
+	if err != nil {
+		return
+	}
+	// 将打开的文件 Copy 到 w
+	_, err = io.Copy(w, fr)
+	if err != nil {
+		return err
+	}
+	return nil
+}

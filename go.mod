@@ -13,6 +13,12 @@ require (
 )
 
 require (
+	github.com/google/uuid v1.0.0 // indirect
+	github.com/pborman/uuid v1.2.1 // indirect
+	golang.org/x/net v0.0.0-20220516155154-20f960328961 // indirect
+)
+
+require (
 	github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e // indirect
 	google.golang.org/protobuf v1.28.0
 	gopkg.in/check.v1 v1.0.0-20200227125254-8fa46927fb4f // indirect
