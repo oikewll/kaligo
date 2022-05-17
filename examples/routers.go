@@ -19,7 +19,7 @@ func AddRoutes(r kaligo.Router) {
 }
 
 func addApiRoute(r kaligo.Router) {
-    r.AddRoute("/user/login", map[string]string{
+    r.AddRoute("/api/user/login", map[string]string{
         http.MethodPost: "Login",
     }, &controller.User{})
 
@@ -34,7 +34,7 @@ func addApiRoute(r kaligo.Router) {
         http.MethodDelete: "Delete",
     }, &controller.Todo{})
 
-    r.AddRoute("api/todo/:id", map[string]string{
+    r.AddRoute("/api/todo/:id", map[string]string{
         http.MethodGet: "Detail",
     }, &controller.Todo{})
 }
@@ -47,6 +47,10 @@ func addHomeRoute(r kaligo.Router) {
 func addStaticRoute(r kaligo.Router) {
     r.AddStaticRoute("/static", webRootPath()+"/static")
     r.AddStaticRoute("/favicon.ico", webRootPath()+"/favicon.ico")
+}
+
+func addDocsRoute(r kaligo.Router) {
+    r.AddRoute("/swagger/*", map[string]string{http.MethodGet: "Index"}, &controller.Docs{})
 }
 
 var Tpls *tpl.Tpl
