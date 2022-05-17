@@ -8,15 +8,13 @@ require (
 	github.com/gomodule/redigo v2.0.0+incompatible
 	github.com/jinzhu/now v1.1.2
 	github.com/mattn/go-sqlite3 v2.0.3+incompatible
+	github.com/pborman/uuid v1.2.1
 	github.com/stretchr/testify v1.7.0
 	golang.org/x/crypto v0.0.0-20210711020723-a769d52b0f97
+	golang.org/x/net v0.0.0-20220516155154-20f960328961
 )
 
-require (
-	github.com/google/uuid v1.0.0 // indirect
-	github.com/pborman/uuid v1.2.1 // indirect
-	golang.org/x/net v0.0.0-20220516155154-20f960328961 // indirect
-)
+require github.com/google/uuid v1.0.0 // indirect
 
 require (
 	github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e // indirect

@@ -1,7 +1,60 @@
 {
     "swagger": "2.0",
     "info": {
-        "contact": {}
+        "title": "Kaligo Example API",
+        "contact": {},
+        "version": "1.0"
     },
-    "paths": {}
+    "host": "localhost/api",
+    "paths": {
+        "/todo": {
+            "get": {
+                "summary": "获取所有 Todo",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "当前页数, 1开始",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "当前页数, 默认20",
+                        "name": "size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/model.Todo"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "model.Todo": {
+            "type": "object",
+            "properties": {
+                "date": {
+                    "type": "string"
+                },
+                "done": {
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        }
+    }
 }

@@ -12,6 +12,11 @@ type Todo struct {
 }
 
 // List 分页获取数据列表
+// @Summary 获取所有 Todo
+// @Param   page       query integer false "当前页数, 1开始"
+// @Param   size       query integer false "当前页数, 默认20"
+// @Success 200 {object} []model.Todo
+// @Router  /todo [get]
 func (c *Todo) List() {
     data, _, err := model.Todo{}.List()
     result(c.Context, data, err)

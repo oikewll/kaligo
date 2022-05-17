@@ -9,15 +9,16 @@ import (
     "github.com/owner888/kaligo/tpl"
 )
 
-//go:generate swag init
 // AddRoutes Load Routes
 func AddRoutes(r kaligo.Router) {
     addApiRoute(r)
     addHomeRoute(r)
     addStaticRoute(r)
+    addDocsRoute(r)
     loadHtmlTemplates(r)
 }
 
+//go:generate swag init
 func addApiRoute(r kaligo.Router) {
     r.AddRoute("/api/user/login", map[string]string{
         http.MethodPost: "Login",
@@ -50,7 +51,8 @@ func addStaticRoute(r kaligo.Router) {
 }
 
 func addDocsRoute(r kaligo.Router) {
-    r.AddRoute("/swagger/*", map[string]string{http.MethodGet: "Index"}, &controller.Docs{})
+    r.AddStaticRoute("/docs", "docs")
+    r.AddRoute("/swagger/.*", map[string]string{http.MethodGet: "Index"}, &controller.Docs{})
 }
 
 var Tpls *tpl.Tpl

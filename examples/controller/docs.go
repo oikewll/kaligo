@@ -9,7 +9,9 @@ type Docs struct {
     kaligo.Controller
 }
 
-var swaggerHandler = httpSwagger.Handler()
+var swaggerHandler = httpSwagger.Handler(
+    httpSwagger.URL("/docs/swagger.json"),
+)
 
 func (c *Docs) Index() {
     swaggerHandler.ServeHTTP(c.ResponseWriter, c.Request)

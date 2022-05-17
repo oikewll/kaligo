@@ -1,4 +1,38 @@
+definitions:
+  model.Todo:
+    properties:
+      date:
+        type: string
+      done:
+        type: boolean
+      id:
+        type: integer
+      title:
+        type: string
+    type: object
+host: localhost/api
 info:
   contact: {}
-paths: {}
+  title: Kaligo Example API
+  version: "1.0"
+paths:
+  /todo:
+    get:
+      parameters:
+      - description: 当前页数, 1开始
+        in: query
+        name: page
+        type: integer
+      - description: 当前页数, 默认20
+        in: query
+        name: size
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/model.Todo'
+            type: array
+      summary: 获取所有 Todo
 swagger: "2.0"

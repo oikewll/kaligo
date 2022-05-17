@@ -13,6 +13,10 @@ import (
     "github.com/owner888/kaligo/logs"
 )
 
+// @title Kaligo Example API
+// @version 1.0
+// @host localhost/api
+
 func main() {
     loadConfig()
     setupLog()
