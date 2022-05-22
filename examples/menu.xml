@@ -1,0 +1,80 @@
+<xml>
+    <!-- //这里的子菜单为隐性项目 -->
+    <menu name='常用' icon='fa fa-th-list'>    
+        <menu name='内容管理' icon='fa fa-file'>
+            <menu name='内容列表' url='content' method='GET' display='1' reload='1' default='1' />
+            <menu name='内容添加' url='content' method='POST' />
+            <menu name='内容修改' url='content/:id' method='PUT' />
+            <menu name='内容删除' url='content/:id' method='DELETE' />
+            <!-- <menu name='{lang.menu_content_category_manage}' url='category/index' method='GET' /> -->
+        </menu>
+        <menu name='会员管理' icon='fa fa-users'>
+            <menu name='会员列表' url='member/index' method='GET' display='1' reload='1' />
+            <menu name='会员添加' url='member/add' method='POST' />
+            <menu name='会员修改' url='member/edit' method='PUT' />
+            <menu name='会员删除' url='member/del' method='DELETE' />
+        </menu>
+    </menu>
+    <menu name='系统' icon='fa fa-gear'>
+        <menu name='个人中心' icon='fa fa-user'>
+            <menu name='登陆密码' url='admin/editpwd' method='GET' display='1' />
+            <menu name='我的权限' url='admin/mypurview' method='GET' display='1' />
+        </menu>
+        <menu name='用户管理' icon='fa fa-users'>
+            <menu name='用户组管理' url='admin_group/index' method='GET' display='1' />
+            <menu name='用户组添加' url='admin_group/add' method='POST' />
+            <menu name='用户组修改' url='admin_group/edit' method='PUT' />
+            <menu name='用户组删除' url='admin_group/del' method='DELETE' />
+
+            <menu name='用户管理' url='admin/index' method='GET' display='1' />
+            <menu name='用户添加' url='admin/add' method='POST' />
+            <menu name='用户修改' url='admin/edit' method='PUT' />
+            <menu name='用户删除' url='admin/del' method='DELETE' />
+
+            <menu name='操作日志' url='admin/oplog' method='GET' display='1' reload='1' />
+            <menu name='登录日志' url='admin/login_log' method='GET' display='1' reload='1' />
+
+            <menu name='重设MFA' url='admin/reset_mfa' method='DELETE' />
+            <menu name='用户激活' url='admin/active' method='POST' />
+            <menu name='操作日志删除' url='admin/oplog_del' method='DELETE' />
+            <menu name='登录日志删除' url='admin/login_log_del' method='DELETE' />
+            <menu name='清空三个月前登录日志' url='admin/del_old_login_log' method='DELETE' />
+            <menu name='终断回话' url='session/terminate' method='DELETE' />
+            <menu name='显示缓存' url='cache/show_cache' method='GET' />
+            <menu name='配置批量修改' url='config/batch_edit' method='POST' />
+        </menu>
+        <menu name='会话管理' icon='fa fa-rocket'>
+            <menu name='在线会话' url='session/online' method='GET' display='1' reload='1' />
+            <menu name='历史会话' url='session/offline' method='GET' display='1' reload='1' />
+        </menu>
+        <menu name='系统管理' icon='fa fa-wrench'>
+            <menu name='配置管理' url='config/index' method='GET' display='1' />
+            <menu name='配置添加' url='config/add' method='POST' />
+            <menu name='配置修改' url='config/edit' method='PUT' />
+            <menu name='配置删除' url='config/del' method='DELETE' />
+            <menu name='Spam管理' url='spam/index' method='GET' />
+        </menu>
+        <menu name='缓存管理' icon='fa fa-cloud'>
+            <menu name='缓存管理' url='cache/index' method='GET' display='1' />
+            <menu name='缓存删除' url='cache/del' method='DELETE' />
+            <menu name='缓存清理' url='cache/clear' method='DELETE' />
+            <menu name='Redis键值管理' url='cache/redis_keys' method='GET' />
+            <menu name='Redis服务器信息' url='cache/redis_info' method='GET' />
+        </menu>
+        <menu name='资源管理' icon='fa fa-file'>
+            <menu name='文件管理' url='filemanage/index' method='GET' display='1' />
+            <menu name='文件新增' url='filemanage/add' method='POST' />
+            <menu name='文件修改' url='filemanage/edit' method='PUT' />
+            <menu name='文件删除' url='filemanage/del' method='DELETE' />
+            <menu name='文件上传' url='upload/upload' method='POST' />
+            <menu name='文件分块上传' url='upload/upload_chunked' method='POST' />
+            <menu name='图片拖拉上传' url='upload/upload_html5' method='POST' />
+        </menu>
+        <menu name='作业中心' icon='fa fa-coffee'>
+            <menu name='任务列表' url='crond/index' method='GET' display='1' />
+            <menu name='任务新增' url='crond/add' method='POST' />
+            <menu name='任务修改' url='crond/edit' method='PUT' />
+            <menu name='任务删除' url='crond/del' method='DELETE' />
+        </menu>
+    </menu>
+</xml>

@@ -24,20 +24,20 @@ func addApiRoute(r kaligo.Router) {
         http.MethodPost: "Login",
     }, &controller.User{})
 
-    r.AddRoute("/api/user/logout", map[string]string{
-        http.MethodPost: "Logout",
-    }, &controller.User{})
+	r.AddRoute("/api/user/logout", map[string]string{
+		http.MethodPost: "Logout",
+	}, &controller.User{})
 
-    r.AddRoute("/api/todo", map[string]string{
-        http.MethodGet:    "List",
-        http.MethodPost:   "Create",
-        http.MethodPut:    "Update",
-        http.MethodDelete: "Delete",
-    }, &controller.Todo{})
+	r.AddRoute("/api/todo", map[string]string{
+		http.MethodGet:    "List",
+		http.MethodPost:   "Create",
+	}, &controller.Todo{})
 
-    r.AddRoute("/api/todo/:id", map[string]string{
-        http.MethodGet: "Detail",
-    }, &controller.Todo{})
+	r.AddRoute("/api/todo/:id", map[string]string{
+		http.MethodPut:    "Update",
+		http.MethodDelete: "Delete",
+		http.MethodGet:    "Detail",
+	}, &controller.Todo{})
 }
 
 func addHomeRoute(r kaligo.Router) {
