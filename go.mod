@@ -17,6 +17,7 @@ require (
 )
 
 require (
+	github.com/boj/redistore v0.0.0-20180917114910-cd5dcc76aeff // indirect
 	github.com/google/uuid v1.0.0 // indirect
 	github.com/gorilla/securecookie v1.1.1 // indirect
 )
