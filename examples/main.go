@@ -11,6 +11,8 @@ import (
     "github.com/owner888/kaligo/database"
     "github.com/owner888/kaligo/database/driver/mysql"
     "github.com/owner888/kaligo/logs"
+    "github.com/owner888/kaligo/sessions"
+    "github.com/owner888/kaligo/sessions/cookie"
 )
 
 // @title Kaligo Example API
@@ -58,8 +60,11 @@ func setupDatabase() *database.DB {
 
 func run(db *database.DB) {
     r := kaligo.NewRouter()
+    // 创建基于cookie的存储引擎，secret11111 参数是用于加密的密钥
+	store := cookie.NewStore([]byte("secret11111"))
+    r.Use(auth.Auth)
+    r.Use(sessions.Sessions("mysession", store))
     r.AddDB(db)
     AddRoutes(r)
-    r.Use(auth.Auth)
     kaligo.Run(r, ":"+config.String("app.server.port", "80"))
 }

@@ -6,6 +6,8 @@ require (
 	github.com/bradfitz/gomemcache v0.0.0-20220106215444-fb4bf637b56d
 	github.com/go-sql-driver/mysql v1.6.0
 	github.com/gomodule/redigo v2.0.0+incompatible
+	github.com/gorilla/context v1.1.1
+	github.com/gorilla/sessions v1.2.1
 	github.com/jinzhu/now v1.1.2
 	github.com/mattn/go-sqlite3 v2.0.3+incompatible
 	github.com/pborman/uuid v1.2.1
@@ -14,7 +16,10 @@ require (
 	golang.org/x/net v0.0.0-20220516155154-20f960328961
 )
 
-require github.com/google/uuid v1.0.0 // indirect
+require (
+	github.com/google/uuid v1.0.0 // indirect
+	github.com/gorilla/securecookie v1.1.1 // indirect
+)
 
 require (
 	github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e // indirect
