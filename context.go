@@ -3,6 +3,7 @@ package kaligo
 import (
     "encoding/json"
     "errors"
+    "fmt"
     "io"
     "io/ioutil"
     "math"
@@ -37,15 +38,9 @@ type Context struct {
     Request        *http.Request
 
     Params   Params
+    handlers []HandlerFunc
+    index    int8
     fullPath string
-
-    DB *database.DB
-
-    // Cache is a key/value pair exclusively for the context of all request.
-    Cache cache.Cache
-
-    // Timer 定时任务
-    Timer *Timer
 
     // Keys is a key/value pair exclusively for the context of each request.
     // Keys map[string]any
@@ -61,22 +56,28 @@ type Context struct {
     // SameSite allows a server to define a cookie attribute making it impossible for
     // the browser to send this cookie along with cross-site requests.
     sameSite http.SameSite
+    
+    // Cache is a key/value pair exclusively for the context of all request.
+    Cache cache.Cache
 
-    index    int8
-    handlers []HandlerFunc
+    DB *database.DB
+
+    // Timer 定时任务
+    Timer *Timer
 }
 
 var MaxMultipartMemory int64 = 32 << 20 // 32 MiB
 
 func (c *Context) Reset() {
     c.Params = c.Params[:0]
+    c.handlers = nil
+    c.index = -1
+
     c.fullPath = ""
     c.Keys = sync.Map{}
     c.QueryCache = nil
     c.FormCache = nil
     c.sameSite = 0
-    c.index = -1
-    c.handlers = nil
 }
 
 func (c *Context) Next() {
@@ -132,6 +133,17 @@ func (c *Context) ClientIP() (ip string) {
     return
 }
 
+func (c *Context) requestHeader(key string) string {
+    if c.Request != nil {
+        return c.Request.Header.Get(key)
+    }
+    return ""
+}
+
+/************************************/
+/******** METADATA MANAGEMENT********/
+/************************************/
+
 // Set is used to store a new key/value pair exclusively for this context.
 // It also lazy initializes  c.Keys if it was not used previously.
 func (c *Context) Set(key string, value any) {
@@ -141,13 +153,121 @@ func (c *Context) Set(key string, value any) {
 // Get returns the value for the given key, ie: (value, true).
 // If the value does not exist it returns (nil, false)
 // func (c *Context) Get(key string) (value any, exists bool) {
-func (c *Context) Get(key string) any {
+func (c *Context) Get(key string) (value any, exists bool) {
     val, ok := c.Keys.Load(key)
-    if ok {
-        // return (any)(val).(T)
-        return val
-    }
-    return nil
+    return val, ok
+}
+
+// MustGet returns the value for the given key if it exists, otherwise it panics.
+func (c *Context) MustGet(key string) interface{} {
+	if value, exists := c.Get(key); exists {
+		return value
+	}
+	panic("Key \"" + key + "\" does not exist")
+}
+
+// GetString returns the value associated with the key as a string.
+func (c *Context) GetString(key string) (s string) {
+	if val, ok := c.Get(key); ok && val != nil {
+		s, _ = val.(string)
+	}
+	return
+}
+
+// GetBool returns the value associated with the key as a boolean.
+func (c *Context) GetBool(key string) (b bool) {
+	if val, ok := c.Get(key); ok && val != nil {
+		b, _ = val.(bool)
+	}
+	return
+}
+
+// GetInt returns the value associated with the key as an integer.
+func (c *Context) GetInt(key string) (i int) {
+	if val, ok := c.Get(key); ok && val != nil {
+		i, _ = val.(int)
+	}
+	return
+}
+
+// GetInt64 returns the value associated with the key as an integer.
+func (c *Context) GetInt64(key string) (i64 int64) {
+	if val, ok := c.Get(key); ok && val != nil {
+		i64, _ = val.(int64)
+	}
+	return
+}
+
+// GetUint returns the value associated with the key as an unsigned integer.
+func (c *Context) GetUint(key string) (ui uint) {
+	if val, ok := c.Get(key); ok && val != nil {
+		ui, _ = val.(uint)
+	}
+	return
+}
+
+// GetUint64 returns the value associated with the key as an unsigned integer.
+func (c *Context) GetUint64(key string) (ui64 uint64) {
+	if val, ok := c.Get(key); ok && val != nil {
+		ui64, _ = val.(uint64)
+	}
+	return
+}
+
+// GetFloat64 returns the value associated with the key as a float64.
+func (c *Context) GetFloat64(key string) (f64 float64) {
+	if val, ok := c.Get(key); ok && val != nil {
+		f64, _ = val.(float64)
+	}
+	return
+}
+
+// GetTime returns the value associated with the key as time.
+func (c *Context) GetTime(key string) (t time.Time) {
+	if val, ok := c.Get(key); ok && val != nil {
+		t, _ = val.(time.Time)
+	}
+	return
+}
+
+// GetDuration returns the value associated with the key as a duration.
+func (c *Context) GetDuration(key string) (d time.Duration) {
+	if val, ok := c.Get(key); ok && val != nil {
+		d, _ = val.(time.Duration)
+	}
+	return
+}
+
+// GetStringSlice returns the value associated with the key as a slice of strings.
+func (c *Context) GetStringSlice(key string) (ss []string) {
+	if val, ok := c.Get(key); ok && val != nil {
+		ss, _ = val.([]string)
+	}
+	return
+}
+
+// GetStringMap returns the value associated with the key as a map of interfaces.
+func (c *Context) GetStringMap(key string) (sm map[string]interface{}) {
+	if val, ok := c.Get(key); ok && val != nil {
+		sm, _ = val.(map[string]interface{})
+	}
+	return
+}
+
+// GetStringMapString returns the value associated with the key as a map of strings.
+func (c *Context) GetStringMapString(key string) (sms map[string]string) {
+	if val, ok := c.Get(key); ok && val != nil {
+		sms, _ = val.(map[string]string)
+	}
+	return
+}
+
+// GetStringMapStringSlice returns the value associated with the key as a map to a slice of strings.
+func (c *Context) GetStringMapStringSlice(key string) (smss map[string][]string) {
+	if val, ok := c.Get(key); ok && val != nil {
+		smss, _ = val.(map[string][]string)
+	}
+	return
 }
 
 // Del is used to delete value from store with a key.
@@ -158,90 +278,6 @@ func (c *Context) Del(key string) {
 // Clear is used to Clear map.
 func (c *Context) Clear(key string) {
     c.Keys = sync.Map{}
-}
-
-// Redirect returns an HTTP redirect to the specific location.
-func (c *Context) Redirect(code int, location string) {
-    c.Render(-1, render.Redirect{
-        Code:     code,
-        Location: location,
-        Request:  c.Request,
-    })
-}
-
-// JSON serializes the given struct as JSON into the response body.
-// It also sets the Content-Type as "application/json".
-func (c *Context) JSON(code int, obj any) {
-    c.Render(code, render.JSON{Data: obj})
-}
-
-func (c *Context) HTML(code int, name string, obj any) {
-    instance := c.mux.HTMLRender.Instance(name, obj)
-    c.Render(code, instance)
-}
-
-func (c *Context) View(name string, obj interface{}) {
-    c.HTML(http.StatusOK, name, obj)
-}
-
-// String writes the given string into the response body.
-func (c *Context) String(code int, format string, values ...any) {
-    c.Render(code, render.String{Format: format, Data: values})
-}
-
-// Data writes some data into the body stream and updates the HTTP code.
-func (c *Context) Data(code int, contentType string, data []byte) {
-    c.Render(code, render.Data{
-        ContentType: contentType,
-        Data:        data,
-    })
-}
-
-func (c *Context) requestHeader(key string) string {
-    if c.Request != nil {
-        return c.Request.Header.Get(key)
-    }
-    return ""
-}
-
-// """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-// => RESPONSE RENDERING
-// """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-
-// bodyAllowedForStatus is a copy of http.bodyAllowedForStatus non-exported function.
-func bodyAllowedForStatus(status int) bool {
-    switch {
-    case status >= 100 && status <= 199:
-        return false
-    case status == http.StatusNoContent:
-        return false
-    case status == http.StatusNotModified:
-        return false
-    }
-    return true
-}
-
-// Status sets the HTTP response code.
-func (c *Context) Status(code int) {
-    c.ResponseWriter.WriteHeader(code)
-}
-
-// Header is an intelligent shortcut for c.Writer.Header().Set(key, value).
-// It writes a header in the response.
-// If value == "", this method removes the header `c.Writer.Header().Del(key)`
-func (c *Context) Header(key, value string) {
-    if value == "" {
-        c.ResponseWriter.Header().Del(key)
-        return
-    }
-    c.ResponseWriter.Header().Set(key, value)
-}
-
-// EnableCors 支持 CORS 跨域访问
-func (c *Context) EnableCors() {
-    if c.ResponseWriter != nil {
-        c.ResponseWriter.Header().Set("Access-Control-Allow-Origin", "*")
-    }
 }
 
 // """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -406,6 +442,47 @@ func (c *Context) SaveUploadedFile(file *multipart.FileHeader, dst string) error
     return err
 }
 
+
+// """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+// => RESPONSE RENDERING
+// """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+// bodyAllowedForStatus is a copy of http.bodyAllowedForStatus non-exported function.
+func bodyAllowedForStatus(status int) bool {
+    switch {
+    case status >= 100 && status <= 199:
+        return false
+    case status == http.StatusNoContent:
+        return false
+    case status == http.StatusNotModified:
+        return false
+    }
+    return true
+}
+
+// Status sets the HTTP response code.
+func (c *Context) Status(code int) {
+    c.ResponseWriter.WriteHeader(code)
+}
+
+// Header is an intelligent shortcut for c.Writer.Header().Set(key, value).
+// It writes a header in the response.
+// If value == "", this method removes the header `c.Writer.Header().Del(key)`
+func (c *Context) Header(key, value string) {
+    if value == "" {
+        c.ResponseWriter.Header().Del(key)
+        return
+    }
+    c.ResponseWriter.Header().Set(key, value)
+}
+
+// EnableCors 支持 CORS 跨域访问
+func (c *Context) EnableCors() {
+    if c.ResponseWriter != nil {
+        c.ResponseWriter.Header().Set("Access-Control-Allow-Origin", "*")
+    }
+}
+
 // SetSameSite with cookie
 func (c *Context) SetSameSite(samesite http.SameSite) {
     c.sameSite = samesite
@@ -430,15 +507,15 @@ func (c *Context) SetCookie(name, value string, maxAge int, path, domain string,
     })
 }
 
-func (c *Context) CookieValue(key string, defaultValue ...string) string {
-    ret, err := c.Cookie(key)
+func (c *Context) CookieValue(name string, defaultValue ...string) string {
+    cookie, err := c.Cookie(name)
     if err != nil {
         if len(defaultValue) > 0 {
             return defaultValue[0]
         }
         return ""
     }
-    return ret
+    return cookie
 }
 
 // Cookie returns the named cookie provided in the request or
@@ -470,6 +547,66 @@ func (c *Context) Render(code int, r render.Render) {
     }
 }
 
+// JSON serializes the given struct as JSON into the response body.
+// It also sets the Content-Type as "application/json".
+func (c *Context) JSON(code int, obj any) {
+    c.Render(code, render.JSON{Data: obj})
+}
+
+func (c *Context) HTML(code int, name string, obj any) {
+    instance := c.mux.HTMLRender.Instance(name, obj)
+    c.Render(code, instance)
+}
+
+func (c *Context) View(name string, obj interface{}) {
+    c.HTML(http.StatusOK, name, obj)
+}
+
+// String writes the given string into the response body.
+func (c *Context) String(code int, format string, values ...any) {
+    c.Render(code, render.String{Format: format, Data: values})
+}
+
+// Redirect returns an HTTP redirect to the specific location.
+func (c *Context) Redirect(code int, location string) {
+    c.Render(-1, render.Redirect{
+        Code:     code,
+        Location: location,
+        Request:  c.Request,
+    })
+}
+
+// Data writes some data into the body stream and updates the HTTP code.
+func (c *Context) Data(code int, contentType string, data []byte) {
+    c.Render(code, render.Data{
+        ContentType: contentType,
+        Data:        data,
+    })
+}
+
+// File writes the specified file into the body stream in an efficient way.
+func (c *Context) File(filepath string) {
+	http.ServeFile(c.ResponseWriter, c.Request, filepath)
+}
+
+// FileFromFS writes the specified file from http.FileSystem into the body stream in an efficient way.
+func (c *Context) FileFromFS(filepath string, fs http.FileSystem) {
+	defer func(old string) {
+		c.Request.URL.Path = old
+	}(c.Request.URL.Path)
+
+	c.Request.URL.Path = filepath
+
+	http.FileServer(fs).ServeHTTP(c.ResponseWriter, c.Request)
+}
+
+// FileAttachment writes the specified file into the body stream in an efficient way
+// On the client side, the file will typically be downloaded with the given filename
+func (c *Context) FileAttachment(filepath, filename string) {
+	c.ResponseWriter.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", filename))
+	http.ServeFile(c.ResponseWriter, c.Request, filepath)
+}
+
 /***** 当前时间 *****/
 // NowFunc 当前时间获取函数类型
 type NowFunc func() time.Time
@@ -491,6 +628,11 @@ func (c *Context) Now() time.Time {
 func (c *Context) NowTimestamp() int64 {
     return Now().Unix()
 }
+
+// SetAccepted sets Accept header data.
+// func (c *Context) SetAccepted(formats ...string) {
+//     c.Accepted = formats
+// }
 
 /************************************/
 /***** GOLANG.ORG/X/NET/CONTEXT *****/
@@ -528,9 +670,8 @@ func (c *Context) Value(key any) any {
         return c.Request
     }
     if keyAsString, ok := key.(string); ok {
-        if val := c.Get(keyAsString); val != nil {
-            return val
-        }
+        val, _ := c.Get(keyAsString)
+        return val
     }
     if c.Request == nil || c.Request.Context() == nil {
         return nil
