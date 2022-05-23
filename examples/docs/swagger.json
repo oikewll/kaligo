@@ -5,7 +5,7 @@
         "contact": {},
         "version": "1.0"
     },
-    "host": "localhost/api",
+    "host": "localhost:8080/api",
     "paths": {
         "/todo": {
             "get": {

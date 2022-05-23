@@ -18,7 +18,7 @@ import (
 
 // @title Kaligo Example API
 // @version 1.0
-// @host localhost/api
+// @host localhost:8080/api
 
 func main() {
     loadConfig()
@@ -62,7 +62,7 @@ func setupDatabase() *database.DB {
 func run(db *database.DB) {
     r := kaligo.NewRouter()
     // 创建基于cookie的存储引擎，secret 参数是用于加密的密钥
-	store := cookie.NewStore([]byte("secret"))
+    store := cookie.NewStore([]byte("secret"))
     // store, _ := redis.NewStore(10, "tcp", "localhost:6379", "", []byte("secret"))
     r.Use(auth.Auth)
     r.Use(sessions.Sessions("mysession", store))
