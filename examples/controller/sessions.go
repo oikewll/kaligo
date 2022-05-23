@@ -11,7 +11,7 @@ type Sessions struct {
 
 func (c *Sessions) Hello() {
     // 初始化session对象
-    session := sessions.Default(c)
+    session := sessions.Default(c.Context)
 
     if session.Get("hello") != "world" {
         session.Set("hello", "world")
