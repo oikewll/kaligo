@@ -3,6 +3,7 @@ module github.com/owner888/kaligo
 go 1.18
 
 require (
+	github.com/boj/redistore v0.0.0-20180917114910-cd5dcc76aeff
 	github.com/bradfitz/gomemcache v0.0.0-20220106215444-fb4bf637b56d
 	github.com/go-sql-driver/mysql v1.6.0
 	github.com/gomodule/redigo v2.0.0+incompatible
@@ -17,7 +18,6 @@ require (
 )
 
 require (
-	github.com/boj/redistore v0.0.0-20180917114910-cd5dcc76aeff // indirect
 	github.com/google/uuid v1.0.0 // indirect
 	github.com/gorilla/securecookie v1.1.1 // indirect
 )

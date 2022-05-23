@@ -13,7 +13,7 @@ import (
     "github.com/owner888/kaligo/logs"
     "github.com/owner888/kaligo/sessions"
     "github.com/owner888/kaligo/sessions/cookie"
-    "github.com/owner888/kaligo/sessions/redis"
+    // "github.com/owner888/kaligo/sessions/redis"
 )
 
 // @title Kaligo Example API
@@ -63,7 +63,7 @@ func run(db *database.DB) {
     r := kaligo.NewRouter()
     // 创建基于cookie的存储引擎，secret 参数是用于加密的密钥
 	store := cookie.NewStore([]byte("secret"))
-    store, _ := redis.NewStore(10, "tcp", "localhost:6379", "", []byte("secret"))
+    // store, _ := redis.NewStore(10, "tcp", "localhost:6379", "", []byte("secret"))
     r.Use(auth.Auth)
     r.Use(sessions.Sessions("mysession", store))
     r.AddDB(db)
