@@ -26,6 +26,8 @@ paths:
               type: string
             type: object
       summary: Session 样例 Get
+      tags:
+      - session
     post:
       responses:
         "200":
@@ -35,7 +37,23 @@ paths:
               type: string
             type: object
       summary: Session 样例 Set
+      tags:
+      - session
   /todo:
+    delete:
+      parameters:
+      - description: Todo ID
+        in: query
+        name: id
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: integer
+      summary: Delete 删除单条或多条数据
+      tags:
+      - todo
     get:
       parameters:
       - description: 当前页数, 1开始
@@ -54,4 +72,68 @@ paths:
               $ref: '#/definitions/model.Todo'
             type: array
       summary: 获取所有 Todo
+      tags:
+      - todo
+    post:
+      parameters:
+      - in: formData
+        name: date
+        type: string
+      - in: formData
+        name: done
+        type: boolean
+      - in: formData
+        name: id
+        type: integer
+      - in: formData
+        name: title
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Todo'
+      summary: Create 添加一条数据
+      tags:
+      - todo
+    put:
+      parameters:
+      - in: formData
+        name: date
+        type: string
+      - in: formData
+        name: done
+        type: boolean
+      - in: formData
+        name: id
+        type: integer
+      - in: formData
+        name: title
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/model.Todo'
+            type: array
+      summary: Update 更新单条或多条数据
+      tags:
+      - todo
+  /todo/:id:
+    get:
+      parameters:
+      - description: Todo ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Todo'
+      summary: Detail 获取单条数据详情
+      tags:
+      - todo
 swagger: "2.0"

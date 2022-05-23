@@ -18,6 +18,9 @@ const docTemplate = `{
     "paths": {
         "/sessions": {
             "get": {
+                "tags": [
+                    "session"
+                ],
                 "summary": "Session 样例 Get",
                 "responses": {
                     "200": {
@@ -32,6 +35,9 @@ const docTemplate = `{
                 }
             },
             "post": {
+                "tags": [
+                    "session"
+                ],
                 "summary": "Session 样例 Set",
                 "responses": {
                     "200": {
@@ -48,6 +54,9 @@ const docTemplate = `{
         },
         "/todo": {
             "get": {
+                "tags": [
+                    "todo"
+                ],
                 "summary": "获取所有 Todo",
                 "parameters": [
                     {
@@ -71,6 +80,128 @@ const docTemplate = `{
                             "items": {
                                 "$ref": "#/definitions/model.Todo"
                             }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "todo"
+                ],
+                "summary": "Update 更新单条或多条数据",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "name": "date",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "name": "done",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "id",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "name": "title",
+                        "in": "formData"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/model.Todo"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "todo"
+                ],
+                "summary": "Create 添加一条数据",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "name": "date",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "name": "done",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "id",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "name": "title",
+                        "in": "formData"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Todo"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "todo"
+                ],
+                "summary": "Delete 删除单条或多条数据",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Todo ID",
+                        "name": "id",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                }
+            }
+        },
+        "/todo/:id": {
+            "get": {
+                "tags": [
+                    "todo"
+                ],
+                "summary": "Detail 获取单条数据详情",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Todo ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Todo"
                         }
                     }
                 }

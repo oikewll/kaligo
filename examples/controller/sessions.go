@@ -10,6 +10,7 @@ type Sessions struct {
 }
 
 // @Summary Session 样例 Set
+// @tags    session
 // @Success 200 {object} map[string]string
 // @Router  /sessions [post]
 func (c *Sessions) Set() {
@@ -27,6 +28,7 @@ func (c *Sessions) Set() {
 }
 
 // @Summary Session 样例 Get
+// @tags    session
 // @Success 200 {object} map[string]string
 // @Router  /sessions [get]
 func (c *Sessions) Get() {
