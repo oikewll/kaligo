@@ -48,8 +48,10 @@ type Logger interface {
     Warnf(string, ...any)
     Errorf(string, ...any)
     Criticalf(string, ...any)
-    Panic(msg string, data ...any)
-    Fatal(msg string, data ...any)
+    Panic(...any)
+    Panicf(string, ...any)
+    Fatal(...any)
+    Fatalf(string, ...any)
 }
 
 type Log struct {
@@ -131,13 +133,25 @@ func (l *logger) Criticalf(msg string, data ...any) {
 }
 
 // Panic 输出 Critical 日志并 panic
-func (l *logger) Panic(msg string, data ...any) {
+func (l *logger) Panic(data ...any) {
+    l.Critical(data...)
+    panic(fmt.Sprint(data...))
+}
+
+// Fatal 输出 Critical 日志并退出程序
+func (l *logger) Fatal(data ...any) {
+    l.Critical(data...)
+    os.Exit(1)
+}
+
+// Panic 输出 Critical 日志并 panic
+func (l *logger) Panicf(msg string, data ...any) {
     l.Criticalf(msg, data...)
     panic(fmt.Sprintf(msg, data...))
 }
 
 // Fatal 输出 Critical 日志并退出程序
-func (l *logger) Fatal(msg string, data ...any) {
+func (l *logger) Fatalf(msg string, data ...any) {
     l.Criticalf(msg, data...)
     os.Exit(1)
 }
@@ -234,11 +248,21 @@ func Criticalf(msg string, data ...any) {
 }
 
 // Panic 输出 Critical 日志并 panic
-func Panic(msg string, data ...any) {
-    root.Panic(msg, data...)
+func Panic(data ...any) {
+    root.Panic(data...)
+}
+
+// Panic 输出 Critical 日志并 panic
+func Panicf(msg string, data ...any) {
+    root.Panicf(msg, data...)
 }
 
 // Fatal 输出 Critical 日志并退出程序
-func Fatal(msg string, data ...any) {
-    root.Fatal(msg, data...)
+func Fatal(data ...any) {
+    root.Fatal(data...)
+}
+
+// Fatal 输出 Critical 日志并退出程序
+func Fatalf(msg string, data ...any) {
+    root.Fatalf(msg, data...)
 }
