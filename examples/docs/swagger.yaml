@@ -16,6 +16,21 @@ info:
   title: Kaligo Example API
   version: "1.0"
 paths:
+  /sessions:
+    get:
+      parameters:
+      - description: SESSION ID
+        in: query
+        name: session_id
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Session 样例
   /todo:
     get:
       parameters:

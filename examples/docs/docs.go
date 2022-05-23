@@ -16,6 +16,30 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/sessions": {
+            "get": {
+                "summary": "Session 样例",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "SESSION ID",
+                        "name": "session_id",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/todo": {
             "get": {
                 "summary": "获取所有 Todo",

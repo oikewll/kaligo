@@ -9,6 +9,11 @@ type Sessions struct {
     kaligo.Controller
 }
 
+// Hello Session 样例
+// @Summary Session 样例
+// @Param   session_id   query integer false "SESSION ID"
+// @Success 200 {object} map[string]string
+// @Router  /sessions [get]
 func (c *Sessions) Hello() {
     // 初始化session对象
     session := sessions.Default(c.Context)
