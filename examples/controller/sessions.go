@@ -10,6 +10,7 @@ type Sessions struct {
 }
 
 // @Summary Session 添加
+// @Tags    Session
 // @Description Session 添加简介
 // @Success 200 {object} map[string]string
 // @Router  /sessions [POST]
@@ -22,6 +23,7 @@ func (c *Sessions) Create() {
 }
 
 // @Summary Session 信息
+// @Tags    Session
 // @Success 200 {object} map[string]string
 // @Router  /sessions [GET]
 func (c *Sessions) Detail() {
@@ -31,6 +33,7 @@ func (c *Sessions) Detail() {
 }
 
 // @Summary Session 删除
+// @Tags    Session
 // @Success 200 {object} map[string]string
 // @Router  /sessions [DELETE]
 func (c *Sessions) Delete() {
@@ -42,6 +45,7 @@ func (c *Sessions) Delete() {
 }
 
 // @Summary Session 销毁
+// @Tags    Session
 // @Success 200 {object} map[string]string
 // @Router  /sessions/destory [DELETE]
 func (c *Sessions) Destory() {

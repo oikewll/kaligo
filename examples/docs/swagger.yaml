@@ -26,6 +26,8 @@ paths:
               type: string
             type: object
       summary: Session 删除
+      tags:
+      - Session
     get:
       responses:
         "200":
@@ -35,6 +37,8 @@ paths:
               type: string
             type: object
       summary: Session 信息
+      tags:
+      - Session
     post:
       description: Session 添加简介
       responses:
@@ -45,6 +49,8 @@ paths:
               type: string
             type: object
       summary: Session 添加
+      tags:
+      - Session
   /sessions/destory:
     delete:
       responses:
@@ -55,6 +61,8 @@ paths:
               type: string
             type: object
       summary: Session 销毁
+      tags:
+      - Session
   /todo:
     delete:
       parameters:
