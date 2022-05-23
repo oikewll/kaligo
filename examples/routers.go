@@ -23,10 +23,7 @@ func AddRoutes(r kaligo.Router) {
 func addSessionRoute(r kaligo.Router) {
     r.AddRoute("/api/sessions", map[string]string{
         http.MethodPost: "Set",
-    }, &controller.Sessions{})
-
-    r.AddRoute("/api/sessions", map[string]string{
-        http.MethodGet: "Get",
+        http.MethodGet:  "Get",
     }, &controller.Sessions{})
 }
 

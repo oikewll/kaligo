@@ -3,7 +3,7 @@ package controller
 import (
     "github.com/owner888/kaligo"
     "github.com/owner888/kaligo/sessions"
-) 
+)
 
 type Sessions struct {
     kaligo.Controller
