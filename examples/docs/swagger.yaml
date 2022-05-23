@@ -34,13 +34,7 @@ paths:
             additionalProperties:
               type: string
             type: object
-<<<<<<< HEAD
       summary: Session 信息
-=======
-      summary: Session 样例 Get
-      tags:
-      - session
->>>>>>> 643c8173ad82ecec031245d66cf6777830d0ccd7
     post:
       description: Session 添加简介
       responses:
@@ -50,7 +44,6 @@ paths:
             additionalProperties:
               type: string
             type: object
-<<<<<<< HEAD
       summary: Session 添加
   /sessions/destory:
     delete:
@@ -62,11 +55,6 @@ paths:
               type: string
             type: object
       summary: Session 销毁
-=======
-      summary: Session 样例 Set
-      tags:
-      - session
->>>>>>> 643c8173ad82ecec031245d66cf6777830d0ccd7
   /todo:
     delete:
       parameters:

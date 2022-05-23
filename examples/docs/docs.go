@@ -18,14 +18,7 @@ const docTemplate = `{
     "paths": {
         "/sessions": {
             "get": {
-<<<<<<< HEAD
                 "summary": "Session 信息",
-=======
-                "tags": [
-                    "session"
-                ],
-                "summary": "Session 样例 Get",
->>>>>>> 643c8173ad82ecec031245d66cf6777830d0ccd7
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -39,7 +32,6 @@ const docTemplate = `{
                 }
             },
             "post": {
-<<<<<<< HEAD
                 "description": "Session 添加简介",
                 "summary": "Session 添加",
                 "responses": {
@@ -72,12 +64,6 @@ const docTemplate = `{
         "/sessions/destory": {
             "delete": {
                 "summary": "Session 销毁",
-=======
-                "tags": [
-                    "session"
-                ],
-                "summary": "Session 样例 Set",
->>>>>>> 643c8173ad82ecec031245d66cf6777830d0ccd7
                 "responses": {
                     "200": {
                         "description": "OK",
