@@ -10,7 +10,7 @@ definitions:
       title:
         type: string
     type: object
-host: localhost/api
+host: localhost:8080/api
 info:
   contact: {}
   title: Kaligo Example API
