@@ -9,15 +9,21 @@
     "paths": {
         "/sessions": {
             "get": {
-                "summary": "Session 样例",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "SESSION ID",
-                        "name": "session_id",
-                        "in": "query"
+                "summary": "Session 样例 Get",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
                     }
-                ],
+                }
+            },
+            "post": {
+                "summary": "Session 样例 Set",
                 "responses": {
                     "200": {
                         "description": "OK",

@@ -18,11 +18,6 @@ info:
 paths:
   /sessions:
     get:
-      parameters:
-      - description: SESSION ID
-        in: query
-        name: session_id
-        type: integer
       responses:
         "200":
           description: OK
@@ -30,7 +25,16 @@ paths:
             additionalProperties:
               type: string
             type: object
-      summary: Session 样例
+      summary: Session 样例 Get
+    post:
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Session 样例 Set
   /todo:
     get:
       parameters:

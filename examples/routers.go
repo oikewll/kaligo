@@ -21,8 +21,12 @@ func AddRoutes(r kaligo.Router) {
 
 //go:generate swag init
 func addSessionRoute(r kaligo.Router) {
-    r.AddRoute("/sessions", map[string]string{
-        http.MethodGet: "Hello",
+    r.AddRoute("/api/sessions", map[string]string{
+        http.MethodPost: "Set",
+    }, &controller.Sessions{})
+
+    r.AddRoute("/api/sessions", map[string]string{
+        http.MethodGet: "Get",
     }, &controller.Sessions{})
 }
 
