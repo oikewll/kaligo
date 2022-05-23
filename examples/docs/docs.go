@@ -18,7 +18,7 @@ const docTemplate = `{
     "paths": {
         "/sessions": {
             "get": {
-                "summary": "Session 样例 Get",
+                "summary": "Session 信息",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -32,7 +32,38 @@ const docTemplate = `{
                 }
             },
             "post": {
-                "summary": "Session 样例 Set",
+                "description": "Session 添加简介",
+                "summary": "Session 添加",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "summary": "Session 删除",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/sessions/destory": {
+            "delete": {
+                "summary": "Session 销毁",
                 "responses": {
                     "200": {
                         "description": "OK",

@@ -17,6 +17,15 @@ info:
   version: "1.0"
 paths:
   /sessions:
+    delete:
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Session 删除
     get:
       responses:
         "200":
@@ -25,8 +34,9 @@ paths:
             additionalProperties:
               type: string
             type: object
-      summary: Session 样例 Get
+      summary: Session 信息
     post:
+      description: Session 添加简介
       responses:
         "200":
           description: OK
@@ -34,7 +44,17 @@ paths:
             additionalProperties:
               type: string
             type: object
-      summary: Session 样例 Set
+      summary: Session 添加
+  /sessions/destory:
+    delete:
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Session 销毁
   /todo:
     get:
       parameters:
