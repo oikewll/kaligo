@@ -159,6 +159,11 @@ func (a *Mux) AddRoute(pattern string, m map[string]string, c Interface) {
     if ok, err := route.IsMethodsValid(); !ok {
         logs.Panic(err.Error())
     }
+    for _, v := range a.routes {
+        if v.Regex.String() == route.Regex.String() {
+            logs.Panic("Cannot add routes repeatedly")
+        }
+    }
 
     a.routes = append(a.routes, route)
 }
