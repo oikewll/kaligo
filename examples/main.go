@@ -54,10 +54,10 @@ func setupLog() {
 func setupDatabase() *database.DB {
     var err error
     c := mysql.NewConfig()
-    c.Addr = fmt.Sprintf("%s:%s", config.String("database.mysql.host"), config.String("database.mysql.port"))
-    c.User = config.String("database.mysql.user")
-    c.Passwd = config.String("database.mysql.pass")
-    c.DBName = config.String("database.mysql.name")
+    c.Addr      = fmt.Sprintf("%s:%s", config.String("database.mysql.host"), config.String("database.mysql.port"))
+    c.User      = config.String("database.mysql.user")
+    c.Passwd    = config.String("database.mysql.pass")
+    c.DBName    = config.String("database.mysql.name")
     c.ParseTime = true
     db, err := database.Open(mysql.Open(c.FormatDSN()))
     if err != nil {
@@ -72,8 +72,9 @@ func run(db *database.DB) {
     // 创建基于cookie的存储引擎，secret 参数是用于加密的密钥
     store := cookie.NewStore([]byte("secret"))
     // store, _ := redis.NewStore(10, "tcp", "localhost:6379", "", []byte("secret"))
-    r.Use(auth.Auth)
     r.Use(sessions.Sessions("mysession", store))
+    r.Use(auth.Auth)
+    // r.Use(kaligo.BasicAuth(kaligo.Accounts{"username": "test", "password":"test"}))
     r.AddDB(db)
     AddRoutes(r)
     kaligo.Run(r, ":"+config.String("app.server.port", "80"))

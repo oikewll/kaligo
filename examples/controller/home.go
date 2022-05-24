@@ -24,3 +24,16 @@ func (c *Home) Index() {
     }
     c.HTML(http.StatusOK, tplName, data)
 }
+
+// @Summary 账户登陆
+// @Tags    Home
+// @Success 200 {object} map[string]string
+// @Router  /home [POST]
+func (c *Home) Login() {
+    username := c.FormValue("username")
+    c.SetCookie("access_token", username, 1000, "/", "", true, true)
+}
+
+func (c *Home) Logout() {
+
+}

@@ -21,17 +21,12 @@ import (
     "github.com/owner888/kaligo/util"
 )
 
-// type JSONResult struct {
-//     Code int     `json:"code" `
-//     Msg  string  `json:"msg"`
-//     Data any     `json:"data"`
-// }
-
 // abortIndex represents a typical value used in abort functions.
 const abortIndex int8 = math.MaxInt8 >> 1
 
 // Context is use for ServeHTTP goroutine
 type Context struct {
+    UID string
     mux *Mux
 
     ResponseWriter http.ResponseWriter
@@ -62,7 +57,6 @@ type Context struct {
 
     DB *database.DB
 
-    // Timer 定时任务
     Timer *Timer
 }
 
@@ -80,6 +74,9 @@ func (c *Context) Reset() {
     c.sameSite = 0
 }
 
+/************************************/
+/*********** FLOW CONTROL ***********/
+/************************************/
 func (c *Context) Next() {
     c.index++
     for c.index < int8(len(c.handlers)) {
@@ -96,12 +93,62 @@ func (c *Context) Abort() {
     c.index = abortIndex
 }
 
+// AbortWithStatus calls `Abort()` and writes the headers with the specified status code.
+// For example, a failed attempt to authenticate a request could use: context.AbortWithStatus(401).
+func (c *Context) AbortWithStatus(code int) {
+    c.Status(code)
+    c.ResponseWriter.WriteHeader(code)
+    c.Abort()
+}
+
+// // AbortWithStatusJSON calls `Abort()` and then `JSON` internally.
+// // This method stops the chain, writes the status code and return a JSON body.
+// // It also sets the Content-Type as "application/json".
+// func (c *Context) AbortWithStatusJSON(code int, jsonObj interface{}) {
+//     c.Abort()
+//     c.JSON(code, jsonObj)
+// }
+//
+// // AbortWithError calls `AbortWithStatus()` and `Error()` internally.
+// // This method stops the chain, writes the status code and pushes the specified error to `c.Errors`.
+// // See Context.Error() for more details.
+// func (c *Context) AbortWithError(code int, err error) *Error {
+//     c.AbortWithStatus(code)
+//     return c.Error(err)
+// }
+
+/************************************/
+/********* ERROR MANAGEMENT *********/
+/************************************/
+
+// Error attaches an error to the current context. The error is pushed to a list of errors.
+// It's a good idea to call Error for each error that occurred during the resolution of a request.
+// A middleware can be used to collect all the errors and push them to a database together,
+// print a log, or append it in the HTTP response.
+// Error will panic if err is nil.
+// func (c *Context) Error(err error) *Error {
+//     if err == nil {
+//         panic("err is nil")
+//     }
+//
+//     parsedError, ok := err.(*Error)
+//     if !ok {
+//         parsedError = &Error{
+//             Err:  err,
+//             Type: ErrorTypePrivate,
+//         }
+//     }
+//
+//     c.Errors = append(c.Errors, parsedError)
+//     return parsedError
+// }
+
 // CallController 调用其他接口（非异步）
 func (a *Context) CallController(controller Interface, method string, params Params) (ret any, err error) {
     if a.mux != nil {
         return a.mux.CallController(controller, method, params)
     }
-    return nil, errors.New("服务未初始化")
+    return nil, errors.New("service not initialized.")
 }
 
 // FullPath returns a matched route full path. For not found routes
@@ -114,6 +161,7 @@ func (c *Context) FullPath() string {
 }
 
 // ClientIP returns a client ip. returns 127.0.0.1 if request from local machine
+// 需要重构
 func (c *Context) ClientIP() (ip string) {
     if c.Request == nil {
         return ""

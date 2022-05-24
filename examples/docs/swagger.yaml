@@ -16,6 +16,18 @@ info:
   title: Kaligo Example API
   version: "1.0"
 paths:
+  /home:
+    post:
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: 账户登陆
+      tags:
+      - Home
   /sessions:
     delete:
       responses:
@@ -160,4 +172,40 @@ paths:
       summary: Detail 获取单条数据详情
       tags:
       - todo
+  /user:
+    get:
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: 用户信息
+      tags:
+      - User
+  /user/login:
+    post:
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: 账户登陆
+      tags:
+      - User
+  /user/logout:
+    post:
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: 账户退出
+      tags:
+      - User
 swagger: "2.0"
