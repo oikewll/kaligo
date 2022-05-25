@@ -2,6 +2,7 @@ package model
 
 import (
     "errors"
+    "fmt"
     "strings"
     // "time"
 
@@ -12,9 +13,10 @@ import (
 )
 
 const (
-    DefaultKey  = "UserDefaultKey"
-    errorFormat = "[sessions] ERROR! %s\n"
-    timeFormat  = "2006-01-02 15:04:05"
+    UserDefaultKeyFormat    = "UserDefaultKey-%s"       // 根据UID获取用户信息
+    PurviewDefaultKeyFormat = "PurviewDefaultKey-%s"    // 更加PurViewID获取用户权限信息
+    errorFormat             = "[sessions] ERROR! %s\n"
+    timeFormat              = "2006-01-02 15:04:05"
 )
 
 type Purview struct {
@@ -65,6 +67,8 @@ type Accounts map[string]string
 
 func (m *User) Table() string { return "user" }
 
+// 检查用户权限
+// GET-/api/todo,GET-/api/todo/:id,POST-/api/todo,PUT-/api/todo/:id,DELETE-/api/todo/:id
 func (m *User) CheckPurviews(url, method string) bool {
     return true
 }
@@ -121,7 +125,7 @@ func (m *User) CheckUser(accounts Accounts) (err error) {
     }
 
     // 缓存用户信息 GetUser() 方法已经做了
-    // m.ctx.Set(DefaultKey, m)
+    // m.ctx.Set(UserDefaultKey, m)
     return
 }
 
@@ -168,14 +172,14 @@ func (m *User) GetUser(account string, ftype string, useCache bool) (err error) 
     if useCache {
         var u any
         // 获取缓存中的用户信息
-        u, exists = m.ctx.Get(DefaultKey)
+        u, exists = m.ctx.Get(fmt.Sprintf(UserDefaultKeyFormat, uid))
         m = u.(*User)
     }
 
     if !exists {
         _, err = DB.Select("*").From(m.Table()).Where("uid", "=", uid).Scan(m).Execute()
         // 缓存用户信息
-        m.ctx.Set(DefaultKey, m)
+        m.ctx.Set(fmt.Sprintf(UserDefaultKeyFormat, uid), m)
     }
 
     // 处理头像
