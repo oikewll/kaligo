@@ -19,11 +19,7 @@ type Menu struct {
     Show bool
 
     Meta
-}
-
-type Menus struct {
-    Current  Menu
-    Children Menu
+    Children []Menu
 }
 
 type Home struct {
