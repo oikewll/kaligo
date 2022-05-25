@@ -272,13 +272,15 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "当前页数, 1开始",
+                        "default": 1,
+                        "description": "当前页数",
                         "name": "page",
                         "in": "query"
                     },
                     {
                         "type": "integer",
-                        "description": "当前页数, 默认20",
+                        "default": 20,
+                        "description": "每页记录",
                         "name": "size",
                         "in": "query"
                     }
@@ -306,27 +308,30 @@ const docTemplate = `{
                         "default": 1,
                         "description": "账号ID",
                         "name": "id",
-                        "in": "query"
+                        "in": "path"
                     },
                     {
                         "type": "string",
+                        "default": "test",
                         "description": "账号",
                         "name": "username",
-                        "in": "query",
+                        "in": "formData",
                         "required": true
                     },
                     {
                         "type": "string",
+                        "default": "test",
                         "description": "密码",
                         "name": "password",
-                        "in": "query",
+                        "in": "formData",
                         "required": true
                     },
                     {
                         "type": "string",
+                        "default": "test",
                         "description": "姓名",
                         "name": "realname",
-                        "in": "query",
+                        "in": "formData",
                         "required": true
                     },
                     {
@@ -338,7 +343,7 @@ const docTemplate = `{
                         "type": "string",
                         "description": "所属组IDs",
                         "name": "groups",
-                        "in": "query",
+                        "in": "formData",
                         "required": true
                     },
                     {
@@ -346,14 +351,14 @@ const docTemplate = `{
                         "default": "test@gmail.com",
                         "description": "邮箱",
                         "name": "emali",
-                        "in": "query"
+                        "in": "formData"
                     },
                     {
                         "type": "integer",
                         "default": 1,
                         "description": "状态",
                         "name": "status",
-                        "in": "query"
+                        "in": "formData"
                     }
                 ],
                 "responses": {
@@ -376,23 +381,26 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
+                        "default": "test",
                         "description": "账号",
                         "name": "username",
-                        "in": "query",
+                        "in": "formData",
                         "required": true
                     },
                     {
                         "type": "string",
+                        "default": "test",
                         "description": "密码",
                         "name": "password",
-                        "in": "query",
+                        "in": "formData",
                         "required": true
                     },
                     {
                         "type": "string",
+                        "default": "test",
                         "description": "姓名",
                         "name": "realname",
-                        "in": "query",
+                        "in": "formData",
                         "required": true
                     },
                     {
@@ -404,7 +412,7 @@ const docTemplate = `{
                         "type": "string",
                         "description": "所属组IDs",
                         "name": "groups",
-                        "in": "query",
+                        "in": "formData",
                         "required": true
                     },
                     {
@@ -412,14 +420,14 @@ const docTemplate = `{
                         "default": "test@gmail.com",
                         "description": "邮箱",
                         "name": "emali",
-                        "in": "query"
+                        "in": "formData"
                     },
                     {
                         "type": "integer",
                         "default": 1,
                         "description": "状态",
                         "name": "status",
-                        "in": "query"
+                        "in": "formData"
                     }
                 ],
                 "responses": {
@@ -442,7 +450,7 @@ const docTemplate = `{
                         "default": 1,
                         "description": "账号ID",
                         "name": "id",
-                        "in": "query"
+                        "in": "path"
                     }
                 ],
                 "responses": {
@@ -528,10 +536,10 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "用户ID",
+                        "default": 1,
+                        "description": "账号ID",
                         "name": "id",
-                        "in": "path",
-                        "required": true
+                        "in": "path"
                     }
                 ],
                 "responses": {

@@ -228,7 +228,7 @@ paths:
       parameters:
       - default: 1
         description: 账号ID
-        in: query
+        in: path
         name: id
         type: integer
       responses:
@@ -241,11 +241,13 @@ paths:
       - User
     get:
       parameters:
-      - description: 当前页数, 1开始
+      - default: 1
+        description: 当前页数
         in: query
         name: page
         type: integer
-      - description: 当前页数, 默认20
+      - default: 20
+        description: 每页记录
         in: query
         name: size
         type: integer
@@ -261,18 +263,21 @@ paths:
       - User
     post:
       parameters:
-      - description: 账号
-        in: query
+      - default: test
+        description: 账号
+        in: formData
         name: username
         required: true
         type: string
-      - description: 密码
-        in: query
+      - default: test
+        description: 密码
+        in: formData
         name: password
         required: true
         type: string
-      - description: 姓名
-        in: query
+      - default: test
+        description: 姓名
+        in: formData
         name: realname
         required: true
         type: string
@@ -281,18 +286,18 @@ paths:
         - "1"
         - "2"
         - "3"
-        in: query
+        in: formData
         name: groups
         required: true
         type: string
       - default: test@gmail.com
         description: 邮箱
-        in: query
+        in: formData
         name: emali
         type: string
       - default: 1
         description: 状态
-        in: query
+        in: formData
         name: status
         type: integer
       responses:
@@ -307,21 +312,24 @@ paths:
       parameters:
       - default: 1
         description: 账号ID
-        in: query
+        in: path
         name: id
         type: integer
-      - description: 账号
-        in: query
+      - default: test
+        description: 账号
+        in: formData
         name: username
         required: true
         type: string
-      - description: 密码
-        in: query
+      - default: test
+        description: 密码
+        in: formData
         name: password
         required: true
         type: string
-      - description: 姓名
-        in: query
+      - default: test
+        description: 姓名
+        in: formData
         name: realname
         required: true
         type: string
@@ -330,18 +338,18 @@ paths:
         - "1"
         - "2"
         - "3"
-        in: query
+        in: formData
         name: groups
         required: true
         type: string
       - default: test@gmail.com
         description: 邮箱
-        in: query
+        in: formData
         name: emali
         type: string
       - default: 1
         description: 状态
-        in: query
+        in: formData
         name: status
         type: integer
       responses:
@@ -357,10 +365,10 @@ paths:
   /user/{id}:
     get:
       parameters:
-      - description: 用户ID
+      - default: 1
+        description: 账号ID
         in: path
         name: id
-        required: true
         type: integer
       responses:
         "200":

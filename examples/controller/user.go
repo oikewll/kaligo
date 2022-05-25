@@ -2,7 +2,6 @@ package controller
 
 import (
     "errors"
-    // "net/http"
     "github.com/owner888/kaligo"
     "github.com/owner888/kaligo/logs"
     "github.com/owner888/kaligo/sessions"
@@ -15,9 +14,9 @@ type User struct {
 
 // @Summary List 分页获取用户信息
 // @Tags    User
-// @Param   page     query integer false "当前页数, 1开始"
-// @Param   size     query integer false "当前页数, 默认20"
-// @Success 200 {object} []model.User
+// @Param   page     query integer false "当前页数" default(1)
+// @Param   size     query integer false "每页记录" default(20)
+// @Success 200 {array} model.User
 // @Router  /user [get]
 func (c *User) List() {
     data, _, err := model.User{}.List()
@@ -26,7 +25,7 @@ func (c *User) List() {
 
 // @Summary Detail 用户信息
 // @Tags    User
-// @Param   id       path integer true "用户ID"    default(1)
+// @Param   id        path      integer false  "账号ID"     default(1)
 // @Router  /user/{id} [GET]
 // @Success 200 {object} map[string]string
 func (c *User) Detail() {
@@ -40,10 +39,10 @@ func (c *User) Detail() {
 
 // @Summary Update 更新单条或多条数据
 // @Tags    User
-// @Param   id        path   integer false  "账号ID"    default(1)
-// @Param   username  formData  string  true   "账号"
-// @Param   password  formData  string  true   "密码"
-// @Param   realname  formData  string  true   "姓名"
+// @Param   id        path      integer false  "账号ID"     default(1)
+// @Param   username  formData  string  true   "账号"       default(test)
+// @Param   password  formData  string  true   "密码"       default(test)
+// @Param   realname  formData  string  true   "姓名"       default(test)
 // @Param   groups    formData  string  true   "所属组IDs"  Enums(1, 2, 3)
 // @Param   emali     formData  string  false  "邮箱"       default(test@gmail.com)
 // @Param   status    formData  integer false  "状态"       default(1)
@@ -62,9 +61,9 @@ func (c *User) Update() {
 
 // @Summary Create 添加一条数据
 // @Tags    User
-// @Param   username  formData  string  true   "账号"
-// @Param   password  formData  string  true   "密码"
-// @Param   realname  formData  string  true   "姓名"
+// @Param   username  formData  string  true   "账号"       default(test)
+// @Param   password  formData  string  true   "密码"       default(test)
+// @Param   realname  formData  string  true   "姓名"       default(test)
 // @Param   groups    formData  string  true   "所属组IDs"  Enums(1, 2, 3)
 // @Param   emali     formData  string  false  "邮箱"       default(test@gmail.com)
 // @Param   status    formData  integer false  "状态"       default(1)
@@ -82,7 +81,7 @@ func (c *User) Create() {
 
 // @Summary Delete 删除单条或多条数据
 // @Tags    User
-// @Param   id        path  integer false  "账号ID"    default(1)
+// @Param   id        path      integer false  "账号ID"     default(1)
 // @Success 200 {integer} integer
 // @Router  /user [DELETE]
 func (c *User) Delete() {
@@ -98,7 +97,7 @@ func (c *User) Delete() {
 // @Tags    User
 // @Param   username  formData  string  true   "账号"       default(test)
 // @Param   password  formData  string  true   "密码"       default(test)
-// @Param   remember  formData  bool    true   "记住密码"   default(true)
+// @Param   remember  formData  boolean true   "记住密码"   default(true)
 // @Success 200 {object} map[string]string
 // @Router  /user/login [POST]
 func (c *User) Login() {
@@ -126,11 +125,6 @@ func (c *User) Login() {
         "password": password,
         "remember": remember,
     })
-    // result(c.Context, map[string]string{
-    //     "username": username,
-    //     "password": password,
-    //     "remember": remember,
-    // }, nil)
 
     // c.String(200, "Login successful")
 
