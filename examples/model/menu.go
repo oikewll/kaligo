@@ -31,7 +31,8 @@ type xmlRoot struct {
     Menus   []Menu   `xml:"menu"`
 }
 
-func (m Menu) LoadDefault() ([]Menu, error) {
+// LoadDefault("GET-/api/todo,GET-/api/todo/:id,POST-/api/todo,PUT-/api/todo/:id,DELETE-/api/todo/:id")
+func (m Menu) LoadDefault(filters ...string) ([]Menu, error) {
     file, err := os.Open(defaultMenuPath)
     if err != nil {
         return []Menu{}, err
