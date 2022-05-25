@@ -33,7 +33,6 @@ type xmlRoot struct {
     Menus   []Menu   `xml:"menu"`
 }
 
-// LoadDefault("GET-/api/todo,GET-/api/todo/:id,POST-/api/todo,PUT-/api/todo/:id,DELETE-/api/todo/:id")
 func (m Menu) LoadDefault(filters ...string) ([]Menu, error) {
     file, err := os.Open(defaultMenuPath)
     if err != nil {
@@ -54,4 +53,39 @@ func (m Menu) Load(reader io.Reader) ([]Menu, error) {
         return []Menu{}, err
     }
     return v.Menus, nil
+}
+
+func (m Menu) getChildren() []Menu   { return m.Children }
+func (m *Menu) setChildren(c []Menu) { m.Children = c }
+
+// Permission 通过权限列表过滤菜单
+func (m *Menu) Permission(p []Permission) *Menu {
+    return filterTree(m, Menu.getChildren, (*Menu).setChildren, func(node Menu) bool {
+        if len(node.Children) > 0 {
+            return true
+        }
+        for _, v := range p {
+            if v.Method == node.Method && v.Path == node.Path {
+                return true
+            }
+        }
+        return false
+    })
+}
+
+// filterTree 树形结构过滤，深度优先，先过滤叶子结点
+func filterTree[T any](root *T, getter func(node T) []T, setter func(node *T, children []T), filter func(node T) bool) *T {
+    var children []T
+    for _, v := range getter(*root) {
+        n := filterTree(&v, getter, setter, filter)
+        if n != nil {
+            children = append(children, *n)
+        }
+    }
+    setter(root, children)
+    ok := filter(*root)
+    if ok {
+        return root
+    }
+    return nil
 }

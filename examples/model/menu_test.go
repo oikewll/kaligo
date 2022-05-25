@@ -13,6 +13,20 @@ func TestMenuParse(t *testing.T) {
     assert.Equal(t, []Menu{}, menu)
 }
 
+func TestPermisionFilter(t *testing.T) {
+    pStr := "GET-/content,POST-/content"
+    menu, _ := Menu{}.Load(strings.NewReader(testMenuStr))
+    p := Permission{}.Parse(pStr)
+    root := &Menu{Children: menu}
+    root = root.Permission(p)
+    assert.Equal(t, Menu{}, root)
+}
+
+func TestPermision(t *testing.T) {
+    pStr := "GET-/api/todo,GET-/api/todo/:id,POST-/api/todo,PUT-/api/todo/:id,DELETE-/api/todo/:id"
+    assert.Equal(t, []Permission{}, Permission{}.Parse(pStr))
+}
+
 var testMenuStr = `
 <xml>
     <!-- //这里的子菜单为隐性项目 -->
