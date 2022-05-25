@@ -36,9 +36,8 @@ type UserOptions struct {
 type User struct {
     Base
 
-    // ID int                  `db:"id" json:"id"`
     UID string              `db:"uid" json:"uid"`
-    Groups []int            `db:"ugroupsid" json:"groups"`
+    Groups []int            `db:"groups" json:"groups"`
     Username string         `db:"username" json:"username" validate:"required"`
     Password string         `db:"validate" validate:"required"`
     Realname string         `db:"realname" json:"realname"`
@@ -70,7 +69,7 @@ func (m *User) Table() string { return "user" }
 // List 分页获取数据列表
 func (m User) List() ([]User, int, error) {
     var users []User
-    _, err := DB.Select("id", "title", "date", "done").From(m.Table()).Scan(&users).Execute()
+    _, err := DB.Select("id", "username", "realname", "status").From(m.Table()).Scan(&users).Execute()
     return users, 0, err
 }
 

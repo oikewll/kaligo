@@ -15,8 +15,8 @@ type User struct {
 
 // @Summary List 分页获取用户信息
 // @tags    User
-// @Param   page       query integer false "当前页数, 1开始"
-// @Param   size       query integer false "当前页数, 默认20"
+// @Param   page     query integer false "当前页数, 1开始"
+// @Param   size     query integer false "当前页数, 默认20"
 // @Success 200 {object} []model.User
 // @Router  /user [get]
 func (c *User) List() {
@@ -40,7 +40,13 @@ func (c *User) Detail() {
 
 // @Summary Update 更新单条或多条数据
 // @tags    User
-// @Param   user formData model.User true "User"
+// @Param   id        query  integer false  "账号ID"    default(1)
+// @Param   username  query  string  true   "账号"
+// @Param   password  query  string  true   "密码"
+// @Param   realname  query  string  true   "姓名"
+// @Param   groups    query  string  true   "所属组IDs"  Enums(1, 2, 3)
+// @Param   emali     query  string  false  "邮箱"       default(test@gmail.com)
+// @Param   status    query  integer false  "状态"       default(1)
 // @Success 200 {object} []model.User
 // @Router  /user [PUT]
 func (c *User) Update() {
@@ -54,23 +60,14 @@ func (c *User) Update() {
     result(c.Context, data, err)
 }
 
-// @Summary Delete 删除单条或多条数据
-// @tags    User
-// @Param   id       query integer false "User ID"
-// @Success 200 {integer} integer
-// @Router  /user [DELETE]
-func (c *User) Delete() {
-    id := c.QueryValue("id")
-    if len(id) == 0 {
-        result(c.Context, nil, errors.New("id is required"))
-    }
-    data, err := (&model.User{}).Delete(id)
-    result(c.Context, data, err)
-}
-
 // @Summary Create 添加一条数据
 // @tags    User
-// @Param   user formData model.User true "User"
+// @Param   username  query  string  true   "账号"
+// @Param   password  query  string  true   "密码"
+// @Param   realname  query  string  true   "姓名"
+// @Param   groups    query  string  true   "所属组IDs"  Enums(1, 2, 3)
+// @Param   emali     query  string  false  "邮箱"       default(test@gmail.com)
+// @Param   status    query  integer false  "状态"       default(1)
 // @Success 200 {object} model.User
 // @Router  /user [POST]
 func (c *User) Create() {
@@ -80,6 +77,20 @@ func (c *User) Create() {
         result(c.Context, nil, err)
     }
     data, err := (&model.User{}).Create(user)
+    result(c.Context, data, err)
+}
+
+// @Summary Delete 删除单条或多条数据
+// @tags    User
+// @Param   id        query  integer false  "账号ID"    default(1)
+// @Success 200 {integer} integer
+// @Router  /user [DELETE]
+func (c *User) Delete() {
+    id := c.QueryValue("id")
+    if len(id) == 0 {
+        result(c.Context, nil, errors.New("id is required"))
+    }
+    data, err := (&model.User{}).Delete(id)
     result(c.Context, data, err)
 }
 

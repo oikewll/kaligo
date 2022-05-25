@@ -50,7 +50,6 @@ definitions:
       status:
         type: integer
       uid:
-        description: ID int                  `db:"id" json:"id"`
         type: string
       updatedAt:
         type: string
@@ -227,7 +226,8 @@ paths:
   /user:
     delete:
       parameters:
-      - description: User ID
+      - default: 1
+        description: 账号ID
         in: query
         name: id
         type: integer
@@ -261,65 +261,40 @@ paths:
       - User
     post:
       parameters:
-      - in: formData
-        name: avatar
-        type: string
-      - in: formData
-        name: createdAt
-        type: string
-      - in: formData
-        name: creatorId
-        type: integer
-      - in: formData
-        name: deletedAt
-        type: string
-      - in: formData
-        name: deletorId
-        type: integer
-      - in: formData
-        name: email
-        type: string
-      - in: formData
-        items:
-          type: integer
-        name: groups
-        type: array
-      - in: formData
-        name: id
-        type: integer
-      - in: formData
-        name: isFirstLogin
-        type: boolean
-      - in: formData
-        name: password
-        required: true
-        type: string
-      - in: formData
-        name: realname
-        type: string
-      - in: formData
-        name: sessionExpire
-        type: string
-      - in: formData
-        name: sessionID
-        type: string
-      - in: formData
-        name: status
-        type: integer
-      - description: ID int                  `db:"id" json:"id"`
-        in: formData
-        name: uid
-        type: string
-      - in: formData
-        name: updatedAt
-        type: string
-      - in: formData
-        name: updatorId
-        type: integer
-      - in: formData
+      - description: 账号
+        in: query
         name: username
         required: true
         type: string
+      - description: 密码
+        in: query
+        name: password
+        required: true
+        type: string
+      - description: 姓名
+        in: query
+        name: realname
+        required: true
+        type: string
+      - description: 所属组IDs
+        enum:
+        - "1"
+        - "2"
+        - "3"
+        in: query
+        name: groups
+        required: true
+        type: string
+      - default: test@gmail.com
+        description: 邮箱
+        in: query
+        name: emali
+        type: string
+      - default: 1
+        description: 状态
+        in: query
+        name: status
+        type: integer
       responses:
         "200":
           description: OK
@@ -330,65 +305,45 @@ paths:
       - User
     put:
       parameters:
-      - in: formData
-        name: avatar
-        type: string
-      - in: formData
-        name: createdAt
-        type: string
-      - in: formData
-        name: creatorId
-        type: integer
-      - in: formData
-        name: deletedAt
-        type: string
-      - in: formData
-        name: deletorId
-        type: integer
-      - in: formData
-        name: email
-        type: string
-      - in: formData
-        items:
-          type: integer
-        name: groups
-        type: array
-      - in: formData
+      - default: 1
+        description: 账号ID
+        in: query
         name: id
         type: integer
-      - in: formData
-        name: isFirstLogin
-        type: boolean
-      - in: formData
-        name: password
-        required: true
-        type: string
-      - in: formData
-        name: realname
-        type: string
-      - in: formData
-        name: sessionExpire
-        type: string
-      - in: formData
-        name: sessionID
-        type: string
-      - in: formData
-        name: status
-        type: integer
-      - description: ID int                  `db:"id" json:"id"`
-        in: formData
-        name: uid
-        type: string
-      - in: formData
-        name: updatedAt
-        type: string
-      - in: formData
-        name: updatorId
-        type: integer
-      - in: formData
+      - description: 账号
+        in: query
         name: username
         required: true
         type: string
+      - description: 密码
+        in: query
+        name: password
+        required: true
+        type: string
+      - description: 姓名
+        in: query
+        name: realname
+        required: true
+        type: string
+      - description: 所属组IDs
+        enum:
+        - "1"
+        - "2"
+        - "3"
+        in: query
+        name: groups
+        required: true
+        type: string
+      - default: test@gmail.com
+        description: 邮箱
+        in: query
+        name: emali
+        type: string
+      - default: 1
+        description: 状态
+        in: query
+        name: status
+        type: integer
       responses:
         "200":
           description: OK

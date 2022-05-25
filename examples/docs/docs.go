@@ -302,100 +302,58 @@ const docTemplate = `{
                 "summary": "Update 更新单条或多条数据",
                 "parameters": [
                     {
-                        "type": "string",
-                        "name": "avatar",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "string",
-                        "name": "createdAt",
-                        "in": "formData"
-                    },
-                    {
                         "type": "integer",
-                        "name": "creatorId",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "string",
-                        "name": "deletedAt",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "integer",
-                        "name": "deletorId",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "string",
-                        "name": "email",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "array",
-                        "items": {
-                            "type": "integer"
-                        },
-                        "name": "groups",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "integer",
+                        "default": 1,
+                        "description": "账号ID",
                         "name": "id",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "boolean",
-                        "name": "isFirstLogin",
-                        "in": "formData"
+                        "in": "query"
                     },
                     {
                         "type": "string",
-                        "name": "password",
-                        "in": "formData",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "name": "realname",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "string",
-                        "name": "sessionExpire",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "string",
-                        "name": "sessionID",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "integer",
-                        "name": "status",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "string",
-                        "description": "ID int                  ` + "`" + `db:\"id\" json:\"id\"` + "`" + `",
-                        "name": "uid",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "string",
-                        "name": "updatedAt",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "integer",
-                        "name": "updatorId",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "string",
+                        "description": "账号",
                         "name": "username",
-                        "in": "formData",
+                        "in": "query",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "密码",
+                        "name": "password",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "姓名",
+                        "name": "realname",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "enum": [
+                            "1",
+                            "2",
+                            "3"
+                        ],
+                        "type": "string",
+                        "description": "所属组IDs",
+                        "name": "groups",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "test@gmail.com",
+                        "description": "邮箱",
+                        "name": "emali",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "状态",
+                        "name": "status",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -418,99 +376,50 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "name": "avatar",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "string",
-                        "name": "createdAt",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "integer",
-                        "name": "creatorId",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "string",
-                        "name": "deletedAt",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "integer",
-                        "name": "deletorId",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "string",
-                        "name": "email",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "array",
-                        "items": {
-                            "type": "integer"
-                        },
-                        "name": "groups",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "integer",
-                        "name": "id",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "boolean",
-                        "name": "isFirstLogin",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "string",
-                        "name": "password",
-                        "in": "formData",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "name": "realname",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "string",
-                        "name": "sessionExpire",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "string",
-                        "name": "sessionID",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "integer",
-                        "name": "status",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "string",
-                        "description": "ID int                  ` + "`" + `db:\"id\" json:\"id\"` + "`" + `",
-                        "name": "uid",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "string",
-                        "name": "updatedAt",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "integer",
-                        "name": "updatorId",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "string",
+                        "description": "账号",
                         "name": "username",
-                        "in": "formData",
+                        "in": "query",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "密码",
+                        "name": "password",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "姓名",
+                        "name": "realname",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "enum": [
+                            "1",
+                            "2",
+                            "3"
+                        ],
+                        "type": "string",
+                        "description": "所属组IDs",
+                        "name": "groups",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "test@gmail.com",
+                        "description": "邮箱",
+                        "name": "emali",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "状态",
+                        "name": "status",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -530,7 +439,8 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "User ID",
+                        "default": 1,
+                        "description": "账号ID",
                         "name": "id",
                         "in": "query"
                     }
@@ -692,7 +602,6 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "uid": {
-                    "description": "ID int                  ` + "`" + `db:\"id\" json:\"id\"` + "`" + `",
                     "type": "string"
                 },
                 "updatedAt": {
