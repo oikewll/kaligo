@@ -16,6 +16,111 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/auth/check_token": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "CheckToken 检查 CSRF Token 是否存在",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "CSRF Token",
+                        "name": "csrf",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/login": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Login 账户登陆",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "default": "test",
+                        "description": "账号",
+                        "name": "username",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "test",
+                        "description": "密码",
+                        "name": "password",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "boolean",
+                        "default": true,
+                        "description": "记住密码",
+                        "name": "remember",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/logout": {
+            "delete": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Logout 账户退出",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/token": {
+            "get": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Token 产生一个 CSRF Token",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/init": {
             "get": {
                 "tags": [
@@ -297,6 +402,116 @@ const docTemplate = `{
                     }
                 }
             },
+            "post": {
+                "tags": [
+                    "User"
+                ],
+                "summary": "Create 添加一条数据",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "default": "test",
+                        "description": "账号",
+                        "name": "username",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "test",
+                        "description": "密码",
+                        "name": "password",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "test",
+                        "description": "姓名",
+                        "name": "realname",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "enum": [
+                            "1",
+                            "2",
+                            "3"
+                        ],
+                        "type": "string",
+                        "description": "所属组IDs",
+                        "name": "groups",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "test@gmail.com",
+                        "description": "邮箱",
+                        "name": "emali",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "状态",
+                        "name": "status",
+                        "in": "formData"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.User"
+                        }
+                    }
+                }
+            }
+        },
+        "/user/createform": {
+            "get": {
+                "tags": [
+                    "User"
+                ],
+                "summary": "CreateForm 用户添加表单",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Form"
+                        }
+                    }
+                }
+            }
+        },
+        "/user/{id}": {
+            "get": {
+                "tags": [
+                    "User"
+                ],
+                "summary": "Detail 用户信息",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "账号ID",
+                        "name": "id",
+                        "in": "path"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
             "put": {
                 "tags": [
                     "User"
@@ -372,73 +587,9 @@ const docTemplate = `{
                         }
                     }
                 }
-            },
-            "post": {
-                "tags": [
-                    "User"
-                ],
-                "summary": "Create 添加一条数据",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "default": "test",
-                        "description": "账号",
-                        "name": "username",
-                        "in": "formData",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "default": "test",
-                        "description": "密码",
-                        "name": "password",
-                        "in": "formData",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "default": "test",
-                        "description": "姓名",
-                        "name": "realname",
-                        "in": "formData",
-                        "required": true
-                    },
-                    {
-                        "enum": [
-                            "1",
-                            "2",
-                            "3"
-                        ],
-                        "type": "string",
-                        "description": "所属组IDs",
-                        "name": "groups",
-                        "in": "formData",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "default": "test@gmail.com",
-                        "description": "邮箱",
-                        "name": "emali",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "integer",
-                        "default": 1,
-                        "description": "状态",
-                        "name": "status",
-                        "in": "formData"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/model.User"
-                        }
-                    }
-                }
-            },
+            }
+        },
+        "/user{id}": {
             "delete": {
                 "tags": [
                     "User"
@@ -462,101 +613,49 @@ const docTemplate = `{
                     }
                 }
             }
-        },
-        "/user/login": {
-            "post": {
-                "tags": [
-                    "User"
-                ],
-                "summary": "Login 账户登陆",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "default": "test",
-                        "description": "账号",
-                        "name": "username",
-                        "in": "formData",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "default": "test",
-                        "description": "密码",
-                        "name": "password",
-                        "in": "formData",
-                        "required": true
-                    },
-                    {
-                        "type": "boolean",
-                        "default": true,
-                        "description": "记住密码",
-                        "name": "remember",
-                        "in": "formData",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/user/logout": {
-            "delete": {
-                "tags": [
-                    "User"
-                ],
-                "summary": "Logout 账户退出",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/user/{id}": {
-            "get": {
-                "tags": [
-                    "User"
-                ],
-                "summary": "Detail 用户信息",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "default": 1,
-                        "description": "账号ID",
-                        "name": "id",
-                        "in": "path"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    }
-                }
-            }
         }
     },
     "definitions": {
+        "model.Field": {
+            "type": "object",
+            "properties": {
+                "field": {
+                    "type": "string"
+                },
+                "label": {
+                    "type": "string"
+                },
+                "rules": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.Form": {
+            "type": "object",
+            "properties": {
+                "csrf": {
+                    "type": "string"
+                },
+                "fields": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.Field"
+                    }
+                },
+                "method": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "path": {
+                    "type": "string"
+                }
+            }
+        },
         "model.Purview": {
             "type": "object"
         },

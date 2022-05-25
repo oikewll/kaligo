@@ -1,5 +1,31 @@
 basePath: /api
 definitions:
+  model.Field:
+    properties:
+      field:
+        type: string
+      label:
+        type: string
+      rules:
+        type: string
+      type:
+        type: string
+    type: object
+  model.Form:
+    properties:
+      csrf:
+        type: string
+      fields:
+        items:
+          $ref: '#/definitions/model.Field'
+        type: array
+      method:
+        type: string
+      name:
+        type: string
+      path:
+        type: string
+    type: object
   model.Purview:
     type: object
   model.Todo:
@@ -67,6 +93,75 @@ info:
   title: Kaligo Example API
   version: "1.0"
 paths:
+  /auth/check_token:
+    post:
+      parameters:
+      - description: CSRF Token
+        in: formData
+        name: csrf
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: CheckToken 检查 CSRF Token 是否存在
+      tags:
+      - Auth
+  /auth/login:
+    post:
+      parameters:
+      - default: test
+        description: 账号
+        in: formData
+        name: username
+        required: true
+        type: string
+      - default: test
+        description: 密码
+        in: formData
+        name: password
+        required: true
+        type: string
+      - default: true
+        description: 记住密码
+        in: formData
+        name: remember
+        required: true
+        type: boolean
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Login 账户登陆
+      tags:
+      - Auth
+  /auth/logout:
+    delete:
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Logout 账户退出
+      tags:
+      - Auth
+  /auth/token:
+    get:
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: Token 产生一个 CSRF Token
+      tags:
+      - Auth
   /init:
     get:
       responses:
@@ -224,21 +319,6 @@ paths:
       tags:
       - todo
   /user:
-    delete:
-      parameters:
-      - default: 1
-        description: 账号ID
-        in: path
-        name: id
-        type: integer
-      responses:
-        "200":
-          description: OK
-          schema:
-            type: integer
-      summary: Delete 删除单条或多条数据
-      tags:
-      - User
     get:
       parameters:
       - default: 1
@@ -308,6 +388,24 @@ paths:
       summary: Create 添加一条数据
       tags:
       - User
+  /user/{id}:
+    get:
+      parameters:
+      - default: 1
+        description: 账号ID
+        in: path
+        name: id
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Detail 用户信息
+      tags:
+      - User
     put:
       parameters:
       - default: 1
@@ -362,8 +460,18 @@ paths:
       summary: Update 更新单条或多条数据
       tags:
       - User
-  /user/{id}:
+  /user/createform:
     get:
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Form'
+      summary: CreateForm 用户添加表单
+      tags:
+      - User
+  /user{id}:
+    delete:
       parameters:
       - default: 1
         description: 账号ID
@@ -374,53 +482,8 @@ paths:
         "200":
           description: OK
           schema:
-            additionalProperties:
-              type: string
-            type: object
-      summary: Detail 用户信息
-      tags:
-      - User
-  /user/login:
-    post:
-      parameters:
-      - default: test
-        description: 账号
-        in: formData
-        name: username
-        required: true
-        type: string
-      - default: test
-        description: 密码
-        in: formData
-        name: password
-        required: true
-        type: string
-      - default: true
-        description: 记住密码
-        in: formData
-        name: remember
-        required: true
-        type: boolean
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      summary: Login 账户登陆
-      tags:
-      - User
-  /user/logout:
-    delete:
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      summary: Logout 账户退出
+            type: integer
+      summary: Delete 删除单条或多条数据
       tags:
       - User
 swagger: "2.0"

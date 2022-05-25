@@ -56,6 +56,17 @@ func RemoveDuplicatesAndEmpty(a []string) (ret []string) {
     return
 }
 
+func Md5(str string) string {
+    data := []byte(str)
+    has := md5.Sum(data)
+    md5str1 := fmt.Sprintf("%x", has)
+    return md5str1
+}
+
+func MakeCsrfToken() string {
+    return Md5(UUID())
+}
+
 // uuid
 func UUID() string {
     return uuid.NewUUID().String()
@@ -193,13 +204,6 @@ func MapToJson(m interface{}) string {
 
         return ""
     }
-}
-
-func Md5(str string) string {
-    data := []byte(str)
-    has := md5.Sum(data)
-    md5str1 := fmt.Sprintf("%x", has)
-    return md5str1
 }
 
 func MemStat() string {

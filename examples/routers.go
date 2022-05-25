@@ -34,19 +34,31 @@ func addSessionRoute(r kaligo.Router) {
 
 func addApiRoute(r kaligo.Router) {
     // 优先匹配精准的, 否则和 /api/user/:id 冲突了
-    r.AddRoute("/api/user/login", map[string]string{
+    r.AddRoute("/api/auth/login", map[string]string{
         http.MethodPost: "Login",
-    }, &controller.User{})
+    }, &controller.Auth{})
 
-	r.AddRoute("/api/user/logout", map[string]string{
+	r.AddRoute("/api/auth/logout", map[string]string{
 		http.MethodDelete: "Logout",
-	}, &controller.User{})
+	}, &controller.Auth{})
+
+	r.AddRoute("/api/auth/token", map[string]string{
+		http.MethodGet: "Token",
+	}, &controller.Auth{})
+
+    r.AddRoute("/api/auth/check_token", map[string]string{
+		http.MethodPost: "CheckToken",
+	}, &controller.Auth{})
 
     r.AddRoute("/api/user/:id", map[string]string{
 		http.MethodPut:    "Update",
 		http.MethodDelete: "Delete",
         http.MethodGet:    "Detail",
     }, &controller.User{})
+
+	r.AddRoute("/api/user/createform", map[string]string{
+		http.MethodGet:    "CreateForm",
+	}, &controller.User{})
 
 	r.AddRoute("/api/user", map[string]string{
 		http.MethodGet:    "List",
