@@ -47,9 +47,11 @@ func (c *User) Detail() {
 // @Param   emali     formData  string  false  "邮箱"       default(test@gmail.com)
 // @Param   status    formData  integer false  "状态"       default(1)
 // @Success 200 {object} []model.User
-// @Router  /user [PUT]
+// @Router  /user/{id} [PUT]
 func (c *User) Update() {
+    // id := c.ParamValue("id")
     var user model.User
+    // intVar, err := strconv.Atoi(id)
     err := c.JsonBodyValue(&user)
     if err != nil {
         result(c.Context, nil, err)
@@ -83,7 +85,7 @@ func (c *User) Create() {
 // @Tags    User
 // @Param   id        path      integer false  "账号ID"     default(1)
 // @Success 200 {integer} integer
-// @Router  /user [DELETE]
+// @Router  /user{id} [DELETE]
 func (c *User) Delete() {
     id := c.QueryValue("id")
     if len(id) == 0 {

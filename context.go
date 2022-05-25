@@ -12,6 +12,7 @@ import (
     "net/url"
     "os"
     "strings"
+    // "strconv"
     "sync"
     "time"
 
@@ -361,6 +362,17 @@ func (c *Context) getDefaultValue(defaultValue ...string) string {
 func (c *Context) ParamValue(key string, defaultValue ...string) string {
     return c.Params.ByName(key, defaultValue...)
 }
+
+// func (c *Context) ParamInt(key string, defaultValue ...any) int {
+//     param := c.Params.ByName(key, defaultValue...)
+//     defaultVal := strconv.Itoa(param)
+//     intVar, err := strconv.Atoi(param)
+//     if err != nil {
+//         return 0
+//     }
+//
+//     return intVar
+// }
 
 // AddParam adds param to context and
 // replaces path param key with given value for e2e testing purposes
