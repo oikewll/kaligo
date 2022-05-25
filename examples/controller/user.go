@@ -26,7 +26,7 @@ func (c *User) List() {
 
 // @Summary Detail 用户信息
 // @Tags    User
-// @Param   id       path integer true "用户ID"
+// @Param   id       path integer true "用户ID"    default(1)
 // @Router  /user/{id} [GET]
 // @Success 200 {object} map[string]string
 func (c *User) Detail() {
@@ -40,13 +40,13 @@ func (c *User) Detail() {
 
 // @Summary Update 更新单条或多条数据
 // @Tags    User
-// @Param   id        query  integer false  "账号ID"    default(1)
-// @Param   username  query  string  true   "账号"
-// @Param   password  query  string  true   "密码"
-// @Param   realname  query  string  true   "姓名"
-// @Param   groups    query  string  true   "所属组IDs"  Enums(1, 2, 3)
-// @Param   emali     query  string  false  "邮箱"       default(test@gmail.com)
-// @Param   status    query  integer false  "状态"       default(1)
+// @Param   id        path   integer false  "账号ID"    default(1)
+// @Param   username  formData  string  true   "账号"
+// @Param   password  formData  string  true   "密码"
+// @Param   realname  formData  string  true   "姓名"
+// @Param   groups    formData  string  true   "所属组IDs"  Enums(1, 2, 3)
+// @Param   emali     formData  string  false  "邮箱"       default(test@gmail.com)
+// @Param   status    formData  integer false  "状态"       default(1)
 // @Success 200 {object} []model.User
 // @Router  /user [PUT]
 func (c *User) Update() {
@@ -62,12 +62,12 @@ func (c *User) Update() {
 
 // @Summary Create 添加一条数据
 // @Tags    User
-// @Param   username  query  string  true   "账号"
-// @Param   password  query  string  true   "密码"
-// @Param   realname  query  string  true   "姓名"
-// @Param   groups    query  string  true   "所属组IDs"  Enums(1, 2, 3)
-// @Param   emali     query  string  false  "邮箱"       default(test@gmail.com)
-// @Param   status    query  integer false  "状态"       default(1)
+// @Param   username  formData  string  true   "账号"
+// @Param   password  formData  string  true   "密码"
+// @Param   realname  formData  string  true   "姓名"
+// @Param   groups    formData  string  true   "所属组IDs"  Enums(1, 2, 3)
+// @Param   emali     formData  string  false  "邮箱"       default(test@gmail.com)
+// @Param   status    formData  integer false  "状态"       default(1)
 // @Success 200 {object} model.User
 // @Router  /user [POST]
 func (c *User) Create() {
@@ -82,7 +82,7 @@ func (c *User) Create() {
 
 // @Summary Delete 删除单条或多条数据
 // @Tags    User
-// @Param   id        query  integer false  "账号ID"    default(1)
+// @Param   id        path  integer false  "账号ID"    default(1)
 // @Success 200 {integer} integer
 // @Router  /user [DELETE]
 func (c *User) Delete() {
