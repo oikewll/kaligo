@@ -67,6 +67,13 @@ type Accounts map[string]string
 
 func (m *User) Table() string { return "user" }
 
+// List 分页获取数据列表
+func (m User) List() ([]User, int, error) {
+    var users []User
+    _, err := DB.Select("id", "title", "date", "done").From(m.Table()).Scan(&users).Execute()
+    return users, 0, err
+}
+
 // 检查用户权限
 // GET-/api/todo,GET-/api/todo/:id,POST-/api/todo,PUT-/api/todo/:id,DELETE-/api/todo/:id
 func (m *User) CheckPurviews(url, method string) bool {
@@ -74,9 +81,17 @@ func (m *User) CheckPurviews(url, method string) bool {
 }
 
 // 获取用户私有权限(非组权限)
-// func (m *User) GetPurviews() string {
-// }
+// 用户权限 = 用户私有权限 + 组权限
+func (m *User) GetPurviews() string {
+    return "GET-/api/todo,GET-/api/todo/:id,POST-/api/todo,PUT-/api/todo/:id,DELETE-/api/todo/:id"
+}
 
+// 获取组权限
+func (m *User) GetGroupsPurviews() string {
+    return "GET-/api/todo,GET-/api/todo/:id,POST-/api/todo,PUT-/api/todo/:id,DELETE-/api/todo/:id"
+}
+
+// 检测用户
 func (m *User) CheckUser(accounts Accounts) (err error) {
     var username, password string    
     var ok bool
@@ -129,15 +144,7 @@ func (m *User) CheckUser(accounts Accounts) (err error) {
     return
 }
 
-// 验证登录成功后对用户进行授权
-// 登录接口才会到这里来
-//
-// @param array $user   用户信息 
-// @param int $remember 是否自动登陆 
-// @param int $seclogin 是否私密登陆
-// func (m *User) AuthUser(username string) bool {
-// }
-
+// 用户是否24小时内连续登录失败超过3次
 func (m *User) getLoginError24(username string) bool {
     // ErrorNum = 3
     // loc, _ := time.LoadLocation("Asia/Shanghai")
@@ -181,6 +188,7 @@ func (m *User) GetUser(account string, ftype string, useCache bool) (err error) 
     return
 }
 
+// 获取用户头像
 func (m *User) getUserAvatar(avatarURL string) string {
     return avatarURL
 }
@@ -207,7 +215,7 @@ func (m *User) Detail(id string) (u User, err error) {
 
 // Create 添加一条数据
 func (m *User) Create(u User) (ID, error) {
-    q, err := DB.Insert(m.Table(), []string{"title", "date"}).Values([]any{u.Username, u.Password}).Execute()
+    q, err := DB.Insert(m.Table(), []string{"username", "password"}).Values([]any{u.Username, u.Password}).Execute()
     return ID(q.LastInsertId), err
 }
 

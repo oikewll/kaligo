@@ -1,5 +1,7 @@
 basePath: /api
 definitions:
+  model.Purview:
+    type: object
   model.Todo:
     properties:
       date:
@@ -10,6 +12,55 @@ definitions:
         type: integer
       title:
         type: string
+    type: object
+  model.User:
+    properties:
+      avatar:
+        type: string
+      createdAt:
+        type: string
+      creatorId:
+        type: integer
+      deletedAt:
+        type: string
+      deletorId:
+        type: integer
+      email:
+        type: string
+      groups:
+        items:
+          type: integer
+        type: array
+      id:
+        type: integer
+      isFirstLogin:
+        type: boolean
+      password:
+        type: string
+      purviews:
+        items:
+          $ref: '#/definitions/model.Purview'
+        type: array
+      realname:
+        type: string
+      sessionExpire:
+        type: string
+      sessionID:
+        type: string
+      status:
+        type: integer
+      uid:
+        description: ID int                  `db:"id" json:"id"`
+        type: string
+      updatedAt:
+        type: string
+      updatorId:
+        type: integer
+      username:
+        type: string
+    required:
+    - password
+    - username
     type: object
 host: localhost:8080
 info:
@@ -108,7 +159,7 @@ paths:
             items:
               $ref: '#/definitions/model.Todo'
             type: array
-      summary: 获取所有 Todo
+      summary: List 获取所有 Todo
       tags:
       - todo
     post:
@@ -157,7 +208,7 @@ paths:
       summary: Update 更新单条或多条数据
       tags:
       - todo
-  /todo/:id:
+  /todo/{id}:
     get:
       parameters:
       - description: Todo ID
@@ -174,7 +225,188 @@ paths:
       tags:
       - todo
   /user:
+    delete:
+      parameters:
+      - description: User ID
+        in: query
+        name: id
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: integer
+      summary: Delete 删除单条或多条数据
+      tags:
+      - User
     get:
+      parameters:
+      - description: 当前页数, 1开始
+        in: query
+        name: page
+        type: integer
+      - description: 当前页数, 默认20
+        in: query
+        name: size
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/model.User'
+            type: array
+      summary: List 分页获取用户信息
+      tags:
+      - User
+    post:
+      parameters:
+      - in: formData
+        name: avatar
+        type: string
+      - in: formData
+        name: createdAt
+        type: string
+      - in: formData
+        name: creatorId
+        type: integer
+      - in: formData
+        name: deletedAt
+        type: string
+      - in: formData
+        name: deletorId
+        type: integer
+      - in: formData
+        name: email
+        type: string
+      - in: formData
+        items:
+          type: integer
+        name: groups
+        type: array
+      - in: formData
+        name: id
+        type: integer
+      - in: formData
+        name: isFirstLogin
+        type: boolean
+      - in: formData
+        name: password
+        required: true
+        type: string
+      - in: formData
+        name: realname
+        type: string
+      - in: formData
+        name: sessionExpire
+        type: string
+      - in: formData
+        name: sessionID
+        type: string
+      - in: formData
+        name: status
+        type: integer
+      - description: ID int                  `db:"id" json:"id"`
+        in: formData
+        name: uid
+        type: string
+      - in: formData
+        name: updatedAt
+        type: string
+      - in: formData
+        name: updatorId
+        type: integer
+      - in: formData
+        name: username
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.User'
+      summary: Create 添加一条数据
+      tags:
+      - User
+    put:
+      parameters:
+      - in: formData
+        name: avatar
+        type: string
+      - in: formData
+        name: createdAt
+        type: string
+      - in: formData
+        name: creatorId
+        type: integer
+      - in: formData
+        name: deletedAt
+        type: string
+      - in: formData
+        name: deletorId
+        type: integer
+      - in: formData
+        name: email
+        type: string
+      - in: formData
+        items:
+          type: integer
+        name: groups
+        type: array
+      - in: formData
+        name: id
+        type: integer
+      - in: formData
+        name: isFirstLogin
+        type: boolean
+      - in: formData
+        name: password
+        required: true
+        type: string
+      - in: formData
+        name: realname
+        type: string
+      - in: formData
+        name: sessionExpire
+        type: string
+      - in: formData
+        name: sessionID
+        type: string
+      - in: formData
+        name: status
+        type: integer
+      - description: ID int                  `db:"id" json:"id"`
+        in: formData
+        name: uid
+        type: string
+      - in: formData
+        name: updatedAt
+        type: string
+      - in: formData
+        name: updatorId
+        type: integer
+      - in: formData
+        name: username
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/model.User'
+            type: array
+      summary: Update 更新单条或多条数据
+      tags:
+      - User
+  /user/{id}:
+    get:
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
       responses:
         "200":
           description: OK
@@ -182,7 +414,7 @@ paths:
             additionalProperties:
               type: string
             type: object
-      summary: 用户信息
+      summary: Detail 用户信息
       tags:
       - User
   /user/login:
@@ -194,7 +426,7 @@ paths:
             additionalProperties:
               type: string
             type: object
-      summary: 账户登陆
+      summary: Login 账户登陆
       tags:
       - User
   /user/logout:
@@ -206,7 +438,7 @@ paths:
             additionalProperties:
               type: string
             type: object
-      summary: 账户退出
+      summary: Logout 账户退出
       tags:
       - User
 swagger: "2.0"

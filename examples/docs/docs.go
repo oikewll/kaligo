@@ -113,7 +113,7 @@ const docTemplate = `{
                 "tags": [
                     "todo"
                 ],
-                "summary": "获取所有 Todo",
+                "summary": "List 获取所有 Todo",
                 "parameters": [
                     {
                         "type": "integer",
@@ -238,7 +238,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/todo/:id": {
+        "/todo/{id}": {
             "get": {
                 "tags": [
                     "todo"
@@ -268,15 +268,278 @@ const docTemplate = `{
                 "tags": [
                     "User"
                 ],
-                "summary": "用户信息",
+                "summary": "List 分页获取用户信息",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "当前页数, 1开始",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "当前页数, 默认20",
+                        "name": "size",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/model.User"
                             }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "User"
+                ],
+                "summary": "Update 更新单条或多条数据",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "name": "avatar",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "name": "createdAt",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "creatorId",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "name": "deletedAt",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "deletorId",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "name": "email",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        },
+                        "name": "groups",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "id",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "name": "isFirstLogin",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "name": "password",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "name": "realname",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "name": "sessionExpire",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "name": "sessionID",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "status",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "ID int                  ` + "`" + `db:\"id\" json:\"id\"` + "`" + `",
+                        "name": "uid",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "name": "updatedAt",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "updatorId",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "name": "username",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/model.User"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "User"
+                ],
+                "summary": "Create 添加一条数据",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "name": "avatar",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "name": "createdAt",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "creatorId",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "name": "deletedAt",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "deletorId",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "name": "email",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        },
+                        "name": "groups",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "id",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "name": "isFirstLogin",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "name": "password",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "name": "realname",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "name": "sessionExpire",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "name": "sessionID",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "status",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "ID int                  ` + "`" + `db:\"id\" json:\"id\"` + "`" + `",
+                        "name": "uid",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "name": "updatedAt",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "updatorId",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "name": "username",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.User"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "User"
+                ],
+                "summary": "Delete 删除单条或多条数据",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "User ID",
+                        "name": "id",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "integer"
                         }
                     }
                 }
@@ -287,7 +550,7 @@ const docTemplate = `{
                 "tags": [
                     "User"
                 ],
-                "summary": "账户登陆",
+                "summary": "Login 账户登陆",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -306,7 +569,35 @@ const docTemplate = `{
                 "tags": [
                     "User"
                 ],
-                "summary": "账户退出",
+                "summary": "Logout 账户退出",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/user/{id}": {
+            "get": {
+                "tags": [
+                    "User"
+                ],
+                "summary": "Detail 用户信息",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -322,6 +613,9 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "model.Purview": {
+            "type": "object"
+        },
         "model.Todo": {
             "type": "object",
             "properties": {
@@ -335,6 +629,79 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.User": {
+            "type": "object",
+            "required": [
+                "password",
+                "username"
+            ],
+            "properties": {
+                "avatar": {
+                    "type": "string"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "creatorId": {
+                    "type": "integer"
+                },
+                "deletedAt": {
+                    "type": "string"
+                },
+                "deletorId": {
+                    "type": "integer"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "groups": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "isFirstLogin": {
+                    "type": "boolean"
+                },
+                "password": {
+                    "type": "string"
+                },
+                "purviews": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.Purview"
+                    }
+                },
+                "realname": {
+                    "type": "string"
+                },
+                "sessionExpire": {
+                    "type": "string"
+                },
+                "sessionID": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "integer"
+                },
+                "uid": {
+                    "description": "ID int                  ` + "`" + `db:\"id\" json:\"id\"` + "`" + `",
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                },
+                "updatorId": {
+                    "type": "integer"
+                },
+                "username": {
                     "type": "string"
                 }
             }

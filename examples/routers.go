@@ -33,8 +33,15 @@ func addSessionRoute(r kaligo.Router) {
 }
 
 func addApiRoute(r kaligo.Router) {
-    r.AddRoute("/api/user", map[string]string{
-        http.MethodPost: "Detail",
+	r.AddRoute("/api/user", map[string]string{
+		http.MethodGet:    "List",
+		http.MethodPost:   "Create",
+	}, &controller.User{})
+
+    r.AddRoute("/api/user/:id", map[string]string{
+		http.MethodPut:    "Update",
+		http.MethodDelete: "Delete",
+        http.MethodGet:    "Detail",
     }, &controller.User{})
 
     r.AddRoute("/api/user/login", map[string]string{

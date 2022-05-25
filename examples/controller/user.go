@@ -1,6 +1,7 @@
 package controller
 
 import (
+    "errors"
     "net/http"
     "github.com/owner888/kaligo"
     "github.com/owner888/kaligo/logs"
@@ -12,19 +13,77 @@ type User struct {
     kaligo.Controller
 }
 
-// @Summary 用户信息
-// @Tags    User
-// @Success 200 {object} map[string]string
-// @Router  /user [GET]
-func (c *User) Detail() {
-    session := sessions.Default(c.Context)
-
-    logs.Debug(c)
-
-    c.JSON(200, kaligo.H{"hello": session.Get("hello")})
+// @Summary List 分页获取用户信息
+// @tags    User
+// @Param   page       query integer false "当前页数, 1开始"
+// @Param   size       query integer false "当前页数, 默认20"
+// @Success 200 {object} []model.User
+// @Router  /user [get]
+func (c *User) List() {
+    data, _, err := model.User{}.List()
+    result(c.Context, data, err)
 }
 
-// @Summary 账户登陆
+// @Summary Detail 用户信息
+// @Tags    User
+// @Param   id       path integer true "User ID"
+// @Router  /user/{id} [GET]
+// @Success 200 {object} map[string]string
+func (c *User) Detail() {
+    session := sessions.Default(c.Context)
+    uid := session.Get("UID")
+
+    logs.Debug("UID === ", uid)
+
+    c.JSON(200, kaligo.H{"UID": uid})
+}
+
+// @Summary Update 更新单条或多条数据
+// @tags    User
+// @Param   user formData model.User true "User"
+// @Success 200 {object} []model.User
+// @Router  /user [PUT]
+func (c *User) Update() {
+    var user model.User
+    err := c.JsonBodyValue(&user)
+    if err != nil {
+        result(c.Context, nil, err)
+    }
+
+    data, err := (&model.User{}).Update(user)
+    result(c.Context, data, err)
+}
+
+// @Summary Delete 删除单条或多条数据
+// @tags    User
+// @Param   id       query integer false "User ID"
+// @Success 200 {integer} integer
+// @Router  /user [DELETE]
+func (c *User) Delete() {
+    id := c.QueryValue("id")
+    if len(id) == 0 {
+        result(c.Context, nil, errors.New("id is required"))
+    }
+    data, err := (&model.User{}).Delete(id)
+    result(c.Context, data, err)
+}
+
+// @Summary Create 添加一条数据
+// @tags    User
+// @Param   user formData model.User true "User"
+// @Success 200 {object} model.User
+// @Router  /user [POST]
+func (c *User) Create() {
+    var user model.User
+    err := c.JsonBodyValue(&user)
+    if err != nil {
+        result(c.Context, nil, err)
+    }
+    data, err := (&model.User{}).Create(user)
+    result(c.Context, data, err)
+}
+
+// @Summary Login 账户登陆
 // @Tags    User
 // @Success 200 {object} map[string]string
 // @Router  /user/login [POST]
@@ -46,12 +105,14 @@ func (c *User) Login() {
     }()
 
     user := &model.User{}
+    // CheckUser 里面调用的 GetUser 会把用户数据缓存到 context.Set("UserDefaultKey-UID", user)
     if err := user.CheckUser(model.Accounts{ "username": username, "password": password, "validate": validate, "remember": remember }); err != nil {
         panic(err)
     }
 
     session := sessions.Default(c.Context)
-    session.Set("user", user)
+    // 要检查是否需要加UID为后缀
+    session.Set("UID", user.UID)
 
     // if user.IsFirstLogin {
     //     session.Set("uid", user.UID)
@@ -85,7 +146,7 @@ func (c *User) Login() {
     // c.SetCookie("access_token", username, 1000, "/", "", true, true)
 }
 
-// @Summary 账户退出
+// @Summary Logout 账户退出
 // @Tags    User
 // @Success 200 {object} map[string]string
 // @Router  /user/logout [DELETE]

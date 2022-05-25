@@ -11,8 +11,7 @@ type Todo struct {
     kaligo.Controller
 }
 
-// List 分页获取数据列表
-// @Summary 获取所有 Todo
+// @Summary List 获取所有 Todo
 // @tags    todo
 // @Param   page       query integer false "当前页数, 1开始"
 // @Param   size       query integer false "当前页数, 默认20"
@@ -23,12 +22,11 @@ func (c *Todo) List() {
     result(c.Context, data, err)
 }
 
-// Detail 获取单条数据详情
 // @Summary Detail 获取单条数据详情
 // @tags    todo
 // @Param   id       path integer true "Todo ID"
 // @Success 200 {object} model.Todo
-// @Router  /todo/:id [GET]
+// @Router  /todo/{id} [GET]
 func (c *Todo) Detail() {
     id := c.QueryValue("id")
     if len(id) == 0 {
@@ -38,7 +36,6 @@ func (c *Todo) Detail() {
     result(c.Context, data, err)
 }
 
-// Create 添加一条数据
 // @Summary Create 添加一条数据
 // @tags    todo
 // @Param   todo formData model.Todo true "Todo"
@@ -54,7 +51,6 @@ func (c *Todo) Create() {
     result(c.Context, data, err)
 }
 
-// Update 更新单条或多条数据
 // @Summary Update 更新单条或多条数据
 // @tags    todo
 // @Param   todo formData model.Todo true "Todo"
@@ -70,7 +66,6 @@ func (c *Todo) Update() {
     result(c.Context, data, err)
 }
 
-// Delete 删除单条或多条数据
 // @Summary Delete 删除单条或多条数据
 // @tags    todo
 // @Param   id       query integer false "Todo ID"
