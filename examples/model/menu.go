@@ -11,19 +11,18 @@ const defaultMenuPath = "menu.xml"
 
 // 菜单
 type Menu struct {
-    // XMLName xml.Name `xml:"menu"`
     ID     int
-    Path   string `xml:"path,attr"`
-    Show   bool   `xml:"show,attr"`
-    Method string `xml:"method,attr"` // http method
+    Path   string `json:"path" xml:"path,attr"`
+    Show   bool   `json:"show" xml:"show,attr"`
+    Method string `json:"method" xml:"method,attr"` // http method
     Meta
-    Children []Menu `xml:"menu"`
+    Children []Menu `json:"children" xml:"menu"`
 }
 
 // 菜单显示信息
 type Meta struct {
-    Name string `xml:"name,attr"`
-    Icon string `xml:"icon,attr"`
+    Name string `json:"name" xml:"name,attr"`
+    Icon string `json:"icon" xml:"icon,attr"`
 }
 
 // xmlRoot 菜单根节点
