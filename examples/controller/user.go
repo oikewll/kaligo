@@ -14,7 +14,7 @@ type User struct {
 }
 
 // @Summary List 分页获取用户信息
-// @tags    User
+// @Tags    User
 // @Param   page     query integer false "当前页数, 1开始"
 // @Param   size     query integer false "当前页数, 默认20"
 // @Success 200 {object} []model.User
@@ -39,7 +39,7 @@ func (c *User) Detail() {
 }
 
 // @Summary Update 更新单条或多条数据
-// @tags    User
+// @Tags    User
 // @Param   id        query  integer false  "账号ID"    default(1)
 // @Param   username  query  string  true   "账号"
 // @Param   password  query  string  true   "密码"
@@ -61,7 +61,7 @@ func (c *User) Update() {
 }
 
 // @Summary Create 添加一条数据
-// @tags    User
+// @Tags    User
 // @Param   username  query  string  true   "账号"
 // @Param   password  query  string  true   "密码"
 // @Param   realname  query  string  true   "姓名"
@@ -81,7 +81,7 @@ func (c *User) Create() {
 }
 
 // @Summary Delete 删除单条或多条数据
-// @tags    User
+// @Tags    User
 // @Param   id        query  integer false  "账号ID"    default(1)
 // @Success 200 {integer} integer
 // @Router  /user [DELETE]
@@ -124,6 +124,9 @@ func (c *User) Login() {
     session := sessions.Default(c.Context)
     // 要检查是否需要加UID为后缀
     session.Set("UID", user.UID)
+    session.Save()
+
+    c.String(200, "Login successful")
 
     // if user.IsFirstLogin {
     //     session.Set("uid", user.UID)
@@ -162,5 +165,9 @@ func (c *User) Login() {
 // @Success 200 {object} map[string]string
 // @Router  /user/logout [DELETE]
 func (c *User) Logout() {
+    session := sessions.Default(c.Context)
+    session.Delete("UID")
+    session.Save()
 
+    c.String(200, "Logout successful")
 }
