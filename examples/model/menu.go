@@ -14,6 +14,8 @@ type Menu struct {
     ID     int    `json:"id"`
     Path   string `json:"path" xml:"path,attr"`
     Show   bool   `json:"show" xml:"show,attr"`
+    Top    bool   `json:"top"  xml:"top,attr"`
+    Reload bool   `json:"reload" xml:"reload,attr"`
     Method string `json:"method" xml:"method,attr"` // http method
     Meta
     Children []Menu `json:"children" xml:"menu"`
