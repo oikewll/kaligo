@@ -1,26 +1,13 @@
 package controller
 
 import (
+    "examples/model"
     "fmt"
     "net/http"
     "time"
 
     "github.com/owner888/kaligo"
 )
-
-type Meta struct {
-    Name string
-    Icon string
-}
-type Menu struct {
-    ID int
-    Name string
-    Path string
-    Show bool
-
-    Meta
-    Children []Menu
-}
 
 type Home struct {
     kaligo.Controller
@@ -43,7 +30,8 @@ func (c *Home) Initialization() {
     //     childrens: [
     //     ]
     // },
-    c.String(200, "Initialization")
+    menus, err := model.Menu{}.LoadDefault()
+    result(c.Context, menus, err)
 }
 
 func (c *Home) Index() {
