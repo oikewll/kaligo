@@ -27,12 +27,12 @@ func CompactMapSliceE[T, U any, E error](from []T, transformer func(T) (U, E)) (
 }
 
 func CompactMapSlice[T, U any, E bool](from []T, transformer func(T) (U, E)) ([]U, E) {
-    ret := make([]U, len(from))
+    ret := make([]U, 0, len(from))
     var ok E
-    for i, v := range from {
+    for _, v := range from {
         r, o := transformer(v)
-        if ok {
-            ret[i] = r
+        if o {
+            ret = append(ret, r)
         }
         ok = ok && o
     }
