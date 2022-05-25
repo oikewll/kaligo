@@ -11,7 +11,7 @@ const defaultMenuPath = "menu.xml"
 
 // 菜单
 type Menu struct {
-    ID     int
+    ID     int    `json:"id"`
     Path   string `json:"path" xml:"path,attr"`
     Show   bool   `json:"show" xml:"show,attr"`
     Method string `json:"method" xml:"method,attr"` // http method
