@@ -6,6 +6,7 @@ import (
     "examples/model"
     "github.com/owner888/kaligo"
     "github.com/owner888/kaligo/logs"
+    "github.com/owner888/kaligo/util"
     "github.com/owner888/kaligo/sessions"
 )
 
@@ -25,7 +26,7 @@ func Auth(c *kaligo.Context) {
     }
 
     session := sessions.Default(c)
-    c.UID = session.Get(AuthUserKey).(string)
+    c.UID = util.ToString(session.Get(AuthUserKey))
 
     u := model.DefaultUser(c)
     // 检查权限

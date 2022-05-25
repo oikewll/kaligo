@@ -3,6 +3,7 @@ package model
 import (
     "errors"
     "strings"
+    // "time"
 
     "github.com/owner888/kaligo"
     "github.com/owner888/kaligo/logs"
@@ -13,6 +14,7 @@ import (
 const (
     DefaultKey  = "UserDefaultKey"
     errorFormat = "[sessions] ERROR! %s\n"
+    timeFormat  = "2006-01-02 15:04:05"
 )
 
 type Purview struct {
@@ -50,9 +52,10 @@ type User struct {
 }
 
 func DefaultUser(c *kaligo.Context) *User {
-    logs.Debug("%v", c.UID)
+    logs.Debugf("UID === %s", c.UID)
 
     u := &User{ctx: c}
+    // 从缓存或数据库中获取数据填充到 User struct
     u.GetUser(c.UID, "uid", true)
 
     return u
@@ -60,7 +63,7 @@ func DefaultUser(c *kaligo.Context) *User {
 
 type Accounts map[string]string
 
-func (m *User) table() string { return "user" }
+func (m *User) Table() string { return "user" }
 
 func (m *User) CheckPurviews(url, method string) bool {
     return true
@@ -132,6 +135,10 @@ func (m *User) CheckUser(accounts Accounts) (err error) {
 // }
 
 func (m *User) getLoginError24(username string) bool {
+    // ErrorNum = 3
+    // loc, _ := time.LoadLocation("Asia/Shanghai")
+    // t, _ := time.ParseInLocation(timeFormat, "")
+    // _, err = DB.Select("uid").From(m.table()).Where(ftype, "=", account).Scan(&uid).Execute()
     return true
 }
 
@@ -147,10 +154,14 @@ func (m *User) PasswordVerify(password, hash string) bool {
 
 // 获得用户信息, 如果缓存中存在直接返回, 否则查数据库并且缓存起来
 func (m *User) GetUser(account string, ftype string, useCache bool) (err error) {
+    if account == "" {
+        return
+    }
+
     var uid string = account
     // 非uid, 通过 account 查询 uid 先
     if ftype != "uid" {
-        _, err = DB.Select("uid").From(m.table()).Where(ftype, "=", account).Scan(&uid).Execute()
+        _, err = DB.Select("uid").From(m.Table()).Where(ftype, "=", account).Scan(&uid).Execute()
     }
 
     var exists bool
@@ -162,7 +173,7 @@ func (m *User) GetUser(account string, ftype string, useCache bool) (err error) 
     }
 
     if !exists {
-        _, err = DB.Select("*").From(m.table()).Where("uid", "=", uid).Scan(m).Execute()
+        _, err = DB.Select("*").From(m.Table()).Where("uid", "=", uid).Scan(m).Execute()
         // 缓存用户信息
         m.ctx.Set(DefaultKey, m)
     }
@@ -195,13 +206,13 @@ func (m *User) getRandomAvatar(uid string, width, height int, avatarDIR string) 
 
 // Detail 获取单条数据详情
 func (m *User) Detail(id string) (u User, err error) {
-    _, err = DB.Select("*").From(m.table()).Where("id", "=", id).Scan(&u).Execute()
+    _, err = DB.Select("*").From(m.Table()).Where("id", "=", id).Scan(&u).Execute()
     return
 }
 
 // Create 添加一条数据
 func (m *User) Create(u User) (ID, error) {
-    q, err := DB.Insert(m.table(), []string{"title", "date"}).Values([]any{u.Username, u.Password}).Execute()
+    q, err := DB.Insert(m.Table(), []string{"title", "date"}).Values([]any{u.Username, u.Password}).Execute()
     return ID(q.LastInsertId), err
 }
 
@@ -209,7 +220,7 @@ func (m *User) Create(u User) (ID, error) {
 func (m *User) Update(u User) (ID, error) {
     password, err := u.PasswordHash(u.Password)
 
-    q, err := DB.Update(m.table()).Set(map[string]string{
+    q, err := DB.Update(m.Table()).Set(map[string]string{
         "username": u.Username, 
         "password": password,
     }).Where("id", "=", u.Id).Execute()
@@ -218,6 +229,6 @@ func (m *User) Update(u User) (ID, error) {
 
 // Delete 删除单条或多条数据
 func (m *User) Delete(ids string) (bool, error) {
-    _, err := DB.Delete(m.table()).Where("id", "in", strings.Split(ids, ",")).Execute()
+    _, err := DB.Delete(m.Table()).Where("id", "in", strings.Split(ids, ",")).Execute()
     return err != nil, err
 }
