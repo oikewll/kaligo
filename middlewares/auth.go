@@ -5,24 +5,24 @@ import (
     // "sync"
     // "golang.org/x/crypto/bcrypt"
 
-    "github.com/owner888/kaligo"
-    "github.com/owner888/kaligo/logs"
-    "github.com/owner888/kaligo/sessions"
+    // "github.com/owner888/kaligo"
+    // "github.com/owner888/kaligo/logs"
+    // "github.com/owner888/kaligo/sessions"
 )
 
 // AuthUserKey is the cookie name for user credential in basic auth.
 const AuthUserKey = "user"
 
-func Default(c *kaligo.Context) {
-    if req := c.Request; req != nil {
-        logs.Debug(req.Method, " ", req.URL)
-    }
-
-    session := sessions.Default(c)
-    c.UID = session.Get(AuthUserKey).(string)
-
-    c.Next()
-}
+// func Default(c *kaligo.Context) {
+//     if req := c.Request; req != nil {
+//         logs.Debug(req.Method, " ", req.URL)
+//     }
+//
+//     session := sessions.Default(c)
+//     c.UID = session.Get(AuthUserKey).(string)
+//
+//     c.Next()
+// }
 
 // // 后台管理员表
 // const (

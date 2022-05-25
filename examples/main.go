@@ -74,7 +74,7 @@ func run(db *database.DB) {
     store := cookie.NewStore([]byte("secret"))
     // store, _ := redis.NewStore(10, "tcp", "localhost:6379", "", []byte("secret"))
     r.Use(sessions.Sessions("mysession", store))
-    r.Use(auth.Auth)
+    r.Use(auth.Auth())
     // r.Use(kaligo.BasicAuth(kaligo.Accounts{"username": "test", "password":"test"}))
     r.AddDB(db)
     AddRoutes(r)

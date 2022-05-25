@@ -461,6 +461,32 @@ const docTemplate = `{
                     "User"
                 ],
                 "summary": "Login 账户登陆",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "default": "test",
+                        "description": "账号",
+                        "name": "username",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "test",
+                        "description": "密码",
+                        "name": "password",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "boolean",
+                        "default": true,
+                        "description": "记住密码",
+                        "name": "remember",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -502,7 +528,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "User ID",
+                        "description": "用户ID",
                         "name": "id",
                         "in": "path",
                         "required": true

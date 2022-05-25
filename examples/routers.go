@@ -33,17 +33,7 @@ func addSessionRoute(r kaligo.Router) {
 }
 
 func addApiRoute(r kaligo.Router) {
-	r.AddRoute("/api/user", map[string]string{
-		http.MethodGet:    "List",
-		http.MethodPost:   "Create",
-	}, &controller.User{})
-
-    r.AddRoute("/api/user/:id", map[string]string{
-		http.MethodPut:    "Update",
-		http.MethodDelete: "Delete",
-        http.MethodGet:    "Detail",
-    }, &controller.User{})
-
+    // 优先匹配精准的, 否则和 /api/user/:id 冲突了
     r.AddRoute("/api/user/login", map[string]string{
         http.MethodPost: "Login",
     }, &controller.User{})
@@ -52,15 +42,26 @@ func addApiRoute(r kaligo.Router) {
 		http.MethodDelete: "Logout",
 	}, &controller.User{})
 
-	r.AddRoute("/api/todo", map[string]string{
+    r.AddRoute("/api/user/:id", map[string]string{
+		http.MethodPut:    "Update",
+		http.MethodDelete: "Delete",
+        http.MethodGet:    "Detail",
+    }, &controller.User{})
+
+	r.AddRoute("/api/user", map[string]string{
 		http.MethodGet:    "List",
 		http.MethodPost:   "Create",
-	}, &controller.Todo{})
+	}, &controller.User{})
 
 	r.AddRoute("/api/todo/:id", map[string]string{
 		http.MethodPut:    "Update",
 		http.MethodDelete: "Delete",
 		http.MethodGet:    "Detail",
+	}, &controller.Todo{})
+    
+	r.AddRoute("/api/todo", map[string]string{
+		http.MethodGet:    "List",
+		http.MethodPost:   "Create",
 	}, &controller.Todo{})
 }
 

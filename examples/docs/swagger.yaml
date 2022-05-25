@@ -357,7 +357,7 @@ paths:
   /user/{id}:
     get:
       parameters:
-      - description: User ID
+      - description: 用户ID
         in: path
         name: id
         required: true
@@ -374,6 +374,25 @@ paths:
       - User
   /user/login:
     post:
+      parameters:
+      - default: test
+        description: 账号
+        in: formData
+        name: username
+        required: true
+        type: string
+      - default: test
+        description: 密码
+        in: formData
+        name: password
+        required: true
+        type: string
+      - default: true
+        description: 记住密码
+        in: formData
+        name: remember
+        required: true
+        type: boolean
       responses:
         "200":
           description: OK
