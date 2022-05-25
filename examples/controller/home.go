@@ -8,8 +8,46 @@ import (
     "github.com/owner888/kaligo"
 )
 
+type Meta struct {
+    Name string
+    Icon string
+}
+type Menu struct {
+    ID int
+    Name string
+    Path string
+    Show bool
+
+    Meta
+}
+
+type Menus struct {
+    Current  Menu
+    Children Menu
+}
+
 type Home struct {
     kaligo.Controller
+}
+
+// @Summary 初始化接口
+// @Tags    Home
+// @Success 200 {object} map[string]string
+// @Router  /init [GET]
+func (c *Home) Initialization() {
+    // {
+    //     id: "0-5",
+    //     name: "acquisition",
+    //     path: "/acquisition",
+    //     meta: {
+    //         title: "menu.acquisition-settings",
+    //         icon: "el-icon-truck",
+    //     },
+    //     show: true,
+    //     childrens: [
+    //     ]
+    // },
+    c.String(200, "Initialization")
 }
 
 func (c *Home) Index() {
@@ -23,17 +61,4 @@ func (c *Home) Index() {
         "tplName": tplName,
     }
     c.HTML(http.StatusOK, tplName, data)
-}
-
-// @Summary 账户登陆
-// @Tags    Home
-// @Success 200 {object} map[string]string
-// @Router  /home [POST]
-func (c *Home) Login() {
-    username := c.FormValue("username")
-    c.SetCookie("access_token", username, 1000, "/", "", true, true)
-}
-
-func (c *Home) Logout() {
-
 }

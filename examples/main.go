@@ -19,7 +19,8 @@ import (
 
 // @title Kaligo Example API
 // @version 1.0
-// @host localhost:8080/api
+// @host localhost:8080
+// @BasePath /api
 
 func main() {
     // cmd := exec.Command(GOPATH+"swag init")

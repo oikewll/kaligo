@@ -5,14 +5,15 @@
         "contact": {},
         "version": "1.0"
     },
-    "host": "localhost:8080/api",
+    "host": "localhost:8080",
+    "basePath": "/api",
     "paths": {
-        "/home": {
-            "post": {
+        "/init": {
+            "get": {
                 "tags": [
                     "Home"
                 ],
-                "summary": "账户登陆",
+                "summary": "初始化接口",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -293,7 +294,7 @@
             }
         },
         "/user/logout": {
-            "post": {
+            "delete": {
                 "tags": [
                     "User"
                 ],

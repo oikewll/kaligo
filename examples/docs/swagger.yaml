@@ -1,3 +1,4 @@
+basePath: /api
 definitions:
   model.Todo:
     properties:
@@ -10,14 +11,14 @@ definitions:
       title:
         type: string
     type: object
-host: localhost:8080/api
+host: localhost:8080
 info:
   contact: {}
   title: Kaligo Example API
   version: "1.0"
 paths:
-  /home:
-    post:
+  /init:
+    get:
       responses:
         "200":
           description: OK
@@ -25,7 +26,7 @@ paths:
             additionalProperties:
               type: string
             type: object
-      summary: 账户登陆
+      summary: 初始化接口
       tags:
       - Home
   /sessions:
@@ -197,7 +198,7 @@ paths:
       tags:
       - User
   /user/logout:
-    post:
+    delete:
       responses:
         "200":
           description: OK

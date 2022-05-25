@@ -42,7 +42,7 @@ func addApiRoute(r kaligo.Router) {
     }, &controller.User{})
 
 	r.AddRoute("/api/user/logout", map[string]string{
-		http.MethodPost: "Logout",
+		http.MethodDelete: "Logout",
 	}, &controller.User{})
 
 	r.AddRoute("/api/todo", map[string]string{
@@ -58,6 +58,8 @@ func addApiRoute(r kaligo.Router) {
 }
 
 func addHomeRoute(r kaligo.Router) {
+    r.AddRoute("/api/init", map[string]string{http.MethodGet: "Initialization"}, &controller.Home{})
+
     r.AddRoute("/", map[string]string{http.MethodGet: "Index"}, &controller.Home{})
     r.AddRoute("/home/:tplName", map[string]string{http.MethodGet: "Index"}, &controller.Home{})
 }

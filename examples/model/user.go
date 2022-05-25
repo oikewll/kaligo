@@ -8,7 +8,7 @@ import (
 
     "github.com/owner888/kaligo"
     "github.com/owner888/kaligo/logs"
-    "golang.org/x/crypto/bcrypt"
+    "github.com/owner888/kaligo/util"
     "github.com/go-playground/validator/v10"
 )
 
@@ -115,7 +115,7 @@ func (m *User) CheckUser(accounts Accounts) (err error) {
         return errors.New("连续登录失败超过3次，暂时禁止登录！")
     }
 
-    if !m.PasswordVerify(password, m.Password) {
+    if !util.PasswordVerify(password, m.Password) {
         return errors.New("用户名或密码无效！")
     }
 
@@ -125,7 +125,7 @@ func (m *User) CheckUser(accounts Accounts) (err error) {
     }
 
     // 缓存用户信息 GetUser() 方法已经做了
-    // m.ctx.Set(UserDefaultKey, m)
+    // m.ctx.Set(fmt.Sprintf(UserDefaultKeyFormat, uid), m)
     return
 }
 
@@ -146,18 +146,9 @@ func (m *User) getLoginError24(username string) bool {
     return true
 }
 
-func (m *User) PasswordHash(password string) (string, error) {
-    bytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-    return string(bytes), err
-}
-
-func (m *User) PasswordVerify(password, hash string) bool {
-    err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
-    return err == nil
-}
-
 // 获得用户信息, 如果缓存中存在直接返回, 否则查数据库并且缓存起来
 func (m *User) GetUser(account string, ftype string, useCache bool) (err error) {
+    // account 为空字符串直接返回, 避免下面数据库查询不到把当前对象设置为 nil 导致空指针异常
     if account == "" {
         return
     }
@@ -222,7 +213,7 @@ func (m *User) Create(u User) (ID, error) {
 
 // Update 更新单条或多条数据
 func (m *User) Update(u User) (ID, error) {
-    password, err := u.PasswordHash(u.Password)
+    password, err := util.PasswordHash(u.Password)
 
     q, err := DB.Update(m.Table()).Set(map[string]string{
         "username": u.Username, 

@@ -88,7 +88,7 @@ func (c *User) Login() {
 // @Summary 账户退出
 // @Tags    User
 // @Success 200 {object} map[string]string
-// @Router  /user/logout [POST]
+// @Router  /user/logout [DELETE]
 func (c *User) Logout() {
 
 }
