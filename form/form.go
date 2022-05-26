@@ -1,4 +1,4 @@
-package model
+package form
 
 // @Description 表单验证
 type Validate struct {
@@ -45,6 +45,8 @@ type Form struct {
 type TableButton struct {
     Name string
     Path string
+    Form string
+    Method string
 }
 
 // @Description 表格公共操作按钮
