@@ -40,14 +40,14 @@ func (c *User) List() {
         Title: "关键字",
         Placeholder: "账号/昵称",
         Field: "keywords",
-        Type:  "text",
+        Type:  "input",
     })
-    form.SearchComponents = append(form.SearchComponents, model.Component{
-        Title: "是否启用",
-        Placeholder: "是否启用",
-        Field: "keywords",
-        Type:  "select",
-    })
+    // form.SearchComponents = append(form.SearchComponents, model.Component{
+    //     Title: "是否启用",
+    //     Placeholder: "是否启用",
+    //     Field: "keywords",
+    //     Type:  "select",
+    // })
 
     result(c.Context, data, err)
 }
@@ -73,18 +73,18 @@ func (c *User) Detail() {
 // @Param   password  formData  string  true   "密码"       default(test)
 // @Param   realname  formData  string  true   "姓名"       default(test)
 // @Param   groups    formData  string  true   "所属组IDs"  Enums(1, 2, 3)
-// @Param   emali     formData  string  false  "邮箱"       default(test@gmail.com)
+// @Param   email     formData  string  false  "邮箱"       default(test@gmail.com)
 // @Param   status    formData  integer false  "状态"       default(1)
 // @Success 200 {object} []model.User
 // @Router  /user/{id} [PUT]
 func (c *User) Update() {
-    // id := c.ParamValue("id")
     var user model.User
-    // intVar, err := strconv.Atoi(id)
-    err := c.JsonBodyValue(&user)
-    if err != nil {
-        result(c.Context, nil, err)
-    }
+    user.Id       = c.ParamInt("id")
+    user.Username = c.FormValue("username")
+    user.Password = c.FormValue("password")
+    user.Realname = c.FormValue("realname")
+    user.Groups   = c.FormValue("groups")
+    user.Email    = c.FormValue("email")
 
     data, err := (&model.User{}).Update(user)
     result(c.Context, data, err)
@@ -96,16 +96,17 @@ func (c *User) Update() {
 // @Param   password  formData  string  true   "密码"       default(test)
 // @Param   realname  formData  string  true   "姓名"       default(test)
 // @Param   groups    formData  string  true   "所属组IDs"  Enums(1, 2, 3)
-// @Param   emali     formData  string  false  "邮箱"       default(test@gmail.com)
+// @Param   email     formData  string  false  "邮箱"       default(test@gmail.com)
 // @Param   status    formData  integer false  "状态"       default(1)
 // @Success 200 {object} model.User
 // @Router  /user [POST]
 func (c *User) Create() {
     var user model.User
-    err := c.JsonBodyValue(&user)
-    if err != nil {
-        result(c.Context, nil, err)
-    }
+    user.Username = c.FormValue("username")
+    user.Password = c.FormValue("password")
+    user.Realname = c.FormValue("realname")
+    user.Groups   = c.FormValue("groups")
+    user.Email    = c.FormValue("email")
     data, err := (&model.User{}).Create(user)
     result(c.Context, data, err)
 }
@@ -151,14 +152,14 @@ func (c *User) CreateForm() {
 
 // @Summary Delete 删除单条或多条数据
 // @Tags    User
-// @Param   id        path      integer false  "账号ID"     default(1)
+// @Param   ids       path      integer false  "账号ID"     default(1)
 // @Success 200 {integer} integer
-// @Router  /user{id} [DELETE]
+// @Router  /user/{id} [DELETE]
 func (c *User) Delete() {
-    id := c.QueryValue("id")
-    if len(id) == 0 {
+    ids := c.QueryValue("ids")
+    if len(ids) == 0 {
         result(c.Context, nil, errors.New("id is required"))
     }
-    data, err := (&model.User{}).Delete(id)
+    data, err := (&model.User{}).Delete(ids)
     result(c.Context, data, err)
 }

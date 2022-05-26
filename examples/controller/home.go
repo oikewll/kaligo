@@ -20,7 +20,7 @@ type Home struct {
 func (c *Home) Initialization() {
     // 都不要带 api
     purviews := "GET-/user,GET-/user/:id,POST-/user,PUT-/user/:id,DELETE-/user/:id"
-    menus, err := model.Menu{}.LoadDefault(purviews)
+    menus, err := model.Menu{}.LoadDefault(purviews, true)
     result(c.Context, menus, err)
 }
 
@@ -29,7 +29,7 @@ func (c *Home) Initialization() {
 // @Success 200 {object} map[string]string
 // @Router  /permissions [GET]
 func (c *Home) Permissions() {
-    menus, err := model.Menu{}.LoadDefault("*")
+    menus, err := model.Menu{}.LoadDefault("*", true)
     result(c.Context, menus, err)
 }
 

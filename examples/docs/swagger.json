@@ -304,7 +304,7 @@
                         "type": "string",
                         "default": "test@gmail.com",
                         "description": "邮箱",
-                        "name": "emali",
+                        "name": "email",
                         "in": "formData"
                     },
                     {
@@ -421,7 +421,7 @@
                         "type": "string",
                         "default": "test@gmail.com",
                         "description": "邮箱",
-                        "name": "emali",
+                        "name": "email",
                         "in": "formData"
                     },
                     {
@@ -443,9 +443,7 @@
                         }
                     }
                 }
-            }
-        },
-        "/user{id}": {
+            },
             "delete": {
                 "tags": [
                     "User"
@@ -456,7 +454,7 @@
                         "type": "integer",
                         "default": 1,
                         "description": "账号ID",
-                        "name": "id",
+                        "name": "ids",
                         "in": "path"
                     }
                 ],
@@ -489,7 +487,7 @@
                     "$ref": "#/definitions/model.Props"
                 },
                 "tips": {
-                    "description": "格式:bm://open:com.xxx.xxx",
+                    "description": "提示信息",
                     "type": "string"
                 },
                 "title": {
@@ -501,7 +499,7 @@
                     "type": "string"
                 },
                 "validate": {
-                    "description": "验证: required、numeric..., 详细看本页最下面",
+                    "description": "验证: required、numeric ..., 详细看本页最下面",
                     "$ref": "#/definitions/model.Validate"
                 },
                 "value": {
@@ -566,10 +564,7 @@
                 },
                 "groups": {
                     "description": "所属权限组",
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
+                    "type": "string"
                 },
                 "id": {
                     "description": "用户ID",

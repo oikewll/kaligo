@@ -22,7 +22,7 @@ func TestPermisionFilter(t *testing.T) {
     menu, _ := Menu{}.Load(strings.NewReader(testMenuStr))
     p := Permission{}.Parse(pStr)
     root := &Menu{Children: menu}
-    root = root.Permission(p)
+    root = root.Permission(p, true)
     assert.Equal(t, Menu{}, root)
 }
 

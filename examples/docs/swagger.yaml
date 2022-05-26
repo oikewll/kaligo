@@ -13,7 +13,7 @@ definitions:
         $ref: '#/definitions/model.Props'
         description: 属性
       tips:
-        description: 格式:bm://open:com.xxx.xxx
+        description: 提示信息
         type: string
       title:
         description: 标题
@@ -23,7 +23,7 @@ definitions:
         type: string
       validate:
         $ref: '#/definitions/model.Validate'
-        description: '验证: required、numeric..., 详细看本页最下面'
+        description: '验证: required、numeric ..., 详细看本页最下面'
       value:
         description: 默认值
         type: string
@@ -66,9 +66,7 @@ definitions:
         type: boolean
       groups:
         description: 所属权限组
-        items:
-          type: integer
-        type: array
+        type: string
       id:
         description: 用户ID
         type: integer
@@ -316,7 +314,7 @@ paths:
       - default: test@gmail.com
         description: 邮箱
         in: formData
-        name: emali
+        name: email
         type: string
       - default: 1
         description: 状态
@@ -332,6 +330,21 @@ paths:
       tags:
       - User
   /user/{id}:
+    delete:
+      parameters:
+      - default: 1
+        description: 账号ID
+        in: path
+        name: ids
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: integer
+      summary: Delete 删除单条或多条数据
+      tags:
+      - User
     get:
       parameters:
       - default: 1
@@ -386,7 +399,7 @@ paths:
       - default: test@gmail.com
         description: 邮箱
         in: formData
-        name: emali
+        name: email
         type: string
       - default: 1
         description: 状态
@@ -411,22 +424,6 @@ paths:
           schema:
             $ref: '#/definitions/model.Form'
       summary: CreateForm 用户添加表单
-      tags:
-      - User
-  /user{id}:
-    delete:
-      parameters:
-      - default: 1
-        description: 账号ID
-        in: path
-        name: id
-        type: integer
-      responses:
-        "200":
-          description: OK
-          schema:
-            type: integer
-      summary: Delete 删除单条或多条数据
       tags:
       - User
 swagger: "2.0"
