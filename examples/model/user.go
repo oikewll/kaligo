@@ -40,9 +40,9 @@ type UserOptions struct {
 type User struct {
     // Base
 
-    Id            ID     `db:"id" json:"id"`                                 // 用户ID
+    Id            int    `db:"id" json:"id"`                                 // 用户ID
     UID           string `db:"uid" json:"uid"`                               // UID
-    Groups        []int  `db:"groups" json:"groups"`                         // 所属权限组
+    Groups        string `db:"groups" json:"groups"`                         // 所属权限组
     Username      string `db:"username" json:"username" validate:"required"` // 用户名
     Password      string `db:"validate" json:"-" validate:"required"`        // 密码
     Realname      string `db:"realname" json:"realname"`                     // 用户昵称
@@ -96,6 +96,51 @@ func (m User) List(currPage, pageSize int64, orderBy map[string]string, keywords
     })
 
     return page, err
+}
+
+// Detail 获取单条数据详情
+func (m *User) Detail(id string) (u User, err error) {
+    _, err = DB.Select("*").From(m.Table()).Where("id", "=", id).Scan(&u).Execute()
+    return
+}
+
+// Create 添加一条数据
+func (m *User) Create(u User) (ID, error) {
+    password, err := util.PasswordHash(u.Password)
+    q, err := DB.Insert(m.Table(), []string{
+        "username", 
+        "password",
+        "realname",
+        "groups",
+        "email",
+    }).Values([]any{
+        u.Username, 
+        password,
+        u.Realname,
+        u.Groups,
+        u.Email,
+    }).Execute()
+    return ID(q.LastInsertId), err
+}
+
+// Update 更新单条或多条数据
+func (m *User) Update(u User) (ID, error) {
+    password, err := util.PasswordHash(u.Password)
+
+    q, err := DB.Update(m.Table()).Set(map[string]string{
+        "username": u.Username,
+        "password": password,
+        "realname": u.Realname,
+        "groups":   u.Groups,
+        "email":    u.Email,
+    }).Where("id", "=", u.Id).Execute()
+    return ID(q.RowsAffected), err
+}
+
+// Delete 删除单条或多条数据
+func (m *User) Delete(ids string) (bool, error) {
+    _, err := DB.Delete(m.Table()).Where("id", "IN", strings.Split(ids, ",")).Execute()
+    return err != nil, err
 }
 
 // 检查用户权限
@@ -229,33 +274,4 @@ func (m *User) getRandomAvatar(uid string, width, height int, avatarDIR string) 
     // file_put_contents($filepath. '/' . $avatar, $imgdata);
 
     return ""
-}
-
-// Detail 获取单条数据详情
-func (m *User) Detail(id string) (u User, err error) {
-    _, err = DB.Select("*").From(m.Table()).Where("id", "=", id).Scan(&u).Execute()
-    return
-}
-
-// Create 添加一条数据
-func (m *User) Create(u User) (ID, error) {
-    q, err := DB.Insert(m.Table(), []string{"username", "password"}).Values([]any{u.Username, u.Password}).Execute()
-    return ID(q.LastInsertId), err
-}
-
-// Update 更新单条或多条数据
-func (m *User) Update(u User) (ID, error) {
-    password, err := util.PasswordHash(u.Password)
-
-    q, err := DB.Update(m.Table()).Set(map[string]string{
-        "username": u.Username,
-        "password": password,
-    }).Where("id", "=", u.Id).Execute()
-    return ID(q.LastInsertId), err
-}
-
-// Delete 删除单条或多条数据
-func (m *User) Delete(ids string) (bool, error) {
-    _, err := DB.Delete(m.Table()).Where("id", "in", strings.Split(ids, ",")).Execute()
-    return err != nil, err
 }

@@ -12,6 +12,13 @@ func MapSlice[T, U any](from []T, transformer func(T) U) []U {
     return ret
 }
 
+func ReduceSlice[T, U any](from []T, initial U, reducer func(U, T) U) U {
+    for _, v := range from {
+        initial = reducer(initial, v)
+    }
+    return initial
+}
+
 func CompactMapSliceE[T, U any, E error](from []T, transformer func(T) (U, E)) ([]U, E) {
     ret := make([]U, len(from))
     var err E

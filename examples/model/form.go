@@ -25,8 +25,8 @@ type Component struct {
     Title string        `json:"title"`          // 标题
     Props Props         `json:"props"`          // 属性
     Value string        `json:"value"`          // 默认值
-    Validate Validate   `json:"validate"`       // 验证: required、numeric..., 详细看本页最下面
-    Tips  string        `json:"tips"`           // 格式:bm://open:com.xxx.xxx
+    Validate Validate   `json:"validate"`       // 验证: required、numeric ..., 详细看本页最下面
+    Tips  string        `json:"tips"`           // 提示信息
     Placeholder string  `json:"placeholder"`    // 输入框占位文本
 }
 
@@ -38,7 +38,7 @@ type Form struct {
     Csrf   string   `json:"csrf"` 
     
     // 表单组件
-    Components []Component
+    Components []Component  `json:"components"`
 }
 
 // @Description 表单按钮
@@ -71,7 +71,7 @@ type Table struct {
     Csrf   string   `json:"csrf"` 
     
     // 查询表单组件
-    SearchComponents []Component
+    SearchComponents []Component   `json:"search_components"`
     TableGlobalOperate TableGlobalOperate   // 公共按钮
     TableListOperate TableListOperate       // 列表最右边的按钮
 }
