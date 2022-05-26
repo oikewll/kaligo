@@ -1,17 +1,29 @@
 package model
 
+// 表单验证
 type Validate struct {
-    Required bool       `json:"required"`
-    Email    bool       `json:"email"`
-    Numeric  bool       `json:"numeric"`
+    Required bool       `json:"required"`       // 是否必选
+    Type     string     `json:"type"`           // 内建校验类型: date、datetimerange、emali、array
+    Enum     string     `json:"enum"`           // 枚举类型
+    Len      int        `json:"len"`            // 字段长度
+    Min      int        `json:"min"`            // 最小长度
+    Max      int        `json:"max"`            // 最大长度
+    Pattern  string     `json:"pattern"`        // 正则表达式校验
+    Message  string     `json:"message"`        // 校验文案
+}
+
+// 表单组件属性 Property
+type Props struct {
+    Type string     `json:"type"`   // 类型: text、password
 }
 
 // 表单组件
 // http://form-create.com/v2/element-ui/components/input.html
 type Component struct {
-    Type  string        `json:"type"`           // 类型: input、password、number、editor、textarea、file、image
-    Title string        `json:"title"`          // 标题
+    Type  string        `json:"type"`           // 类型: input、editor、textarea、file、image
     Field string        `json:"field"`          // 字段
+    Title string        `json:"title"`          // 标题
+    Props Props         `json:"props"`          // 属性
     Value string        `json:"value"`          // 默认值
     Validate Validate   `json:"validate"`       // 验证: required、numeric..., 详细看本页最下面
     Tips  string        `json:"tips"`           // 格式:bm://open:com.xxx.xxx

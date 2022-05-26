@@ -143,7 +143,7 @@ func (c *User) CreateForm() {
         Title: "邮箱",
         Field: "email",
         Type:  "text",
-        Validate: model.Validate{Required: true, Email: true},
+        Validate: model.Validate{Required: true, Type: "email"},
     })
 
     result(c.Context, form, nil)
