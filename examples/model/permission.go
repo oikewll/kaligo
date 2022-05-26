@@ -15,6 +15,7 @@ type Permission struct {
 const (
     permissionsSeperator      = ","
     permissionStructSeperator = "-"
+    PermissionAll             = "*"
 )
 
 // Parse 解析 Permission 数组，不符合规范的数据直接被移除
@@ -23,6 +24,8 @@ func (m Permission) Parse(permission string) []Permission {
         data := strings.Split(p, permissionStructSeperator)
         if len(data) == 2 {
             return Permission{Method: data[0], Path: data[1]}, true
+        } else if len(data) == 1 && data[0] == PermissionAll {
+            return Permission{Method: PermissionAll, Path: PermissionAll}, true
         }
         return Permission{}, false
     })

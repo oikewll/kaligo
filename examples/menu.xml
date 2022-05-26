@@ -22,6 +22,13 @@
             <menu name='登陆密码' path='/admin/password' method='GET' show='1' />
             <menu name='我的权限' path='/admin/purview' method='GET' show='1' />
         </menu>
+        <menu name='会员中心' icon='fa fa-user'>
+            <menu name='会员管理' path='/user' method='GET' show='1' />
+            <menu name='会员添加' path='/user' method='POST' />
+            <menu name='会员修改' path='/user/:id' method='PUT' />
+            <menu name='会员删除' path='/user/:id' method='DELETE' />
+            <menu name='会员详情' path='/user/:id' method='GET' />
+        </menu>
         <menu name='用户管理' icon='fa fa-users'>
             <menu name='用户组管理' path='/admin_group' method='GET' show='1' />
             <menu name='用户组添加' path='/admin_group' method='POST' />

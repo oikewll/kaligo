@@ -1,31 +1,43 @@
 basePath: /api
 definitions:
-  model.Field:
+  model.Component:
+    description: 表单组件
     properties:
       field:
         description: 字段
         type: string
-      label:
-        description: 标签
+      placeholder:
+        description: 输入框占位文本
         type: string
-      rules:
-        description: '验证: required、numeric..., 详细看本页最下面'
-        type: string
+      props:
+        $ref: '#/definitions/model.Props'
+        description: 属性
       tips:
         description: 格式:bm://open:com.xxx.xxx
         type: string
+      title:
+        description: 标题
+        type: string
       type:
-        description: '类型: text、password、number、editor、textarea、file、image'
+        description: '类型: input、editor、textarea、file、image'
+        type: string
+      validate:
+        $ref: '#/definitions/model.Validate'
+        description: '验证: required、numeric..., 详细看本页最下面'
+      value:
+        description: 默认值
         type: string
     type: object
   model.Form:
+    description: From表单
     properties:
+      components:
+        description: 表单组件
+        items:
+          $ref: '#/definitions/model.Component'
+        type: array
       csrf:
         type: string
-      fields:
-        items:
-          $ref: '#/definitions/model.Field'
-        type: array
       method:
         type: string
       name:
@@ -33,86 +45,75 @@ definitions:
       path:
         type: string
     type: object
-  model.Purview:
-    description: 用户权限
-    type: object
-  model.Todo:
+  model.Props:
+    description: 表单组件属性 Property
     properties:
-      date:
-        type: string
-      done:
-        type: boolean
-      id:
-        type: integer
-      title:
+      type:
+        description: '类型: text、password'
         type: string
     type: object
   model.User:
-    description: User account information
+    description: 用户信息
     properties:
       avatar:
         description: 用户头像地址
         type: string
-      createdAt:
-        description: 创建时间
-        type: string
-      creatorId:
-        description: 自增 ID
-        type: integer
-      deletedAt:
-        description: 删除时间
-        type: string
-      deletorId:
-        description: 自增 ID
-        type: integer
       email:
         description: 邮箱地址
         type: string
+      first_login:
+        description: 是否首次登录
+        type: boolean
       groups:
-        description: 用户所属权限组
+        description: 所属权限组
         items:
           type: integer
         type: array
       id:
-        description: 自增 ID
+        description: 用户ID
         type: integer
-      isFirstLogin:
-        description: 是否首次登录
-        type: boolean
-      password:
-        description: 密码
-        type: string
-      purviews:
-        items:
-          $ref: '#/definitions/model.Purview'
-        type: array
       realname:
         description: 用户昵称
-        type: string
-      sessionExpire:
-        description: 登录 Session 过期时间
-        type: string
-      sessionID:
-        description: 登录 Session ID
         type: string
       status:
         description: 状态
         type: integer
       uid:
-        description: 用户 ID
+        description: UID
         type: string
-      updatedAt:
-        description: 更新时间
-        type: string
-      updatorId:
-        description: 自增 ID
-        type: integer
       username:
         description: 用户名
         type: string
     required:
-    - password
     - username
+    type: object
+  model.Validate:
+    description: 表单验证
+    properties:
+      enum:
+        description: 枚举类型
+        type: string
+      len:
+        description: 字段长度
+        type: integer
+      max:
+        description: 最大长度
+        type: integer
+      message:
+        description: 校验文案
+        type: string
+      min:
+        description: 最小长度
+        type: integer
+      pattern:
+        description: 正则表达式校验
+        type: string
+      required:
+        description: 是否必选
+        type: boolean
+      type:
+        description: '内建校验类型: date、datetimerange、emali、array'
+        type: string
     type: object
 host: localhost:8080
 info:
@@ -201,6 +202,18 @@ paths:
       summary: 初始化接口
       tags:
       - Home
+  /permissions:
+    get:
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: '权限列表: 权限选择、权限展示'
+      tags:
+      - Home
   /sessions:
     delete:
       responses:
@@ -248,103 +261,6 @@ paths:
       summary: Session 销毁
       tags:
       - Session
-  /todo:
-    delete:
-      parameters:
-      - description: Todo ID
-        in: query
-        name: id
-        type: integer
-      responses:
-        "200":
-          description: OK
-          schema:
-            type: integer
-      summary: Delete 删除单条或多条数据
-      tags:
-      - todo
-    get:
-      parameters:
-      - description: 当前页数, 1开始
-        in: query
-        name: page
-        type: integer
-      - description: 当前页数, 默认20
-        in: query
-        name: size
-        type: integer
-      responses:
-        "200":
-          description: OK
-          schema:
-            items:
-              $ref: '#/definitions/model.Todo'
-            type: array
-      summary: List 获取所有 Todo
-      tags:
-      - todo
-    post:
-      parameters:
-      - in: formData
-        name: date
-        type: string
-      - in: formData
-        name: done
-        type: boolean
-      - in: formData
-        name: id
-        type: integer
-      - in: formData
-        name: title
-        type: string
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/model.Todo'
-      summary: Create 添加一条数据
-      tags:
-      - todo
-    put:
-      parameters:
-      - in: formData
-        name: date
-        type: string
-      - in: formData
-        name: done
-        type: boolean
-      - in: formData
-        name: id
-        type: integer
-      - in: formData
-        name: title
-        type: string
-      responses:
-        "200":
-          description: OK
-          schema:
-            items:
-              $ref: '#/definitions/model.Todo'
-            type: array
-      summary: Update 更新单条或多条数据
-      tags:
-      - todo
-  /todo/{id}:
-    get:
-      parameters:
-      - description: Todo ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/model.Todo'
-      summary: Detail 获取单条数据详情
-      tags:
-      - todo
   /user:
     get:
       parameters:

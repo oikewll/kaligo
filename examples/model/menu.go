@@ -33,13 +33,19 @@ type xmlRoot struct {
     Menus   []Menu   `xml:"menu"`
 }
 
-func (m Menu) LoadDefault(filters ...string) ([]Menu, error) {
+func (m Menu) LoadDefault(filters string) ([]Menu, error) {
     file, err := os.Open(defaultMenuPath)
     if err != nil {
         return []Menu{}, err
     }
     defer file.Close()
-    return m.Load(file)
+    menu, err := m.Load(file)
+    root := &Menu{Children: menu}
+    root = root.Permission(Permission{}.Parse(filters))
+    if root != nil {
+        return root.Children, err
+    }
+    return []Menu{}, err
 }
 
 func (m Menu) Load(reader io.Reader) ([]Menu, error) {
@@ -72,12 +78,20 @@ func (m *Menu) Permission(p []Permission) *Menu {
             return true
         }
         for _, v := range p {
-            if v.Method == node.Method && v.Path == node.Path {
+            if node.hasPermission(v) {
                 return true
             }
         }
         return false
     })
+}
+
+func (m *Menu) hasPermission(p Permission) bool {
+    if (m.Method == p.Method || p.Method == PermissionAll) &&
+        (m.Path == p.Path || p.Path == PermissionAll) {
+        return true
+    }
+    return false
 }
 
 // filterTree 树形结构过滤，深度优先，先过滤叶子结点

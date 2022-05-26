@@ -15,6 +15,10 @@ func TestMenuParse(t *testing.T) {
 
 func TestPermisionFilter(t *testing.T) {
     pStr := "GET-/content,POST-/content"
+    // pStr := "*"
+    // pStr := "*-*"
+    // pStr := "*-/content"
+    // pStr := "GET-*"
     menu, _ := Menu{}.Load(strings.NewReader(testMenuStr))
     p := Permission{}.Parse(pStr)
     root := &Menu{Children: menu}

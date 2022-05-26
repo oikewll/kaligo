@@ -21,7 +21,6 @@ const (
     timeFormat              = "2006-01-02 15:04:05"
 )
 
-// Purview 权限
 // @Description 用户权限
 type Purview struct {
     url    string
@@ -37,25 +36,25 @@ type UserOptions struct {
     OSVersion  string
 }
 
-// User 用户信息
-// @Description User account information
+// @Description 用户信息
 type User struct {
-    Base
+    // Base
 
-    UID           string `db:"uid" json:"uid"`                               // 用户 ID
-    Groups        []int  `db:"groups" json:"groups"`                         // 用户所属权限组
+    Id            ID     `db:"id" json:"id"`                                 // 用户ID
+    UID           string `db:"uid" json:"uid"`                               // UID
+    Groups        []int  `db:"groups" json:"groups"`                         // 所属权限组
     Username      string `db:"username" json:"username" validate:"required"` // 用户名
-    Password      string `db:"validate" validate:"required"`                 // 密码
+    Password      string `db:"validate" json:"-" validate:"required"`        // 密码
     Realname      string `db:"realname" json:"realname"`                     // 用户昵称
     Avatar        string `db:"avatar" json:"avatar"`                         // 用户头像地址
     Email         string `db:"email" json:"email" validate:"required|email"` // 邮箱地址
-    SessionID     string `db:"session_id"`                                   // 登录 Session ID
-    SessionExpire string `db:"session_expire"`                               // 登录 Session 过期时间
-    Status        int    `db:"status"`                                       // 状态
-    IsFirstLogin  bool   `db:"is_first_login"`                               // 是否首次登录
+    SessionID     string `db:"session_id" json:"-"`                          // 登录 Session ID
+    SessionExpire string `db:"session_expire" json:"-"`                      // 登录 Session 过期时间
+    Status        int    `db:"status" json:"status"`                         // 状态
+    FirstLogin    bool   `db:"first_login" json:"first_login"`               // 是否首次登录
 
     ctx      *kaligo.Context
-    Purviews []Purview
+    Purviews []Purview   `json:"-"`
 }
 
 func DefaultUser(c *kaligo.Context) *User {
@@ -74,11 +73,11 @@ func (m *User) Table() string { return "user" }
 
 // List 分页获取数据列表
 func (m User) List(currPage, pageSize int64, orderBy map[string]string, keywords, status, createdAt string) (*database.Page[User], error) {
-    page := &database.Page[User] {
+    page := &database.Page[User]{
         Page: currPage,
         Size: pageSize,
     }
-    err := page.SelectPage(DB, []any{"id", "username", "realname", "emali", "status"}, m.Table(), func(q *database.Query, isCount bool) {
+    err := page.SelectPage(DB, []any{"id", "username", "realname", "email", "status"}, m.Table(), func(q *database.Query, isCount bool) {
         if keywords != "" {
             q.WhereOpen()
             q.Where("username", "LIKE", "%"+keywords+"%")

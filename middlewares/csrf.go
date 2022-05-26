@@ -9,7 +9,6 @@ import (
 // CSRF 防刷, 只有 GET 方法不需要验证 CSRF
 func CSRF() kaligo.HandlerFunc {
     return func(c *kaligo.Context) {
-
         req := c.Request
         // 定时器会不存在
         if req != nil {
@@ -30,7 +29,7 @@ func CSRF() kaligo.HandlerFunc {
             c.SetCookie("csrf_token", "", 0, "/", "", true, true)
 
             if token != chkToken {
-                // c.AbortWithStatusJSON(404, "请不要重复提交")
+                c.AbortWithStatusJSON(404, "请不要重复提交")
                 return
             }
         }
