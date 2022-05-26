@@ -113,6 +113,12 @@ func (c *User) CreateForm() {
         Type:  "text",
         Rules: "required",
     })
+    form.Fields = append(form.Fields, model.Field{
+        Label: "邮箱",
+        Field: "email",
+        Type:  "text",
+        Rules: "required|email",
+    })
 
     result(c.Context, form, nil)
 }

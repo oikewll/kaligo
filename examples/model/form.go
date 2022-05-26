@@ -5,7 +5,7 @@ type Field struct {
     Label string    `json:"label"`  // 标签
     Field string    `json:"field"`  // 字段
     Type  string    `json:"type"`   // 类型: text、password、number、editor、textarea、file、image
-    Rules string    `json:"rules"`
+    Rules string    `json:"rules"`  // 验证: required、numeric、integer、decimal、url、email、date
     Tips  string    `json:"tips"`   // 格式:bm://open:com.xxx.xxx
 }
 
