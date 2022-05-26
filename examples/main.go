@@ -5,7 +5,6 @@ import (
     "examples/model"
     "flag"
     "fmt"
-    // "os/exec"
 
     "github.com/owner888/kaligo"
     "github.com/owner888/kaligo/config"
@@ -28,13 +27,6 @@ import (
 // @host localhost:8080
 // @BasePath /api
 func main() {
-    // cmd := exec.Command(GOPATH+"swag init")
-    // cmd := exec.Command("/Users/coffee/Documents/golang/bin/swag init")
-    // err := cmd.Run()
-    // if err != nil {
-    //     logs.Fatalf("cmd.Run() failed with %s\n", err)
-    // }
-
     loadConfig()
     setupLog()
     db := setupDatabase()

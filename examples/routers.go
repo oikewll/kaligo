@@ -64,17 +64,6 @@ func addApiRoute(r kaligo.Router) {
 		http.MethodGet:    "List",
 		http.MethodPost:   "Create",
 	}, &controller.User{})
-
-	r.AddRoute("/api/todo/:id", map[string]string{
-		http.MethodPut:    "Update",
-		http.MethodDelete: "Delete",
-		http.MethodGet:    "Detail",
-	}, &controller.Todo{})
-    
-	r.AddRoute("/api/todo", map[string]string{
-		http.MethodGet:    "List",
-		http.MethodPost:   "Create",
-	}, &controller.Todo{})
 }
 
 func addHomeRoute(r kaligo.Router) {

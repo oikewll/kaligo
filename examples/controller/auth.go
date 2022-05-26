@@ -45,7 +45,7 @@ func (c *Auth) Login() {
 
     // c.String(200, "Login successful")
 
-    // if user.IsFirstLogin {
+    // if user.FirstLogin {
     //     session.Set("uid", user.UID)
     //     session.Save()
     //     c.Redirect(302, "/reset_pwd")

@@ -42,18 +42,18 @@ type UserOptions struct {
 type User struct {
     // Base
 
-    Id            ID
-    UID           string `db:"uid" json:"uid"`                               // 用户 ID
+    Id            ID     `db:"id" json:"id"`                                 // 用户ID
+    UID           string `db:"uid" json:"uid"`                               // UID
     Groups        []int  `db:"groups" json:"groups"`                         // 用户所属权限组
     Username      string `db:"username" json:"username" validate:"required"` // 用户名
-    Password      string `db:"validate" validate:"required"`                 // 密码
+    Password      string `db:"validate"  json:"-" validate:"required"`       // 密码
     Realname      string `db:"realname" json:"realname"`                     // 用户昵称
     Avatar        string `db:"avatar" json:"avatar"`                         // 用户头像地址
     Email         string `db:"email" json:"email" validate:"required|email"` // 邮箱地址
-    SessionID     string `db:"session_id"`                                   // 登录 Session ID
-    SessionExpire string `db:"session_expire"`                               // 登录 Session 过期时间
-    Status        int    `db:"status"`                                       // 状态
-    IsFirstLogin  bool   `db:"is_first_login"`                               // 是否首次登录
+    SessionID     string `db:"session_id" json:"-"`                          // 登录 Session ID
+    SessionExpire string `db:"session_expire" json:"-"`                      // 登录 Session 过期时间
+    Status        int    `db:"status" json:"status"`                         // 状态
+    FirstLogin    bool   `db:"first_login" json:"first_login"`               // 是否首次登录
 
     ctx      *kaligo.Context
     Purviews []Purview
