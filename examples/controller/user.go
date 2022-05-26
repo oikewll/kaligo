@@ -28,10 +28,12 @@ func (c *User) List() {
     page := util.ToInt64(c.FormValue("page", "1"))
     size := util.ToInt64(c.FormValue("size", "20"))
     // 排序字段和排序方式: 只支持 ID、创建时间
-    orderBy  := map[string]string{c.QueryValue("order_name", "id"): c.QueryValue("order_by", "desc")}
-    keywords := c.FormValue("keywords")
+    orderBy   := map[string]string{c.QueryValue("order_name", "id"): c.QueryValue("order_by", "desc")}
+    keywords  := c.FormValue("keywords")
+    status    := c.FormValue("status")
+    createdAt := c.FormValue("created_at")  // 2022-05-06 - 2022-06-08
 
-    data, err := model.User{}.List(page, size, orderBy, keywords)
+    data, err := model.User{}.List(page, size, orderBy, keywords, status, createdAt)
     result(c.Context, data, err)
 }
 

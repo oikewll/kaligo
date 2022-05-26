@@ -73,15 +73,26 @@ type Accounts map[string]string
 func (m *User) Table() string { return "user" }
 
 // List 分页获取数据列表
-func (m User) List(currPage, pageSize int64, orderBy map[string]string, keywords string) (*database.Page[User], error) {
+func (m User) List(currPage, pageSize int64, orderBy map[string]string, keywords, status, createdAt string) (*database.Page[User], error) {
     page := &database.Page[User] {
         Page: currPage,
         Size: pageSize,
     }
     err := page.SelectPage(DB, []any{"id", "username", "realname", "emali", "status"}, m.Table(), func(q *database.Query, isCount bool) {
         if keywords != "" {
+            q.WhereOpen()
             q.Where("username", "LIKE", "%"+keywords+"%")
             q.OrWhere("realname", "LIKE", "%"+keywords+"%")
+            q.WhereClose()
+        }
+
+        if status != "" {
+            q.Where("status", "=", status)
+        }
+
+        if createdAt != "" {
+            // createdAt 前端传过来格式: 2022-05-07,2022-06-01, 因为 BETWEEN 是按逗号split的
+            q.Where("created_at", "BETWEEN", createdAt)
         }
     })
 
