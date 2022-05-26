@@ -18,11 +18,17 @@ type Form struct {
     Fields []Field
 }
 
+// 表单按钮
+type TableButton struct {
+    Name string
+    Path string
+}
+
 // 表格操作
 type TableOperate struct {
-    CreatePath string
-    UpdatePath string
-    DeletePath string
+    CreateButton TableButton
+    UpdateButton TableButton
+    DeleteButton TableButton
 }
 
 // Table 表格
