@@ -90,3 +90,10 @@ func (c UrlValues) get(m map[string][]string, key string) (map[string]string, bo
     }
     return dicts, exist
 }
+
+func (c UrlValues) GetAnyKeyValue(key string, defaultValue ...any) (any, bool) {
+    if value, ok := c.Get(key); ok {
+        return value, true
+    }
+    return defaultValue, false
+}
