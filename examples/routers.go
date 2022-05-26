@@ -60,6 +60,10 @@ func addApiRoute(r kaligo.Router) {
 		http.MethodGet:    "CreateForm",
 	}, &controller.User{})
 
+    r.AddRoute("/api/user/updateform/:id", map[string]string{
+		http.MethodGet:    "UpdateForm",
+	}, &controller.User{})
+
 	r.AddRoute("/api/user", map[string]string{
 		http.MethodGet:    "List",
 		http.MethodPost:   "Create",

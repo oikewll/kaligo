@@ -331,14 +331,25 @@
                     "User"
                 ],
                 "summary": "CreateForm 用户添加表单",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/model.Form"
-                        }
+                "responses": {}
+            }
+        },
+        "/user/updateform/{id}": {
+            "get": {
+                "tags": [
+                    "User"
+                ],
+                "summary": "CreateForm 用户添加表单",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "账号ID",
+                        "name": "id",
+                        "in": "path"
                     }
-                }
+                ],
+                "responses": {}
             }
         },
         "/user/{id}": {
@@ -470,79 +481,6 @@
         }
     },
     "definitions": {
-        "model.Component": {
-            "description": "表单组件",
-            "type": "object",
-            "properties": {
-                "field": {
-                    "description": "字段",
-                    "type": "string"
-                },
-                "placeholder": {
-                    "description": "输入框占位文本",
-                    "type": "string"
-                },
-                "props": {
-                    "description": "属性",
-                    "$ref": "#/definitions/model.Props"
-                },
-                "tips": {
-                    "description": "提示信息",
-                    "type": "string"
-                },
-                "title": {
-                    "description": "标题",
-                    "type": "string"
-                },
-                "type": {
-                    "description": "类型: input、editor、textarea、file、image",
-                    "type": "string"
-                },
-                "validate": {
-                    "description": "验证: required、numeric ..., 详细看本页最下面",
-                    "$ref": "#/definitions/model.Validate"
-                },
-                "value": {
-                    "description": "默认值",
-                    "type": "string"
-                }
-            }
-        },
-        "model.Form": {
-            "description": "From表单",
-            "type": "object",
-            "properties": {
-                "components": {
-                    "description": "表单组件",
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/model.Component"
-                    }
-                },
-                "csrf": {
-                    "type": "string"
-                },
-                "method": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "path": {
-                    "type": "string"
-                }
-            }
-        },
-        "model.Props": {
-            "description": "表单组件属性 Property",
-            "type": "object",
-            "properties": {
-                "type": {
-                    "description": "类型: text、password",
-                    "type": "string"
-                }
-            }
-        },
         "model.User": {
             "description": "用户信息",
             "type": "object",
@@ -584,44 +522,6 @@
                 },
                 "username": {
                     "description": "用户名",
-                    "type": "string"
-                }
-            }
-        },
-        "model.Validate": {
-            "description": "表单验证",
-            "type": "object",
-            "properties": {
-                "enum": {
-                    "description": "枚举类型",
-                    "type": "string"
-                },
-                "len": {
-                    "description": "字段长度",
-                    "type": "integer"
-                },
-                "max": {
-                    "description": "最大长度",
-                    "type": "integer"
-                },
-                "message": {
-                    "description": "校验文案",
-                    "type": "string"
-                },
-                "min": {
-                    "description": "最小长度",
-                    "type": "integer"
-                },
-                "pattern": {
-                    "description": "正则表达式校验",
-                    "type": "string"
-                },
-                "required": {
-                    "description": "是否必选",
-                    "type": "boolean"
-                },
-                "type": {
-                    "description": "内建校验类型: date、datetimerange、emali、array",
                     "type": "string"
                 }
             }

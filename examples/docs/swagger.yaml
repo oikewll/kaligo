@@ -1,57 +1,5 @@
 basePath: /api
 definitions:
-  model.Component:
-    description: 表单组件
-    properties:
-      field:
-        description: 字段
-        type: string
-      placeholder:
-        description: 输入框占位文本
-        type: string
-      props:
-        $ref: '#/definitions/model.Props'
-        description: 属性
-      tips:
-        description: 提示信息
-        type: string
-      title:
-        description: 标题
-        type: string
-      type:
-        description: '类型: input、editor、textarea、file、image'
-        type: string
-      validate:
-        $ref: '#/definitions/model.Validate'
-        description: '验证: required、numeric ..., 详细看本页最下面'
-      value:
-        description: 默认值
-        type: string
-    type: object
-  model.Form:
-    description: From表单
-    properties:
-      components:
-        description: 表单组件
-        items:
-          $ref: '#/definitions/model.Component'
-        type: array
-      csrf:
-        type: string
-      method:
-        type: string
-      name:
-        type: string
-      path:
-        type: string
-    type: object
-  model.Props:
-    description: 表单组件属性 Property
-    properties:
-      type:
-        description: '类型: text、password'
-        type: string
-    type: object
   model.User:
     description: 用户信息
     properties:
@@ -84,34 +32,6 @@ definitions:
         type: string
     required:
     - username
-    type: object
-  model.Validate:
-    description: 表单验证
-    properties:
-      enum:
-        description: 枚举类型
-        type: string
-      len:
-        description: 字段长度
-        type: integer
-      max:
-        description: 最大长度
-        type: integer
-      message:
-        description: 校验文案
-        type: string
-      min:
-        description: 最小长度
-        type: integer
-      pattern:
-        description: 正则表达式校验
-        type: string
-      required:
-        description: 是否必选
-        type: boolean
-      type:
-        description: '内建校验类型: date、datetimerange、emali、array'
-        type: string
     type: object
 host: localhost:8080
 info:
@@ -418,11 +338,19 @@ paths:
       - User
   /user/createform:
     get:
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/model.Form'
+      responses: {}
+      summary: CreateForm 用户添加表单
+      tags:
+      - User
+  /user/updateform/{id}:
+    get:
+      parameters:
+      - default: 1
+        description: 账号ID
+        in: path
+        name: id
+        type: integer
+      responses: {}
       summary: CreateForm 用户添加表单
       tags:
       - User
