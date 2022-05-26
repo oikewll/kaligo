@@ -16,5 +16,11 @@ export default (app) => ({
         return app.$axios.post("/api/permissions", {
             purview: params
         })
+    },
+    addByForm: (params) =>{
+        return app.$axios.post("/api/user", params)
+    },
+    getForm: () =>{
+        return app.$axios.get("/api/user/createform");
     }
 });

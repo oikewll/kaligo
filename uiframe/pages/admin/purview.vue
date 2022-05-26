@@ -29,7 +29,7 @@ import Wrap from "@/components/Common/Wrap";
 import { mapState } from "vuex";
 
 export default {
-    name: "index",
+    name: "admin",
     components: { Wrap },
     data: () => {
         return {
@@ -38,7 +38,7 @@ export default {
             arraySubmit: [],
             isIndeterminate: [],
             permissionList: [],
-            datalist: [],
+            datalistSubmit: [],
         }
     },
     computed: {
@@ -49,8 +49,18 @@ export default {
     async created() {
         const {data} = await this.$api.user.permission();
         this.permissionList = data.data;
-    },
-    beforeDestroy() {
+
+        let childrenList = [];
+        data.data.forEach(item=>{
+            childrenList = childrenList.concat(item.children)
+        })
+        let submitArrayList = [];
+        childrenList.forEach(item=>{
+            submitArrayList = submitArrayList.concat(item.children);
+        })
+        this.arraySubmit = submitArrayList.filter(item=>{
+            return item.permit
+        })
     },
     methods: {
         handleCheckAllChange(val = true, idx = 0) {
@@ -68,12 +78,12 @@ export default {
         handleCheckedChangeSubmit(value, idx) {
             console.log(this.arrayCate)
             console.log(this.arraySubmit)
-            this.datalist = this.arraySubmit.map(item=>{
-                return `${item.method}-${item.path}`
-            }).join(',');
         },
         async handleSubmit(){
-            const {data} = await this.$api.user.permission(this.datalist);
+            this.datalistSubmit = this.arraySubmit.map(item=>{
+                return `${item.method}-${item.path}`
+            }).join(',');
+            const {data} = await this.$api.user.permission(this.datalistSubmit);
         }
     }
 };
