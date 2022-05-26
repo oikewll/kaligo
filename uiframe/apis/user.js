@@ -1,5 +1,5 @@
 /**
- * 通用接口，挂载到common的namespace
+ * 用户权限接口
  */
 
 export default (app) => ({

@@ -1,0 +1,36 @@
+{{template "header" .}}
+
+<link rel="stylesheet" href="https://unpkg.com/@highlightjs/cdn-assets@11.5.1/styles/default.min.css">
+<script src="https://unpkg.com/@highlightjs/cdn-assets@11.5.1/highlight.min.js"></script>
+<script src="https://unpkg.com/@highlightjs/cdn-assets@11.5.1/languages/go.min.js"></script>
+<script>hljs.highlightAll();</script>
+
+<div>
+    <p>1. Use the below Go command to install Kaligo.</p>
+    <pre class="language-go"><code>go get -u github.com/owner888/kaligo</code></pre>
+    <p>2. Quick start with the example.</p>
+    <pre class="language-go">
+<code>package main
+
+import (
+    "net/http"
+
+    "github.com/owner888/kaligo"
+)
+
+type Index struct {
+    kaligo.Controller
+}
+
+func (c *Index) Index() {
+    c.JSON(http.StatusOK, kaligo.H{"msg": "Hello, Kaligo!"})
+}
+
+func main() {
+    r := kaligo.NewRouter()
+    r.AddRoute("/", map[string]string{http.MethodGet: "Index"}, &Index{})
+    kaligo.Run(r, ":80")
+}</code></pre>
+</div>
+
+{{template "footer" .}}

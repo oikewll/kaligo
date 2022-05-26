@@ -88,3 +88,4 @@ sw.*
 pages/src
 # local.config.js
 config.uncommit.yaml
+examples/wwwroot/admin/

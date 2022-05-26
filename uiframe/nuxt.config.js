@@ -10,7 +10,7 @@ let pluginsDev = [];
 const iconfontConfig = tools.parseConfig('./.iconfont')
 
 // build的html文件最终路径
-const output = path.resolve(__dirname, '../', 'examples/wwwroot');
+const output = path.resolve(__dirname, '../', 'examples/wwwroot/admin');
 
 module.exports = {
     ssr: false,
