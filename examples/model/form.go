@@ -17,3 +17,20 @@ type Form struct {
     
     Fields []Field
 }
+
+// 表格操作
+type TableOperate struct {
+    CreatePath string
+    UpdatePath string
+    DeletePath string
+}
+
+// Table 表格
+type Table struct {
+    Name   string   `json:"name"`
+    Path   string   `json:"path"`
+    Method string   `json:"method"`
+    Csrf   string   `json:"csrf"` 
+    
+    Fields []Field
+}
