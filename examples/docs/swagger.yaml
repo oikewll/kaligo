@@ -1,6 +1,7 @@
 basePath: /api
 definitions:
   model.Component:
+    description: 表单组件
     properties:
       field:
         description: 字段
@@ -28,6 +29,7 @@ definitions:
         type: string
     type: object
   model.Form:
+    description: From表单
     properties:
       components:
         description: 表单组件
@@ -44,16 +46,14 @@ definitions:
         type: string
     type: object
   model.Props:
+    description: 表单组件属性 Property
     properties:
       type:
         description: '类型: text、password'
         type: string
     type: object
-  model.Purview:
-    description: 用户权限
-    type: object
   model.User:
-    description: User account information
+    description: 用户信息
     properties:
       avatar:
         description: 用户头像地址
@@ -65,17 +65,13 @@ definitions:
         description: 是否首次登录
         type: boolean
       groups:
-        description: 用户所属权限组
+        description: 所属权限组
         items:
           type: integer
         type: array
       id:
         description: 用户ID
         type: integer
-      purviews:
-        items:
-          $ref: '#/definitions/model.Purview'
-        type: array
       realname:
         description: 用户昵称
         type: string
@@ -92,6 +88,7 @@ definitions:
     - username
     type: object
   model.Validate:
+    description: 表单验证
     properties:
       enum:
         description: 枚举类型

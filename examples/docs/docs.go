@@ -481,6 +481,7 @@ const docTemplate = `{
     },
     "definitions": {
         "model.Component": {
+            "description": "表单组件",
             "type": "object",
             "properties": {
                 "field": {
@@ -518,6 +519,7 @@ const docTemplate = `{
             }
         },
         "model.Form": {
+            "description": "From表单",
             "type": "object",
             "properties": {
                 "components": {
@@ -542,6 +544,7 @@ const docTemplate = `{
             }
         },
         "model.Props": {
+            "description": "表单组件属性 Property",
             "type": "object",
             "properties": {
                 "type": {
@@ -550,12 +553,8 @@ const docTemplate = `{
                 }
             }
         },
-        "model.Purview": {
-            "description": "用户权限",
-            "type": "object"
-        },
         "model.User": {
-            "description": "User account information",
+            "description": "用户信息",
             "type": "object",
             "required": [
                 "username"
@@ -574,7 +573,7 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "groups": {
-                    "description": "用户所属权限组",
+                    "description": "所属权限组",
                     "type": "array",
                     "items": {
                         "type": "integer"
@@ -583,12 +582,6 @@ const docTemplate = `{
                 "id": {
                     "description": "用户ID",
                     "type": "integer"
-                },
-                "purviews": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/model.Purview"
-                    }
                 },
                 "realname": {
                     "description": "用户昵称",
@@ -609,6 +602,7 @@ const docTemplate = `{
             }
         },
         "model.Validate": {
+            "description": "表单验证",
             "type": "object",
             "properties": {
                 "enum": {

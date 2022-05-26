@@ -1,6 +1,6 @@
 package model
 
-// 表单验证
+// @Description 表单验证
 type Validate struct {
     Required bool       `json:"required"`       // 是否必选
     Type     string     `json:"type"`           // 内建校验类型: date、datetimerange、emali、array
@@ -12,12 +12,12 @@ type Validate struct {
     Message  string     `json:"message"`        // 校验文案
 }
 
-// 表单组件属性 Property
+// @Description 表单组件属性 Property
 type Props struct {
     Type string     `json:"type"`   // 类型: text、password
 }
 
-// 表单组件
+// @Description 表单组件
 // http://form-create.com/v2/element-ui/components/input.html
 type Component struct {
     Type  string        `json:"type"`           // 类型: input、editor、textarea、file、image
@@ -30,7 +30,7 @@ type Component struct {
     Placeholder string  `json:"placeholder"`    // 输入框占位文本
 }
 
-// From 表单
+// @Description From表单
 type Form struct {
     Name   string   `json:"name"`
     Path   string   `json:"path"`
@@ -41,13 +41,13 @@ type Form struct {
     Components []Component
 }
 
-// 表单按钮
+// @Description 表单按钮
 type TableButton struct {
     Name string
     Path string
 }
 
-// 表格公共操作按钮
+// @Description 表格公共操作按钮
 type TableGlobalOperate struct {
     CreateButton     TableButton    // 添加
     DeleteButton     TableButton    // 删除
@@ -56,14 +56,14 @@ type TableGlobalOperate struct {
     RefreshButton    TableButton    // 刷新
 }
 
-// 表格列表每一行的操作按钮
+// @Description 表格列表每一行的操作按钮
 type TableListOperate struct {
     UpdateButton     TableButton    // 修改按钮
     ResetMFAButton   TableButton    // 重置MFA
     TerminateAButton TableButton    // 终止session
 }
 
-// Table 表格
+// @Description Table 表格
 type Table struct {
     Name   string   `json:"name"`
     Path   string   `json:"path"`
