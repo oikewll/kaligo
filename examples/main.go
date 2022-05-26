@@ -78,6 +78,7 @@ func run(db *database.DB) {
 
     // 中间件
     r.Use(middlewares.CORS())
+    // r.Use(middlewares.CSRF())    // 防止CSRF攻击
     // 创建基于cookie的存储引擎，secret 参数是用于加密的密钥
     store := cookie.NewStore([]byte("secret"))
     // store, _ := redis.NewStore(10, "tcp", "localhost:6379", "", []byte("secret"))
