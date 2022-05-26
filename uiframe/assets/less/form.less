@@ -1,0 +1,42 @@
+.form-con {
+    .form-title {
+        padding: 15px;
+        background-color: #fff;
+        margin-bottom: 15px;
+    }
+
+    .form-item {
+        padding: 15px;
+        background-color: #fff;
+
+        .item-title {
+            margin: 0 0 0 25px;
+            position: relative;
+            height: 50px;
+            line-height: 50px;
+            font-size: 16px;
+
+            &::after {
+                display: block;
+                content: "";
+                position: absolute;
+                left: -20px;
+                top: 0;
+                bottom: 0;
+                margin: auto;
+                width: 3px;
+                height: 20px;
+                background-color: #2086f9;
+            }
+        }
+    }
+
+    .form-inner {
+        width: 500px;
+
+        .el-select,
+        .el-input {
+            width: 100%;
+        }
+    }
+}

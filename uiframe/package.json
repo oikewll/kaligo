@@ -1,0 +1,55 @@
+{
+  "name": "webfe_admin",
+  "version": "0.0.2",
+  "description": "Sort page rank by the keyword system",
+  "author": "fedev",
+  "private": true,
+  "scripts": {
+    "dev": "cross-env NODE_ENV=development env=dev nuxt",
+    "prettier": "prettier -c --write \"**/*\"",
+    "precommit": "lint-staged",
+    "build": "cross-env NODE_ENV=production env=dev nuxt build",
+    "build:dev": "cross-env NODE_ENV=production env=dev nuxt build",
+    "build:pre": "cross-env NODE_ENV=production env=pre nuxt build",
+    "build:pub": "cross-env NODE_ENV=production env=pub nuxt build",
+    "start": "cross-env NODE_ENV=development env=dev nuxt start",
+    "start:dev": "cross-env NODE_ENV=development env=dev nuxt start",
+    "start:pre": "cross-env NODE_ENV=production env=pre nuxt start",
+    "start:pub": "cross-env NODE_ENV=production env=pub nuxt start"
+  },
+  "dependencies": {
+    "@nuxtjs/style-resources": "^0.1.2",
+    "axios": "^0.24.0",
+    "cross-env": "^5.2.0",
+    "dayjs": "^1.10.6",
+    "element-ui": "^2.15.6",
+    "nuxt": "^2.15.8",
+    "vue-i18n": "^8.10.0"
+  },
+  "devDependencies": {
+    "babel-plugin-component": "^1.1.1",
+    "gulp": "^4.0.2",
+    "husky": "^4.2.3",
+    "less": "^3.9.0",
+    "less-loader": "^4.1.0",
+    "lint-staged": "^11.1.2",
+    "mockjs": "^1.0.1-beta3",
+    "nodemon": "^1.18.9",
+    "prettier": "^2.3.2",
+    "request": "^2.88.0",
+    "sass": "^1.45.1",
+    "sass-loader": "^8.0.2",
+    "svgo-loader": "^2.2.0"
+  },
+  "resolutions": {
+    "graceful-fs": "^4.2.4"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "**/*": "prettier --write"
+  }
+}

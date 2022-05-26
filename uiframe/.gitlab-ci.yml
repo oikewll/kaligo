@@ -1,0 +1,57 @@
+before_script:
+  - echo "Hi DevOpers!"
+  - whoami
+
+stages:
+  - testing
+  - premerge
+  - staging
+  - production
+
+to-testing:
+  stage: testing
+  script:
+    - /bin/bash /data/deploy/deploy.sh
+  only:
+    - testing
+    - /^testing_v*/
+  except:
+    - tags
+  tags:
+    - deploy
+  interruptible: true
+  environment: testing
+
+pre-merge:
+  stage: premerge
+  script:
+    - /bin/bash /data/deploy/deploy.sh premerge
+  only:
+    - develop
+  except:
+    - tags
+  tags:
+    - deploy
+  when: manual
+  environment: staging
+
+to-staging:
+  stage: staging
+  script:
+    - /bin/bash /data/deploy/deploy.sh
+  only:
+    - tags
+  tags:
+    - deploy
+  environment: staging
+
+to-production:
+  stage: production
+  script:
+    - /bin/bash /data/deploy/deploy.sh
+  only:
+    - tags
+  tags:
+    - deploy
+  when: manual
+  environment: production

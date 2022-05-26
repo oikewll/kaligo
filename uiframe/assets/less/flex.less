@@ -1,0 +1,101 @@
+.flex {
+    display: flex;
+}
+
+.fx-center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.fx-jstart {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+.fl-jend {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+.fx-astart {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+}
+
+.fx-adend {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    flex-direction: column;
+}
+
+.fx-allstart {
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-start;
+}
+
+.fx-between {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.fx-bstart {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+}
+
+.fx-dcenter {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.fx-dbcenter {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.fx-dastart {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+}
+
+.fx-cjstart {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+.fx-deend {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: center;
+}
+
+@flex-size: {
+    1: 1 !important;
+    3: 3 !important;
+    6: 6 !important;
+};
+
+each(@flex-size, {
+    .f@{key} {
+      flex: @value;
+    }
+  }
+
+);

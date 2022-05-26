@@ -1,0 +1,9 @@
+.git
+.nuxt
+package-lock.json
+yarn-lock.json
+node_modules
+npm-debug.log
+dist
+.dockerignore
+Dockerfile

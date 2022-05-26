@@ -87,4 +87,5 @@ sw.*
 
 pages/src
 # local.config.js
-config.uncommit.yaml
+examples/wwwroot/
+examples/config.uncommit.yaml

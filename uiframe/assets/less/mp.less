@@ -1,0 +1,51 @@
+/**
+目前3个尺寸，sm, md, lg
+**/
+
+@size: {
+    none: 0 !important;
+    s: 5px !important;
+    6: 6px !important;
+    ss: 8px !important;
+    sm: 10px !important;
+    md: 20px !important;
+    lg: 30px !important;
+    50: 50px !important;
+};
+
+each(@size, {
+  .m-@{key} {
+    margin: @value;
+  }
+  .mt-@{key} {
+    margin-top: @value;
+  }
+  .ml-@{key} {
+    margin-left: @value;
+  }
+  .mr-@{key} {
+    margin-right: @value;
+  }
+  .mb-@{key} {
+    margin-bottom: @value;
+  }
+})
+
+each(@size, {
+  .p-@{key} {
+    padding: @value;
+  }
+
+  .pt-@{key} {
+    padding-top: @value;
+  }
+  .pl-@{key} {
+    padding-left: @value;
+  }
+  .pr-@{key} {
+    padding-right: @value;
+  }
+  .pb-@{key} {
+    padding-bottom: @value;
+  }
+});

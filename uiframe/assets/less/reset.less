@@ -1,0 +1,196 @@
+/**
+* css reset for vue
+* Author: dawson
+* Update: 2019/09/05
+*/
+
+@charset "UTF-8";
+html {
+    color: #666;
+    background-color: #f4f6f9;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body,
+button,
+input,
+select,
+textarea {
+    font: 14px/1.56 PingFangSC-Regular, Tahoma, "Microsoft Yahei", sans-serif;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-size: 1em;
+}
+
+a {
+    text-decoration: none;
+    cursor: pointer;
+}
+
+a:active,
+a:visited,
+a[tabindex="-1"]:focus {
+    outline: 0 none;
+}
+
+@media screen and (-ms-high-contrast: active), (-ms-high-contrast: none) {
+    a:active {
+        background-color: transparent;
+    }
+}
+
+a:hover {
+    outline: 0 none;
+    text-decoration: none;
+}
+
+b,
+cite,
+code,
+em,
+i,
+small,
+th {
+    font-size: 1em;
+    font-style: normal;
+    font-weight: 500;
+}
+
+button,
+input,
+select,
+textarea {
+    font-size: 1em;
+    -webkit-box-sizing: content-box;
+    -moz-box-sizing: content-box;
+    box-sizing: content-box;
+    outline: 0 none;
+}
+
+button,
+input[type="button"],
+input[type="submit"] {
+    cursor: pointer;
+}
+
+button::-moz-focus-inner,
+button::-moz-focus-outer,
+input::-moz-focus-inner,
+input::-moz-focus-outer {
+    border: 0 none;
+    padding: 0;
+    margin: 0;
+}
+
+input[type="search"] {
+    -webkit-appearance: textfield;
+}
+
+input:focus::-webkit-input-placeholder {
+    color: transparent;
+}
+
+input::-ms-clear {
+    display: none;
+}
+
+textarea {
+    resize: vertical;
+    overflow-y: auto;
+}
+
+table {
+    border-collapse: collapse;
+    border-spacing: 0;
+}
+
+th {
+    text-align: inherit;
+}
+
+fieldset,
+iframe,
+img {
+    border: 0 none;
+}
+
+img {
+    display: inline-block;
+    vertical-align: bottom;
+    -ms-interpolation-mode: bicubic;
+    object-fit: cover;
+}
+
+img::shadow div {
+    border: none !important;
+}
+
+iframe {
+    display: block;
+}
+
+ol,
+ul {
+    list-style: none;
+}
+
+li {
+    vertical-align: top;
+}
+
+q:after,
+q:before {
+    content: "";
+}
+
+.cf:after,
+.cf:before {
+    content: "";
+    display: table;
+}
+
+.cf:after {
+    clear: both;
+}
+
+.cf {
+    *zoom: 1;
+}
+
+body {
+    word-break: break-all;
+}
+
+a {
+    color: #202020;
+}
+
+a:hover {
+    color: #ff6428;
+}
+
+a:active {
+    color: #202020;
+}
+
+[none],
+.none {
+    display: none;
+}
+
+[v-cloak],
+[hidden],
+.hidden {
+    visibility: hidden;
+}
