@@ -15,13 +15,18 @@ import (
     "github.com/owner888/kaligo/sessions"
     "github.com/owner888/kaligo/sessions/cookie"
     // "github.com/owner888/kaligo/sessions/redis"
+    "github.com/owner888/kaligo/middlewares"
 )
 
+// swag 不要集成到项目,直接安装工具包即可
+// go install github.com/swaggo/swag/cmd/swag@latest
+// 文档: https://github.com/swaggo/swag#api-operation
+
 // @title Kaligo Example API
+// @description 
 // @version 1.0
 // @host localhost:8080
 // @BasePath /api
-
 func main() {
     // cmd := exec.Command(GOPATH+"swag init")
     // cmd := exec.Command("/Users/coffee/Documents/golang/bin/swag init")
@@ -70,12 +75,15 @@ func setupDatabase() *database.DB {
 
 func run(db *database.DB) {
     r := kaligo.NewRouter()
+
+    // 中间件
+    r.Use(middlewares.CORS())
     // 创建基于cookie的存储引擎，secret 参数是用于加密的密钥
     store := cookie.NewStore([]byte("secret"))
     // store, _ := redis.NewStore(10, "tcp", "localhost:6379", "", []byte("secret"))
     r.Use(sessions.Sessions("mysession", store))
     r.Use(auth.Auth())
-    // r.Use(kaligo.BasicAuth(kaligo.Accounts{"username": "test", "password":"test"}))
+
     r.AddDB(db)
     AddRoutes(r)
     kaligo.Run(r, ":"+config.String("app.server.port", "80"))

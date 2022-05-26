@@ -1,7 +1,7 @@
 package model
 
 import (
-    "fmt"
+    // "fmt"
     "github.com/owner888/kaligo"
     "github.com/owner888/kaligo/logs"
     "github.com/owner888/kaligo/util"
@@ -21,19 +21,21 @@ func DefaultAuth(c *kaligo.Context) *Auth {
 
 func (m *Auth) MakeCsrfToken() string {
     csrf := util.MakeCsrfToken()
-    key  := fmt.Sprintf(AuthDefaultKeyFormat, csrf)
-    logs.Debug("Key ==> ", key)
-    logs.Debug("Csrf ==> ", csrf)
-    m.ctx.Set(key, csrf)
+    // m.ctx.Set(fmt.Sprintf(AuthDefaultKeyFormat, csrf), csrf)     // Context.Set() 不能用于不同请求之间共享数据, 只能用于中间件之间共享
+    m.ctx.SetCookie("csrf_token", csrf, 1000, "/", "", true, true)
+    logs.Debug("Csrf Cookie Set ==> ", csrf)
 
     return csrf
 }
 
 func (m *Auth) CheckCsrfToken(csrf string) bool {
-    key := fmt.Sprintf(AuthDefaultKeyFormat, csrf)
-    ret := m.ctx.GetString(key)
-    logs.Debug("Csrf ==> ", csrf)
-    logs.Debug("Key ==> ", key)
-    logs.Debug("Context.Csrf ==> ", ret)
-    return true
+    // ret := m.ctx.GetString(fmt.Sprintf(AuthDefaultKeyFormat, csrf))
+    ret := m.ctx.CookieValue("csrf_token")
+    // 清除 cookie
+    m.ctx.SetCookie("csrf_token", "", 0, "/", "", true, true)
+
+    // logs.Debug("Csrf ==> ", csrf)
+    // logs.Debug("Csrf Cookie Get ==> ", ret)
+
+    return csrf == ret
 }

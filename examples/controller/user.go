@@ -13,11 +13,6 @@ type User struct {
     kaligo.Controller
 }
 
-// 支持跨域
-// func (c *User) Prepare() {
-//     c.EnableCors()
-// }
-
 // @Summary List 分页获取用户信息
 // @Tags    User
 // @Param   page     query integer false "当前页数" default(1)
