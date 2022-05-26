@@ -9,6 +9,7 @@ definitions:
         description: 标签
         type: string
       rules:
+        description: '验证: required、numeric..., 详细看本页最下面'
         type: string
       tips:
         description: 格式:bm://open:com.xxx.xxx

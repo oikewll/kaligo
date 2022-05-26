@@ -9,6 +9,7 @@ import (
 
     "github.com/go-playground/validator/v10"
     "github.com/owner888/kaligo"
+    "github.com/owner888/kaligo/database"
     "github.com/owner888/kaligo/logs"
     "github.com/owner888/kaligo/util"
 )
@@ -72,10 +73,19 @@ type Accounts map[string]string
 func (m *User) Table() string { return "user" }
 
 // List 分页获取数据列表
-func (m User) List() ([]User, int, error) {
-    var users []User
-    _, err := DB.Select("id", "username", "realname", "status").From(m.Table()).Scan(&users).Execute()
-    return users, 0, err
+func (m User) List(currPage, pageSize int64, orderBy map[string]string, keywords string) (*database.Page[User], error) {
+    page := &database.Page[User] {
+        Page: currPage,
+        Size: pageSize,
+    }
+    err := page.SelectPage(DB, []any{"id", "username", "realname", "emali", "status"}, m.Table(), func(q *database.Query, isCount bool) {
+        if keywords != "" {
+            q.Where("username", "LIKE", "%"+keywords+"%")
+            q.OrWhere("realname", "LIKE", "%"+keywords+"%")
+        }
+    })
+
+    return page, err
 }
 
 // 检查用户权限

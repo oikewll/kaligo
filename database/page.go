@@ -27,7 +27,7 @@ func NewPageResponse[T any](page Page[T]) *PageResponse[T] {
     }
 }
 
-func (page *Page[T]) SelectPage(db *DB, columns []any, table string, wrapper func(query *Query, isCount bool)) (e error) {
+func (page *Page[T]) SelectPage(db *DB, columns []any, table string, wrapper func(query *Query, isCount bool)) (err error) {
     where := func(isCount bool) func(q *Query) {
         return func(q *Query) { wrapper(q, isCount) }
     }

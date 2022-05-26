@@ -4,7 +4,7 @@ import (
     "errors"
     "github.com/owner888/kaligo"
     "github.com/owner888/kaligo/logs"
-    // "github.com/owner888/kaligo/util"
+    "github.com/owner888/kaligo/util"
     "github.com/owner888/kaligo/sessions"
     "examples/model"
 )
@@ -13,6 +13,11 @@ type User struct {
     kaligo.Controller
 }
 
+// 支持跨域
+// func (c *User) Prepare() {
+//     c.EnableCors()
+// }
+
 // @Summary List 分页获取用户信息
 // @Tags    User
 // @Param   page     query integer false "当前页数" default(1)
@@ -20,7 +25,13 @@ type User struct {
 // @Success 200 {array} model.User
 // @Router  /user [get]
 func (c *User) List() {
-    data, _, err := model.User{}.List()
+    page := util.ToInt64(c.FormValue("page", "1"))
+    size := util.ToInt64(c.FormValue("size", "20"))
+    // 排序字段和排序方式: 只支持 ID、创建时间
+    orderBy  := map[string]string{c.QueryValue("order_name", "id"): c.QueryValue("order_by", "desc")}
+    keywords := c.FormValue("keywords")
+
+    data, err := model.User{}.List(page, size, orderBy, keywords)
     result(c.Context, data, err)
 }
 
