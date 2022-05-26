@@ -32,6 +32,7 @@ export default {
         height: 100%;
         overflow: hidden;
         overflow-y: auto;
+        margin-bottom: 0;
     }
     .title{
         margin-bottom: 20px;
