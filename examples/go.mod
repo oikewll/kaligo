@@ -7,7 +7,7 @@ require (
 	github.com/owner888/kaligo v1.2.16
 	github.com/pborman/uuid v1.2.1 // indirect
 	github.com/swaggo/http-swagger v1.2.8
-	github.com/swaggo/swag v1.8.2
+	github.com/swaggo/swag v1.8.2 // indirect
 )
 
 require (

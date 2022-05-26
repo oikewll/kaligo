@@ -63,7 +63,7 @@ func Md5(str string) string {
     return md5str1
 }
 
-func MakeCsrfToken() string {
+func GenerateToken() string {
     return Md5(UUID())
 }
 

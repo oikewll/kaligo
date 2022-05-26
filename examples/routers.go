@@ -85,6 +85,7 @@ func addHomeRoute(r kaligo.Router) {
 }
 
 func addStaticRoute(r kaligo.Router) {
+    r.AddStaticRoute("/admin", webRootPath()+"/admin")
     r.AddStaticRoute("/static", webRootPath()+"/static")
     r.AddStaticRoute("/favicon.ico", webRootPath()+"/favicon.ico")
 }
