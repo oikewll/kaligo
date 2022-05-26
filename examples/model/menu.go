@@ -52,15 +52,22 @@ func (m Menu) Load(reader io.Reader) ([]Menu, error) {
     if err != nil {
         return []Menu{}, err
     }
-    return v.Menus, nil
+    // 给 Menu 带上自增 ID
+    id := 0
+    root := &Menu{Children: v.Menus}
+    forTree(root, (*Menu).getChildren, (*Menu).setChildren, func(node *Menu) {
+        node.ID = id
+        id++
+    })
+    return root.Children, nil
 }
 
-func (m Menu) getChildren() []Menu   { return m.Children }
+func (m *Menu) getChildren() []Menu  { return m.Children }
 func (m *Menu) setChildren(c []Menu) { m.Children = c }
 
 // Permission 通过权限列表过滤菜单
 func (m *Menu) Permission(p []Permission) *Menu {
-    return filterTree(m, Menu.getChildren, (*Menu).setChildren, func(node Menu) bool {
+    return filterTree(m, (*Menu).getChildren, (*Menu).setChildren, func(node Menu) bool {
         if len(node.Children) > 0 {
             return true
         }
@@ -74,9 +81,9 @@ func (m *Menu) Permission(p []Permission) *Menu {
 }
 
 // filterTree 树形结构过滤，深度优先，先过滤叶子结点
-func filterTree[T any](root *T, getter func(node T) []T, setter func(node *T, children []T), filter func(node T) bool) *T {
+func filterTree[T any](root *T, getter func(node *T) []T, setter func(node *T, children []T), filter func(node T) bool) *T {
     var children []T
-    for _, v := range getter(*root) {
+    for _, v := range getter(root) {
         n := filterTree(&v, getter, setter, filter)
         if n != nil {
             children = append(children, *n)
@@ -88,4 +95,15 @@ func filterTree[T any](root *T, getter func(node T) []T, setter func(node *T, ch
         return root
     }
     return nil
+}
+
+// forTree 树形结构中序遍历
+func forTree[T any](root *T, getter func(node *T) []T, setter func(node *T, children []T), each func(node *T)) {
+    each(root)
+    var children []T
+    for _, v := range getter(root) {
+        forTree(&v, getter, setter, each)
+        children = append(children, v)
+    }
+    setter(root, children)
 }
