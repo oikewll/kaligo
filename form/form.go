@@ -44,26 +44,26 @@ type Form struct {
 
 // @Description 表单按钮
 type TableButton struct {
-    Name string
-    Path string
-    Form string
-    Method string
+    Name string   `json:"name"`
+    Path string   `json:"path"`
+    Form string   `json:"form"`
+    Method string `json:"method"`
 }
 
 // @Description 表格公共操作按钮
 type TableGlobalOperate struct {
-    CreateButton     TableButton    // 添加
-    DeleteButton     TableButton    // 删除
-    EnableButton     TableButton    // 启用
-    DisableButton    TableButton    // 禁用
-    RefreshButton    TableButton    // 刷新
+    CreateButton     TableButton     `json:"create_button"`   // 添加
+    DeleteButton     TableButton     `json:"delete_button"`   // 删除
+    EnableButton     TableButton     `json:"enable_button"`   // 启用
+    DisableButton    TableButton     `json:"disable_button"`  // 禁用
+    RefreshButton    TableButton     `json:"refresh_button"`  // 刷新
 }
 
 // @Description 表格列表每一行的操作按钮
 type TableListOperate struct {
-    UpdateButton     TableButton    // 修改按钮
-    ResetMFAButton   TableButton    // 重置MFA
-    TerminateAButton TableButton    // 终止session
+    UpdateButton     TableButton     `json:"update_button"`    // 修改按钮
+    ResetMFAButton   TableButton     `json:"reset_button"`     // 重置MFA
+    TerminateButton TableButton     `json:"terminate_button"`  // 终止session
 }
 
 // @Description Table 表格
@@ -74,9 +74,9 @@ type Table struct {
     Csrf   string   `json:"csrf"` 
     
     // 查询表单组件
-    SearchComponents []Component   `json:"search_components"`
-    TableGlobalOperate TableGlobalOperate   // 公共按钮
-    TableListOperate TableListOperate       // 列表最右边的按钮
+    SearchComponents []Component            `json:"search_components"`
+    TableGlobalOperate TableGlobalOperate   `json:"table_global_operate"` // 公共按钮
+    TableListOperate TableListOperate       `json:"table_list_operate"`   // 列表最右边的按钮
 }
 
 // 表单验证类

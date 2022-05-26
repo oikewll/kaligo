@@ -43,10 +43,10 @@ func (c *User) List() {
         Field: "keywords",
         Type:  "input",
     })
-    // table.SearchComponents = append(form.SearchComponents, kaligo.Component{
+    // table.SearchComponents = append(table.SearchComponents, form.Component{
     //     Title: "是否启用",
     //     Placeholder: "是否启用",
-    //     Field: "keywords",
+    //     Field: "status",
     //     Type:  "select",
     // })
     table.TableGlobalOperate = form.TableGlobalOperate{
@@ -57,9 +57,10 @@ func (c *User) List() {
         RefreshButton: form.TableButton{Name:"刷新", Path:"/api/user/refresh", Method:"GET"},
     }
     table.TableListOperate = form.TableListOperate{
-        UpdateButton:  form.TableButton{Name:"修改", Path:"/api/user/:id", Method:"PUT", Form:"/api/user/updateform"},
+        UpdateButton:  form.TableButton{Name:"修改", Path:"/api/user/:id", Method:"PUT", Form:"/api/user/updateform/:id"},
     }
 
+    data.Table = table
     result(c.Context, data, err)
 }
 
@@ -124,7 +125,6 @@ func (c *User) Create() {
 
 // @Summary CreateForm 用户添加表单
 // @Tags    User
-// @Success 200 {object} form.Form
 // @Router  /user/createform [GET]
 func (c *User) CreateForm() {
     table := form.Form{
@@ -154,6 +154,49 @@ func (c *User) CreateForm() {
     table.Components = append(table.Components, form.Component{
         Title: "邮箱",
         Field: "email",
+        Type:  "text",
+        Validate: form.Validate{Required: true, Message: "请输入邮箱", Trigger: "change", Type: "email"},
+    })
+
+    result(c.Context, table, nil)
+}
+
+// @Summary CreateForm 用户添加表单
+// @Tags    User
+// @Param   id       path      integer false  "账号ID"     default(1)
+// @Router  /user/updateform/{id} [GET]
+func (c *User) UpdateForm() {
+    table := form.Form{
+        Name:   "用户修改",
+        Path:   "/api/user/:id",
+        Method: "PUT",
+        Csrf:   model.DefaultAuth(c.Context).MakeCsrfToken(),
+    }
+    table.Components = append(table.Components, form.Component{
+        Title: "账号",
+        Field: "username",
+        Value: "username",
+        Type:  "text",
+        Validate: form.Validate{Required: true, Message: "请输入账号", Trigger: "change"},
+    })
+    table.Components = append(table.Components, form.Component{
+        Title: "密码",
+        Field: "password",
+        Value: "password",
+        Type:  "password",
+        Validate: form.Validate{Required: true, Message: "请输入密码", Trigger: "change"},
+    })
+    table.Components = append(table.Components, form.Component{
+        Title: "姓名",
+        Field: "realname",
+        Value: "realname",
+        Type:  "text",
+        Validate: form.Validate{Required: true, Message: "请输入姓名", Trigger: "change"},
+    })
+    table.Components = append(table.Components, form.Component{
+        Title: "邮箱",
+        Field: "email",
+        Value: "email",
         Type:  "text",
         Validate: form.Validate{Required: true, Message: "请输入邮箱", Trigger: "change", Type: "email"},
     })
