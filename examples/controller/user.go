@@ -137,25 +137,25 @@ func (c *User) CreateForm() {
         Title: "账号",
         Field: "username",
         Type:  "text",
-        Validate: form.Validate{Required: true},
+        Validate: form.Validate{Required: true, Message: "请输入账号", Trigger: "change"},
     })
     table.Components = append(table.Components, form.Component{
         Title: "密码",
         Field: "password",
         Type:  "password",
-        Validate: form.Validate{Required: true},
+        Validate: form.Validate{Required: true, Message: "请输入密码", Trigger: "change"},
     })
     table.Components = append(table.Components, form.Component{
         Title: "姓名",
         Field: "realname",
         Type:  "text",
-        Validate: form.Validate{Required: true},
+        Validate: form.Validate{Required: true, Message: "请输入姓名", Trigger: "change"},
     })
     table.Components = append(table.Components, form.Component{
         Title: "邮箱",
         Field: "email",
         Type:  "text",
-        Validate: form.Validate{Required: true, Type: "email"},
+        Validate: form.Validate{Required: true, Message: "请输入邮箱", Trigger: "change", Type: "email"},
     })
 
     result(c.Context, table, nil)
@@ -167,7 +167,7 @@ func (c *User) CreateForm() {
 // @Success 200 {integer} integer
 // @Router  /user/{id} [DELETE]
 func (c *User) Delete() {
-    id := c.QueryValue("id")
+    id := c.ParamValue("id")
     if len(id) == 0 {
         result(c.Context, nil, errors.New("id is required"))
     }

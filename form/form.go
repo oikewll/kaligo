@@ -10,6 +10,7 @@ type Validate struct {
     Max      int        `json:"max"`            // 最大长度
     Pattern  string     `json:"pattern"`        // 正则表达式校验
     Message  string     `json:"message"`        // 校验文案
+    Trigger  string     `json:"trigger"`        // 触发器
 }
 
 // @Description 表单组件属性 Property
