@@ -1,13 +1,16 @@
 // 分页工具类
 package database
 
-// "fmt"
+import (
+    "github.com/owner888/kaligo/form"
+)
 
 type Page[T any] struct {
-    Page  int64 `json:"page"`  // 当前页
-    Size  int64 `json:"size"`  // 单页数
-    Total int64 `json:"total"` // 总条数
-    Data  []T   `json:"data"`  // 数据
+    Page   int64      `json:"page"`  // 当前页
+    Size   int64      `json:"size"`  // 单页数
+    Total  int64      `json:"total"` // 总条数
+    Data   []T        `json:"data"`  // 数据
+    Table  form.Table `json:"table"` // 表格
 }
 
 type PageResponse[T any] struct {
