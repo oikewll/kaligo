@@ -53,7 +53,7 @@ export default {
     },
     async created(){
         const {data} = await this.$api.common.init();
-        console.log(data)
+        this.$store.commit("menu/SET_MENUDATA", data.data);
     }
 };
 </script>

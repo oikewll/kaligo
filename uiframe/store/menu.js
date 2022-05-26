@@ -1,11 +1,11 @@
-import Menu_main from "@/config/menu/main";
-import Menu_system from "@/config/menu/system";
-import Mock_menu from "@/config/menu/mock-menu.js";
+// import Menu_main from "@/config/menu/main";
+// import Menu_system from "@/config/menu/system";
+// import Mock_menu from "@/config/menu/mock-menu.js";
 
-let Menu = Menu_main;
-if (localStorage.getItem("Menu_sidebar") && localStorage.getItem("Menu_sidebar") === "system") {
-    Menu = Menu_system;
-}
+// let Menu = Menu_main;
+// if (localStorage.getItem("Menu_sidebar") && localStorage.getItem("Menu_sidebar") === "system") {
+//     Menu = Menu_system;
+// }
 
 const session = window.sessionStorage;
 const CACHE_KEYS = {
@@ -38,8 +38,8 @@ export default {
     state: () => ({
         main_tabs: cache_main_tabs,   // 当前存在的标签页
         main_tabs_active_name: '',    // 当前激活的标签页名字
-        menu_sidebar: Mock_menu[0].children,
-        menu_setting: Mock_menu,      // 后台返回的菜单配置，包括顶部和边栏的数据
+        menu_setting: [],             // 后台返回的菜单配置，包括顶部和边栏的数据
+        menu_sidebar: [],             // 单独边栏菜单的数据
     }),
     getters: {
         getMenu: (state) => state.menu_sidebar,
@@ -70,6 +70,7 @@ export default {
         },
         // 这里是给api拿到菜单后注入vuex的commit
         SET_MENUDATA: (state, data = []) => {
+            state.menu_sidebar = data[0].children;
             state.menu_setting = data;
         }
     },
