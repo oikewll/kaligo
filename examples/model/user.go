@@ -4,51 +4,56 @@ import (
     "errors"
     "fmt"
     "strings"
+
     // "time"
 
+    "github.com/go-playground/validator/v10"
     "github.com/owner888/kaligo"
     "github.com/owner888/kaligo/logs"
     "github.com/owner888/kaligo/util"
-    "github.com/go-playground/validator/v10"
 )
 
 const (
-    UserDefaultKeyFormat    = "UserDefaultKey-%s"       // 根据UID获取用户信息
-    PurviewDefaultKeyFormat = "PurviewDefaultKey-%s"    // 更加PurViewID获取用户权限信息
+    UserDefaultKeyFormat    = "UserDefaultKey-%s"    // 根据UID获取用户信息
+    PurviewDefaultKeyFormat = "PurviewDefaultKey-%s" // 更加PurViewID获取用户权限信息
     errorFormat             = "[sessions] ERROR! %s\n"
     timeFormat              = "2006-01-02 15:04:05"
 )
 
+// Purview 权限
+// @Description 用户权限
 type Purview struct {
     url    string
     method string
 }
 
 type UserOptions struct {
-    OS string
-    Version string
-    Utma string
+    OS         string
+    Version    string
+    Utma       string
     DeviceType string
-    Device string
-    OSVersion string
+    Device     string
+    OSVersion  string
 }
 
+// User 用户信息
+// @Description User account information
 type User struct {
     Base
 
-    UID string              `db:"uid" json:"uid"`
-    Groups []int            `db:"groups" json:"groups"`
-    Username string         `db:"username" json:"username" validate:"required"`
-    Password string         `db:"validate" validate:"required"`
-    Realname string         `db:"realname" json:"realname"`
-    Avatar string           `db:"avatar" json:"avatar"`
-    Email string            `db:"email" json:"email" validate:"required|email"`
-    SessionID string        `db:"session_id"`
-    SessionExpire string    `db:"session_expire"`
-    Status int              `db:"status"`
-    IsFirstLogin bool       `db:"is_first_login"`
+    UID           string `db:"uid" json:"uid"`                               // 用户 ID
+    Groups        []int  `db:"groups" json:"groups"`                         // 用户所属权限组
+    Username      string `db:"username" json:"username" validate:"required"` // 用户名
+    Password      string `db:"validate" validate:"required"`                 // 密码
+    Realname      string `db:"realname" json:"realname"`                     // 用户昵称
+    Avatar        string `db:"avatar" json:"avatar"`                         // 用户头像地址
+    Email         string `db:"email" json:"email" validate:"required|email"` // 邮箱地址
+    SessionID     string `db:"session_id"`                                   // 登录 Session ID
+    SessionExpire string `db:"session_expire"`                               // 登录 Session 过期时间
+    Status        int    `db:"status"`                                       // 状态
+    IsFirstLogin  bool   `db:"is_first_login"`                               // 是否首次登录
 
-    ctx *kaligo.Context
+    ctx      *kaligo.Context
     Purviews []Purview
 }
 
@@ -92,7 +97,7 @@ func (m *User) GetGroupsPurviews() string {
 
 // 检测用户
 func (m *User) CheckUser(accounts Accounts) (err error) {
-    var username, password string    
+    var username, password string
     var ok bool
 
     if username, ok = accounts["username"]; !ok {
@@ -115,8 +120,8 @@ func (m *User) CheckUser(accounts Accounts) (err error) {
         return err
         // 打印每条错误信息
         // for _, err := range err.(validator.ValidationErrors) {
-            // fmt.Println(err)//Key: 'Users.Passwd' Error:Field validation for 'Passwd' failed on the 'min' tag
-            // return
+        // fmt.Println(err)//Key: 'Users.Passwd' Error:Field validation for 'Passwd' failed on the 'min' tag
+        // return
         // }
     }
 
@@ -223,7 +228,7 @@ func (m *User) Update(u User) (ID, error) {
     password, err := util.PasswordHash(u.Password)
 
     q, err := DB.Update(m.Table()).Set(map[string]string{
-        "username": u.Username, 
+        "username": u.Username,
         "password": password,
     }).Where("id", "=", u.Id).Execute()
     return ID(q.LastInsertId), err
