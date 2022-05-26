@@ -1,12 +1,21 @@
 package model
 
-// 表单字段
-type Field struct {
-    Label string    `json:"label"`  // 标签
-    Field string    `json:"field"`  // 字段
-    Type  string    `json:"type"`   // 类型: text、password、number、editor、textarea、file、image
-    Rules string    `json:"rules"`  // 验证: required、numeric..., 详细看本页最下面
-    Tips  string    `json:"tips"`   // 格式:bm://open:com.xxx.xxx
+type Validate struct {
+    Required bool       `json:"required"`
+    Email    bool       `json:"email"`
+    Numeric  bool       `json:"numeric"`
+}
+
+// 表单组件
+// http://form-create.com/v2/element-ui/components/input.html
+type Component struct {
+    Type  string        `json:"type"`           // 类型: input、password、number、editor、textarea、file、image
+    Title string        `json:"title"`          // 标题
+    Field string        `json:"field"`          // 字段
+    Value string        `json:"value"`          // 默认值
+    Validate Validate   `json:"validate"`       // 验证: required、numeric..., 详细看本页最下面
+    Tips  string        `json:"tips"`           // 格式:bm://open:com.xxx.xxx
+    Placeholder string  `json:"placeholder"`    // 输入框占位文本
 }
 
 // From 表单
@@ -16,7 +25,8 @@ type Form struct {
     Method string   `json:"method"`
     Csrf   string   `json:"csrf"` 
     
-    Fields []Field
+    // 表单组件
+    Components []Component
 }
 
 // 表单按钮
@@ -25,14 +35,18 @@ type TableButton struct {
     Path string
 }
 
-// 表格操作
-type TableOperate struct {
+// 表格公共操作按钮
+type TableGlobalOperate struct {
     CreateButton     TableButton    // 添加
-    UpdateButton     TableButton    // 修改
     DeleteButton     TableButton    // 删除
-    RefreshButton    TableButton    // 刷新
     EnableButton     TableButton    // 启用
     DisableButton    TableButton    // 禁用
+    RefreshButton    TableButton    // 刷新
+}
+
+// 表格列表每一行的操作按钮
+type TableListOperate struct {
+    UpdateButton     TableButton    // 修改按钮
     ResetMFAButton   TableButton    // 重置MFA
     TerminateAButton TableButton    // 终止session
 }
@@ -44,7 +58,10 @@ type Table struct {
     Method string   `json:"method"`
     Csrf   string   `json:"csrf"` 
     
-    Fields []Field
+    // 查询表单组件
+    SearchComponents []Component
+    TableGlobalOperate TableGlobalOperate   // 公共按钮
+    TableListOperate TableListOperate       // 列表最右边的按钮
 }
 
 // 表单验证类

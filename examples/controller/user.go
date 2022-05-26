@@ -23,12 +23,32 @@ func (c *User) List() {
     page := c.QueryInt64("page", 1)
     size := c.QueryInt64("size", 20)
     // 排序字段和排序方式: 只支持 ID、创建时间
-    orderBy := map[string]string{c.QueryValue("order_name", "id"): c.QueryValue("order_by", "desc")}
-    keywords := c.FormValue("keywords")
-    status := c.FormValue("status")
+    orderBy   := map[string]string{c.QueryValue("order_name", "id"): c.QueryValue("order_by", "desc")}
+    keywords  := c.FormValue("keywords")
+    status    := c.FormValue("status")
     createdAt := c.FormValue("created_at") // 2022-05-06 - 2022-06-08
 
     data, err := model.User{}.List(page, size, orderBy, keywords, status, createdAt)
+
+    form := model.Table{
+        Name:   "用户列表",
+        Path:   "/api/user",
+        Method: "GET",
+        Csrf:   model.DefaultAuth(c.Context).MakeCsrfToken(),
+    }
+    form.SearchComponents = append(form.SearchComponents, model.Component{
+        Title: "关键字",
+        Placeholder: "账号/昵称",
+        Field: "keywords",
+        Type:  "text",
+    })
+    form.SearchComponents = append(form.SearchComponents, model.Component{
+        Title: "是否启用",
+        Placeholder: "是否启用",
+        Field: "keywords",
+        Type:  "select",
+    })
+
     result(c.Context, data, err)
 }
 
@@ -95,37 +115,35 @@ func (c *User) Create() {
 // @Success 200 {object} model.Form
 // @Router  /user/createform [GET]
 func (c *User) CreateForm() {
-
-    csrf := model.DefaultAuth(c.Context).MakeCsrfToken()
     form := model.Form{
         Name:   "用户添加",
         Path:   "/api/user",
         Method: "POST",
-        Csrf:   csrf,
+        Csrf:   model.DefaultAuth(c.Context).MakeCsrfToken(),
     }
-    form.Fields = append(form.Fields, model.Field{
-        Label: "账号",
+    form.Components = append(form.Components, model.Component{
+        Title: "账号",
         Field: "username",
         Type:  "text",
-        Rules: "required",
+        Validate: model.Validate{Required: true},
     })
-    form.Fields = append(form.Fields, model.Field{
-        Label: "密码",
+    form.Components = append(form.Components, model.Component{
+        Title: "密码",
         Field: "password",
         Type:  "password",
-        Rules: "required",
+        Validate: model.Validate{Required: true},
     })
-    form.Fields = append(form.Fields, model.Field{
-        Label: "姓名",
+    form.Components = append(form.Components, model.Component{
+        Title: "姓名",
         Field: "realname",
         Type:  "text",
-        Rules: "required",
+        Validate: model.Validate{Required: true},
     })
-    form.Fields = append(form.Fields, model.Field{
-        Label: "邮箱",
+    form.Components = append(form.Components, model.Component{
+        Title: "邮箱",
         Field: "email",
         Type:  "text",
-        Rules: "required|email",
+        Validate: model.Validate{Required: true, Email: true},
     })
 
     result(c.Context, form, nil)
