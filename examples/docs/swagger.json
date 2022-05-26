@@ -132,6 +132,25 @@
                 }
             }
         },
+        "/permissions": {
+            "get": {
+                "tags": [
+                    "Home"
+                ],
+                "summary": "权限列表: 权限选择、权限展示",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/sessions": {
             "get": {
                 "tags": [
@@ -608,27 +627,39 @@
         }
     },
     "definitions": {
-        "model.Field": {
+        "model.Component": {
             "type": "object",
             "properties": {
                 "field": {
                     "description": "字段",
                     "type": "string"
                 },
-                "label": {
-                    "description": "标签",
+                "placeholder": {
+                    "description": "输入框占位文本",
                     "type": "string"
                 },
-                "rules": {
-                    "description": "验证: required、numeric..., 详细看本页最下面",
-                    "type": "string"
+                "props": {
+                    "description": "属性",
+                    "$ref": "#/definitions/model.Props"
                 },
                 "tips": {
                     "description": "格式:bm://open:com.xxx.xxx",
                     "type": "string"
                 },
+                "title": {
+                    "description": "标题",
+                    "type": "string"
+                },
                 "type": {
-                    "description": "类型: text、password、number、editor、textarea、file、image",
+                    "description": "类型: input、editor、textarea、file、image",
+                    "type": "string"
+                },
+                "validate": {
+                    "description": "验证: required、numeric..., 详细看本页最下面",
+                    "$ref": "#/definitions/model.Validate"
+                },
+                "value": {
+                    "description": "默认值",
                     "type": "string"
                 }
             }
@@ -636,14 +667,15 @@
         "model.Form": {
             "type": "object",
             "properties": {
-                "csrf": {
-                    "type": "string"
-                },
-                "fields": {
+                "components": {
+                    "description": "表单组件",
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/model.Field"
+                        "$ref": "#/definitions/model.Component"
                     }
+                },
+                "csrf": {
+                    "type": "string"
                 },
                 "method": {
                     "type": "string"
@@ -652,6 +684,15 @@
                     "type": "string"
                 },
                 "path": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.Props": {
+            "type": "object",
+            "properties": {
+                "type": {
+                    "description": "类型: text、password",
                     "type": "string"
                 }
             }
@@ -739,6 +780,43 @@
                 },
                 "username": {
                     "description": "用户名",
+                    "type": "string"
+                }
+            }
+        },
+        "model.Validate": {
+            "type": "object",
+            "properties": {
+                "enum": {
+                    "description": "枚举类型",
+                    "type": "string"
+                },
+                "len": {
+                    "description": "字段长度",
+                    "type": "integer"
+                },
+                "max": {
+                    "description": "最大长度",
+                    "type": "integer"
+                },
+                "message": {
+                    "description": "校验文案",
+                    "type": "string"
+                },
+                "min": {
+                    "description": "最小长度",
+                    "type": "integer"
+                },
+                "pattern": {
+                    "description": "正则表达式校验",
+                    "type": "string"
+                },
+                "required": {
+                    "description": "是否必选",
+                    "type": "boolean"
+                },
+                "type": {
+                    "description": "内建校验类型: date、datetimerange、emali、array",
                     "type": "string"
                 }
             }
