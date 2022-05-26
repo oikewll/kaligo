@@ -64,21 +64,11 @@ func addApiRoute(r kaligo.Router) {
 		http.MethodGet:    "List",
 		http.MethodPost:   "Create",
 	}, &controller.User{})
-
-	r.AddRoute("/api/todo/:id", map[string]string{
-		http.MethodPut:    "Update",
-		http.MethodDelete: "Delete",
-		http.MethodGet:    "Detail",
-	}, &controller.Todo{})
-    
-	r.AddRoute("/api/todo", map[string]string{
-		http.MethodGet:    "List",
-		http.MethodPost:   "Create",
-	}, &controller.Todo{})
 }
 
 func addHomeRoute(r kaligo.Router) {
     r.AddRoute("/api/init", map[string]string{http.MethodGet: "Initialization"}, &controller.Home{})
+    r.AddRoute("/api/permissions", map[string]string{http.MethodGet: "Permissions"}, &controller.Home{})
 
     r.AddRoute("/", map[string]string{http.MethodGet: "Index"}, &controller.Home{})
     r.AddRoute("/home/:tplName", map[string]string{http.MethodGet: "Index"}, &controller.Home{})

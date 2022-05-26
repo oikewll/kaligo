@@ -5,7 +5,6 @@ import (
     "examples/model"
     "flag"
     "fmt"
-    // "os/exec"
 
     "github.com/owner888/kaligo"
     "github.com/owner888/kaligo/config"
@@ -28,13 +27,6 @@ import (
 // @host localhost:8080
 // @BasePath /api
 func main() {
-    // cmd := exec.Command(GOPATH+"swag init")
-    // cmd := exec.Command("/Users/coffee/Documents/golang/bin/swag init")
-    // err := cmd.Run()
-    // if err != nil {
-    //     logs.Fatalf("cmd.Run() failed with %s\n", err)
-    // }
-
     loadConfig()
     setupLog()
     db := setupDatabase()
@@ -78,6 +70,7 @@ func run(db *database.DB) {
 
     // 中间件
     r.Use(middlewares.CORS())
+    // r.Use(middlewares.CSRF())    // 防止CSRF攻击
     // 创建基于cookie的存储引擎，secret 参数是用于加密的密钥
     store := cookie.NewStore([]byte("secret"))
     // store, _ := redis.NewStore(10, "tcp", "localhost:6379", "", []byte("secret"))

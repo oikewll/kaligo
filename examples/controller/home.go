@@ -18,19 +18,18 @@ type Home struct {
 // @Success 200 {object} map[string]string
 // @Router  /init [GET]
 func (c *Home) Initialization() {
-    // {
-    //     id: "0-5",
-    //     name: "acquisition",
-    //     path: "/acquisition",
-    //     meta: {
-    //         title: "menu.acquisition-settings",
-    //         icon: "el-icon-truck",
-    //     },
-    //     show: true,
-    //     childrens: [
-    //     ]
-    // },
-    menus, err := model.Menu{}.LoadDefault()
+    // 都不要带 api
+    purviews := "GET-/user,GET-/user/:id,POST-/user,PUT-/user/:id,DELETE-/user/:id"
+    menus, err := model.Menu{}.LoadDefault(purviews)
+    result(c.Context, menus, err)
+}
+
+// @Summary 权限列表: 权限选择、权限展示
+// @Tags    Home
+// @Success 200 {object} map[string]string
+// @Router  /permissions [GET]
+func (c *Home) Permissions() {
+    menus, err := model.Menu{}.LoadDefault("*")
     result(c.Context, menus, err)
 }
 

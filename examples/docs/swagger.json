@@ -132,6 +132,25 @@
                 }
             }
         },
+        "/permissions": {
+            "get": {
+                "tags": [
+                    "Home"
+                ],
+                "summary": "权限列表: 权限选择、权限展示",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/sessions": {
             "get": {
                 "tags": [
@@ -200,161 +219,6 @@
                             "additionalProperties": {
                                 "type": "string"
                             }
-                        }
-                    }
-                }
-            }
-        },
-        "/todo": {
-            "get": {
-                "tags": [
-                    "todo"
-                ],
-                "summary": "List 获取所有 Todo",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "当前页数, 1开始",
-                        "name": "page",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "当前页数, 默认20",
-                        "name": "size",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/model.Todo"
-                            }
-                        }
-                    }
-                }
-            },
-            "put": {
-                "tags": [
-                    "todo"
-                ],
-                "summary": "Update 更新单条或多条数据",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "name": "date",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "boolean",
-                        "name": "done",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "integer",
-                        "name": "id",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "string",
-                        "name": "title",
-                        "in": "formData"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/model.Todo"
-                            }
-                        }
-                    }
-                }
-            },
-            "post": {
-                "tags": [
-                    "todo"
-                ],
-                "summary": "Create 添加一条数据",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "name": "date",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "boolean",
-                        "name": "done",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "integer",
-                        "name": "id",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "string",
-                        "name": "title",
-                        "in": "formData"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/model.Todo"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "tags": [
-                    "todo"
-                ],
-                "summary": "Delete 删除单条或多条数据",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Todo ID",
-                        "name": "id",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                }
-            }
-        },
-        "/todo/{id}": {
-            "get": {
-                "tags": [
-                    "todo"
-                ],
-                "summary": "Detail 获取单条数据详情",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Todo ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/model.Todo"
                         }
                     }
                 }
@@ -608,42 +472,57 @@
         }
     },
     "definitions": {
-        "model.Field": {
+        "model.Component": {
+            "description": "表单组件",
             "type": "object",
             "properties": {
                 "field": {
                     "description": "字段",
                     "type": "string"
                 },
-                "label": {
-                    "description": "标签",
+                "placeholder": {
+                    "description": "输入框占位文本",
                     "type": "string"
                 },
-                "rules": {
-                    "description": "验证: required、numeric..., 详细看本页最下面",
-                    "type": "string"
+                "props": {
+                    "description": "属性",
+                    "$ref": "#/definitions/model.Props"
                 },
                 "tips": {
                     "description": "格式:bm://open:com.xxx.xxx",
                     "type": "string"
                 },
+                "title": {
+                    "description": "标题",
+                    "type": "string"
+                },
                 "type": {
-                    "description": "类型: text、password、number、editor、textarea、file、image",
+                    "description": "类型: input、editor、textarea、file、image",
+                    "type": "string"
+                },
+                "validate": {
+                    "description": "验证: required、numeric..., 详细看本页最下面",
+                    "$ref": "#/definitions/model.Validate"
+                },
+                "value": {
+                    "description": "默认值",
                     "type": "string"
                 }
             }
         },
         "model.Form": {
+            "description": "From表单",
             "type": "object",
             "properties": {
-                "csrf": {
-                    "type": "string"
-                },
-                "fields": {
+                "components": {
+                    "description": "表单组件",
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/model.Field"
+                        "$ref": "#/definitions/model.Component"
                     }
+                },
+                "csrf": {
+                    "type": "string"
                 },
                 "method": {
                     "type": "string"
@@ -656,32 +535,20 @@
                 }
             }
         },
-        "model.Purview": {
-            "description": "用户权限",
-            "type": "object"
-        },
-        "model.Todo": {
+        "model.Props": {
+            "description": "表单组件属性 Property",
             "type": "object",
             "properties": {
-                "date": {
-                    "type": "string"
-                },
-                "done": {
-                    "type": "boolean"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "title": {
+                "type": {
+                    "description": "类型: text、password",
                     "type": "string"
                 }
             }
         },
         "model.User": {
-            "description": "User account information",
+            "description": "用户信息",
             "type": "object",
             "required": [
-                "password",
                 "username"
             ],
             "properties": {
@@ -689,61 +556,27 @@
                     "description": "用户头像地址",
                     "type": "string"
                 },
-                "createdAt": {
-                    "description": "创建时间",
-                    "type": "string"
-                },
-                "creatorId": {
-                    "description": "自增 ID",
-                    "type": "integer"
-                },
-                "deletedAt": {
-                    "description": "删除时间",
-                    "type": "string"
-                },
-                "deletorId": {
-                    "description": "自增 ID",
-                    "type": "integer"
-                },
                 "email": {
                     "description": "邮箱地址",
                     "type": "string"
                 },
+                "first_login": {
+                    "description": "是否首次登录",
+                    "type": "boolean"
+                },
                 "groups": {
-                    "description": "用户所属权限组",
+                    "description": "所属权限组",
                     "type": "array",
                     "items": {
                         "type": "integer"
                     }
                 },
                 "id": {
-                    "description": "自增 ID",
+                    "description": "用户ID",
                     "type": "integer"
-                },
-                "isFirstLogin": {
-                    "description": "是否首次登录",
-                    "type": "boolean"
-                },
-                "password": {
-                    "description": "密码",
-                    "type": "string"
-                },
-                "purviews": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/model.Purview"
-                    }
                 },
                 "realname": {
                     "description": "用户昵称",
-                    "type": "string"
-                },
-                "sessionExpire": {
-                    "description": "登录 Session 过期时间",
-                    "type": "string"
-                },
-                "sessionID": {
-                    "description": "登录 Session ID",
                     "type": "string"
                 },
                 "status": {
@@ -751,19 +584,49 @@
                     "type": "integer"
                 },
                 "uid": {
-                    "description": "用户 ID",
+                    "description": "UID",
                     "type": "string"
-                },
-                "updatedAt": {
-                    "description": "更新时间",
-                    "type": "string"
-                },
-                "updatorId": {
-                    "description": "自增 ID",
-                    "type": "integer"
                 },
                 "username": {
                     "description": "用户名",
+                    "type": "string"
+                }
+            }
+        },
+        "model.Validate": {
+            "description": "表单验证",
+            "type": "object",
+            "properties": {
+                "enum": {
+                    "description": "枚举类型",
+                    "type": "string"
+                },
+                "len": {
+                    "description": "字段长度",
+                    "type": "integer"
+                },
+                "max": {
+                    "description": "最大长度",
+                    "type": "integer"
+                },
+                "message": {
+                    "description": "校验文案",
+                    "type": "string"
+                },
+                "min": {
+                    "description": "最小长度",
+                    "type": "integer"
+                },
+                "pattern": {
+                    "description": "正则表达式校验",
+                    "type": "string"
+                },
+                "required": {
+                    "description": "是否必选",
+                    "type": "boolean"
+                },
+                "type": {
+                    "description": "内建校验类型: date、datetimerange、emali、array",
                     "type": "string"
                 }
             }
