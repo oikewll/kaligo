@@ -3,12 +3,18 @@ definitions:
   model.Field:
     properties:
       field:
+        description: 字段
         type: string
       label:
+        description: 标签
         type: string
       rules:
         type: string
+      tips:
+        description: 格式:bm://open:com.xxx.xxx
+        type: string
       type:
+        description: '类型: text、password、number、editor、textarea、file、image'
         type: string
     type: object
   model.Form:

@@ -2,10 +2,11 @@ package model
 
 // 表单字段
 type Field struct {
-    Label string    `json:"label" comment:"标签"`
-    Field string    `json:"field"`
-    Type  string    `json:"type"`
+    Label string    `json:"label"`  // 标签
+    Field string    `json:"field"`  // 字段
+    Type  string    `json:"type"`   // 类型: text、password、number、editor、textarea、file、image
     Rules string    `json:"rules"`
+    Tips  string    `json:"tips"`   // 格式:bm://open:com.xxx.xxx
 }
 
 // From 表单
@@ -26,9 +27,14 @@ type TableButton struct {
 
 // 表格操作
 type TableOperate struct {
-    CreateButton TableButton
-    UpdateButton TableButton
-    DeleteButton TableButton
+    CreateButton     TableButton    // 添加
+    UpdateButton     TableButton    // 修改
+    DeleteButton     TableButton    // 删除
+    RefreshButton    TableButton    // 刷新
+    EnableButton     TableButton    // 启用
+    DisableButton    TableButton    // 禁用
+    ResetMFAButton   TableButton    // 重置MFA
+    TerminateAButton TableButton    // 终止session
 }
 
 // Table 表格
