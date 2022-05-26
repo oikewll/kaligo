@@ -15,12 +15,16 @@ import (
     "github.com/owner888/kaligo/sessions"
     "github.com/owner888/kaligo/sessions/cookie"
     // "github.com/owner888/kaligo/sessions/redis"
+    "github.com/owner888/kaligo/middlewares"
 )
 
 // @title Kaligo Example API
 // @version 1.0
 // @host localhost:8080
 // @BasePath /api
+
+// swag 不要集成到项目,直接安装工具包即可
+// go install github.com/swaggo/swag/cmd/swag@latest
 
 func main() {
     // cmd := exec.Command(GOPATH+"swag init")
@@ -75,6 +79,7 @@ func run(db *database.DB) {
     // store, _ := redis.NewStore(10, "tcp", "localhost:6379", "", []byte("secret"))
     r.Use(sessions.Sessions("mysession", store))
     r.Use(auth.Auth())
+    r.Use(middlewares.CORS())
     // r.Use(kaligo.BasicAuth(kaligo.Accounts{"username": "test", "password":"test"}))
     r.AddDB(db)
     AddRoutes(r)

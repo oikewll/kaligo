@@ -702,7 +702,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "creatorId": {
-                    "description": "创建用户 ID",
+                    "description": "自增 ID",
                     "type": "integer"
                 },
                 "deletedAt": {
@@ -710,7 +710,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deletorId": {
-                    "description": "删除用户 ID",
+                    "description": "自增 ID",
                     "type": "integer"
                 },
                 "email": {
@@ -767,7 +767,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "updatorId": {
-                    "description": "更新用户 ID",
+                    "description": "自增 ID",
                     "type": "integer"
                 },
                 "username": {

@@ -1,6 +1,6 @@
 package middlewares
 
-import (
+// import (
     // "errors"
     // "sync"
     // "golang.org/x/crypto/bcrypt"
@@ -8,10 +8,10 @@ import (
     // "github.com/owner888/kaligo"
     // "github.com/owner888/kaligo/logs"
     // "github.com/owner888/kaligo/sessions"
-)
+// )
 
 // AuthUserKey is the cookie name for user credential in basic auth.
-const AuthUserKey = "user"
+// const AuthUserKey = "user"
 
 // func Default(c *kaligo.Context) {
 //     if req := c.Request; req != nil {

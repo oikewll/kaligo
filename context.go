@@ -536,13 +536,6 @@ func (c *Context) Header(key, value string) {
     c.ResponseWriter.Header().Set(key, value)
 }
 
-// EnableCors 支持 CORS 跨域访问
-func (c *Context) EnableCors() {
-    if c.ResponseWriter != nil {
-        c.ResponseWriter.Header().Set("Access-Control-Allow-Origin", "*")
-    }
-}
-
 // SetSameSite with cookie
 func (c *Context) SetSameSite(samesite http.SameSite) {
     c.sameSite = samesite
