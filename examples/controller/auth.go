@@ -105,6 +105,9 @@ func (c *Auth) Token() {
 // @Router  /auth/check_token [POST]
 func (c *Auth) CheckToken() {
     csrf := c.FormValue("csrf")
-    model.DefaultAuth(c.Context).CheckCsrfToken(csrf)
-    result(c.Context, "successful", nil)
+    if model.DefaultAuth(c.Context).CheckCsrfToken(csrf) {
+        c.String(200, "验证通过")
+    } else {
+        c.String(404, "请勿重复提交")
+    }
 }

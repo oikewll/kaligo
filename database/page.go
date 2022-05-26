@@ -27,6 +27,7 @@ func NewPageResponse[T any](page Page[T]) *PageResponse[T] {
     }
 }
 
+// Group 的时候 Count 可能不准, isCount 用于要不要算总数
 func (page *Page[T]) SelectPage(db *DB, columns []any, table string, wrapper func(query *Query, isCount bool)) (err error) {
     where := func(isCount bool) func(q *Query) {
         return func(q *Query) { wrapper(q, isCount) }
