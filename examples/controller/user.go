@@ -152,11 +152,11 @@ func (c *User) CreateForm() {
 
 // @Summary Delete 删除单条或多条数据
 // @Tags    User
-// @Param   ids       path      integer false  "账号ID"     default(1)
+// @Param   id       path      integer false  "账号ID"     default(1)
 // @Success 200 {integer} integer
 // @Router  /user/{id} [DELETE]
 func (c *User) Delete() {
-    ids := c.QueryValue("ids")
+    ids := c.ParamValue("id")
     if len(ids) == 0 {
         result(c.Context, nil, errors.New("id is required"))
     }

@@ -63,6 +63,7 @@ func (q *Query) CompileConditions(conditions map[string][]WhereParam) (sqlStr st
                 column := condition.column
                 op := condition.op
                 value := condition.value
+                valueSql := value
                 // value 传 NULL 字符串过来，要把等号(=)换成 IS
                 if value == "NULL" {
                     if op == "=" {
@@ -103,25 +104,27 @@ func (q *Query) CompileConditions(conditions map[string][]WhereParam) (sqlStr st
                     default:
                         logs.Error("Unsupported BETWEEN Type.")
                     }
-                    value = "? AND ?"
+                    valueSql = "? AND ?"
                     Vars = append(Vars, min, max)
 
                 } else if op == "IN" || op == "NOT IN" {
+                    values := make([]any, 0)
                     switch v := value.(type) {
                     case string:
-                        valueArr := strings.Split(v, ",")
-                        Vars = append(Vars, util.CastSliceAny(valueArr)...)
+                        values = util.CastSliceAny(strings.Split(v, ","))
                     case []string:
-                        Vars = append(Vars, util.CastSliceAny(v)...)
+                        values = util.CastSliceAny(v)
                     case []int:
-                        Vars = append(Vars, util.CastSliceAny(v)...)
+                        values = util.CastSliceAny(v)
                     case []int64:
-                        Vars = append(Vars, util.CastSliceAny(v)...)
+                        values = util.CastSliceAny(v)
                     case []float64:
-                        Vars = append(Vars, util.CastSliceAny(v)...)
+                        values = util.CastSliceAny(v)
                     default:
                         logs.Error("Unsupported IN Or NOT IN Type.")
                     }
+                    valueSql = "(" + strings.Join(strings.Split(strings.Repeat("?", len(values)), ""), ", ") + ")"
+                    Vars = append(Vars, values...)
                 } else {
                     for _, table := range tables {
                         if cryptFields, ok := q.cryptFields[table]; ok && q.Dialector.Name() == "mysql" && q.cryptKey != "" && InSlice(column, &cryptFields) {
@@ -142,7 +145,7 @@ func (q *Query) CompileConditions(conditions map[string][]WhereParam) (sqlStr st
                 }
 
                 // Append the statement to the query
-                sqlStr += fmt.Sprintf("%s %s ?", column, op)
+                sqlStr += fmt.Sprintf("%s %s %s", column, op, valueSql)
             }
 
             // lastCondition = conditionStr

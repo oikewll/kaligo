@@ -454,7 +454,7 @@
                         "type": "integer",
                         "default": 1,
                         "description": "账号ID",
-                        "name": "ids",
+                        "name": "id",
                         "in": "path"
                     }
                 ],
