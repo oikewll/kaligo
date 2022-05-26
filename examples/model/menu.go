@@ -42,7 +42,10 @@ func (m Menu) LoadDefault(filters string) ([]Menu, error) {
     menu, err := m.Load(file)
     root := &Menu{Children: menu}
     root = root.Permission(Permission{}.Parse(filters))
-    return root.Children, err
+    if root != nil {
+        return root.Children, err
+    }
+    return []Menu{}, err
 }
 
 func (m Menu) Load(reader io.Reader) ([]Menu, error) {
