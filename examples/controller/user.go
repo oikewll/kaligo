@@ -2,11 +2,11 @@ package controller
 
 import (
     "errors"
+    "examples/model"
+
     "github.com/owner888/kaligo"
     "github.com/owner888/kaligo/logs"
-    "github.com/owner888/kaligo/util"
     "github.com/owner888/kaligo/sessions"
-    "examples/model"
 )
 
 type User struct {
@@ -20,13 +20,13 @@ type User struct {
 // @Success 200 {array} model.User
 // @Router  /user [get]
 func (c *User) List() {
-    page := util.ToInt64(c.FormValue("page", "1"))
-    size := util.ToInt64(c.FormValue("size", "20"))
+    page := c.QueryInt64("page", 1)
+    size := c.QueryInt64("size", 20)
     // 排序字段和排序方式: 只支持 ID、创建时间
-    orderBy   := map[string]string{c.QueryValue("order_name", "id"): c.QueryValue("order_by", "desc")}
-    keywords  := c.FormValue("keywords")
-    status    := c.FormValue("status")
-    createdAt := c.FormValue("created_at")  // 2022-05-06 - 2022-06-08
+    orderBy := map[string]string{c.QueryValue("order_name", "id"): c.QueryValue("order_by", "desc")}
+    keywords := c.FormValue("keywords")
+    status := c.FormValue("status")
+    createdAt := c.FormValue("created_at") // 2022-05-06 - 2022-06-08
 
     data, err := model.User{}.List(page, size, orderBy, keywords, status, createdAt)
     result(c.Context, data, err)
@@ -144,4 +144,3 @@ func (c *User) Delete() {
     data, err := (&model.User{}).Delete(id)
     result(c.Context, data, err)
 }
-

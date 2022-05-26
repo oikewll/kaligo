@@ -40,8 +40,9 @@ type UserOptions struct {
 // User 用户信息
 // @Description User account information
 type User struct {
-    Base
+    // Base
 
+    Id            ID
     UID           string `db:"uid" json:"uid"`                               // 用户 ID
     Groups        []int  `db:"groups" json:"groups"`                         // 用户所属权限组
     Username      string `db:"username" json:"username" validate:"required"` // 用户名
@@ -74,11 +75,11 @@ func (m *User) Table() string { return "user" }
 
 // List 分页获取数据列表
 func (m User) List(currPage, pageSize int64, orderBy map[string]string, keywords, status, createdAt string) (*database.Page[User], error) {
-    page := &database.Page[User] {
+    page := &database.Page[User]{
         Page: currPage,
         Size: pageSize,
     }
-    err := page.SelectPage(DB, []any{"id", "username", "realname", "emali", "status"}, m.Table(), func(q *database.Query, isCount bool) {
+    err := page.SelectPage(DB, []any{"id", "username", "realname", "email", "status"}, m.Table(), func(q *database.Query, isCount bool) {
         if keywords != "" {
             q.WhereOpen()
             q.Where("username", "LIKE", "%"+keywords+"%")
