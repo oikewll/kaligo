@@ -57,13 +57,13 @@ definitions:
         description: 创建时间
         type: string
       creatorId:
-        description: 创建用户 ID
+        description: 自增 ID
         type: integer
       deletedAt:
         description: 删除时间
         type: string
       deletorId:
-        description: 删除用户 ID
+        description: 自增 ID
         type: integer
       email:
         description: 邮箱地址
@@ -105,7 +105,7 @@ definitions:
         description: 更新时间
         type: string
       updatorId:
-        description: 更新用户 ID
+        description: 自增 ID
         type: integer
       username:
         description: 用户名

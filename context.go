@@ -39,6 +39,7 @@ type Context struct {
     fullPath string
 
     // Keys is a key/value pair exclusively for the context of each request.
+    // 用于中间件之间共享数据, 不同请求之间是不共享的, 需要使用 session 或者 redis
     // Keys map[string]any
     Keys sync.Map
 
@@ -534,13 +535,6 @@ func (c *Context) Header(key, value string) {
         return
     }
     c.ResponseWriter.Header().Set(key, value)
-}
-
-// EnableCors 支持 CORS 跨域访问
-func (c *Context) EnableCors() {
-    if c.ResponseWriter != nil {
-        c.ResponseWriter.Header().Set("Access-Control-Allow-Origin", "*")
-    }
 }
 
 // SetSameSite with cookie
