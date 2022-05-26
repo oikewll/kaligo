@@ -4,6 +4,10 @@ func CastSlice[T any, B any](in []T) []B {
     return MapSlice(in, func(t T) B { return any(t).(B) })
 }
 
+func CastSliceAny[T any](in []T) []any {
+    return MapSlice(in, func(t T) any { return any(t) })
+}
+
 func MapSlice[T, U any](from []T, transformer func(T) U) []U {
     ret := make([]U, len(from))
     for i, v := range from {

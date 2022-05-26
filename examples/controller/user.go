@@ -5,6 +5,7 @@ import (
     "examples/model"
 
     "github.com/owner888/kaligo"
+    "github.com/owner888/kaligo/form"
     "github.com/owner888/kaligo/logs"
     "github.com/owner888/kaligo/sessions"
 )
@@ -30,24 +31,34 @@ func (c *User) List() {
 
     data, err := model.User{}.List(page, size, orderBy, keywords, status, createdAt)
 
-    form := model.Table{
+    table := form.Table{
         Name:   "用户列表",
         Path:   "/api/user",
         Method: "GET",
         Csrf:   model.DefaultAuth(c.Context).MakeCsrfToken(),
     }
-    form.SearchComponents = append(form.SearchComponents, model.Component{
+    table.SearchComponents = append(table.SearchComponents, form.Component{
         Title: "关键字",
         Placeholder: "账号/昵称",
         Field: "keywords",
         Type:  "input",
     })
-    // form.SearchComponents = append(form.SearchComponents, model.Component{
+    // table.SearchComponents = append(form.SearchComponents, kaligo.Component{
     //     Title: "是否启用",
     //     Placeholder: "是否启用",
     //     Field: "keywords",
     //     Type:  "select",
     // })
+    table.TableGlobalOperate = form.TableGlobalOperate{
+        CreateButton:  form.TableButton{Name:"添加", Path:"/api/user", Method:"POST", Form:"/api/user/createform"},
+        DeleteButton:  form.TableButton{Name:"删除", Path:"/api/user/:id", Method:"DELETE"},
+        EnableButton:  form.TableButton{Name:"激活", Path:"/api/user/status/:id", Method:"PUT"},
+        DisableButton: form.TableButton{Name:"禁用", Path:"/api/user/status/:id", Method:"DELETE"},
+        RefreshButton: form.TableButton{Name:"刷新", Path:"/api/user/refresh", Method:"GET"},
+    }
+    table.TableListOperate = form.TableListOperate{
+        UpdateButton:  form.TableButton{Name:"修改", Path:"/api/user/:id", Method:"PUT", Form:"/api/user/updateform"},
+    }
 
     result(c.Context, data, err)
 }
@@ -113,53 +124,53 @@ func (c *User) Create() {
 
 // @Summary CreateForm 用户添加表单
 // @Tags    User
-// @Success 200 {object} model.Form
+// @Success 200 {object} form.Form
 // @Router  /user/createform [GET]
 func (c *User) CreateForm() {
-    form := model.Form{
+    table := form.Form{
         Name:   "用户添加",
         Path:   "/api/user",
         Method: "POST",
         Csrf:   model.DefaultAuth(c.Context).MakeCsrfToken(),
     }
-    form.Components = append(form.Components, model.Component{
+    table.Components = append(table.Components, form.Component{
         Title: "账号",
         Field: "username",
         Type:  "text",
-        Validate: model.Validate{Required: true},
+        Validate: form.Validate{Required: true, Message: "请输入账号", Trigger: "change"},
     })
-    form.Components = append(form.Components, model.Component{
+    table.Components = append(table.Components, form.Component{
         Title: "密码",
         Field: "password",
         Type:  "password",
-        Validate: model.Validate{Required: true},
+        Validate: form.Validate{Required: true, Message: "请输入密码", Trigger: "change"},
     })
-    form.Components = append(form.Components, model.Component{
+    table.Components = append(table.Components, form.Component{
         Title: "姓名",
         Field: "realname",
         Type:  "text",
-        Validate: model.Validate{Required: true},
+        Validate: form.Validate{Required: true, Message: "请输入姓名", Trigger: "change"},
     })
-    form.Components = append(form.Components, model.Component{
+    table.Components = append(table.Components, form.Component{
         Title: "邮箱",
         Field: "email",
         Type:  "text",
-        Validate: model.Validate{Required: true, Type: "email"},
+        Validate: form.Validate{Required: true, Message: "请输入邮箱", Trigger: "change", Type: "email"},
     })
 
-    result(c.Context, form, nil)
+    result(c.Context, table, nil)
 }
 
 // @Summary Delete 删除单条或多条数据
 // @Tags    User
-// @Param   ids       path      integer false  "账号ID"     default(1)
+// @Param   id       path      integer false  "账号ID"     default(1)
 // @Success 200 {integer} integer
 // @Router  /user/{id} [DELETE]
 func (c *User) Delete() {
-    ids := c.QueryValue("ids")
-    if len(ids) == 0 {
+    id := c.ParamValue("id")
+    if len(id) == 0 {
         result(c.Context, nil, errors.New("id is required"))
     }
-    data, err := (&model.User{}).Delete(ids)
+    data, err := (&model.User{}).Delete(id)
     result(c.Context, data, err)
 }

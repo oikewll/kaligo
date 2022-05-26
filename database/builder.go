@@ -3,6 +3,8 @@ package database
 import (
     "fmt"
     "strings"
+
+    "github.com/owner888/kaligo/util"
 )
 
 // Builder is the struct for MySQL DATE type
@@ -59,8 +61,9 @@ func (q *Query) CompileConditions(conditions map[string][]WhereParam) (sqlStr st
                 // 'name', '=', 'John'
                 // 'age', 'BETWEEN', '10,20'
                 column := condition.column
-                op     := condition.op
-                value  := condition.value
+                op := condition.op
+                value := condition.value
+                valueSql := value
                 // value 传 NULL 字符串过来，要把等号(=)换成 IS
                 if value == "NULL" {
                     if op == "=" {
@@ -75,12 +78,12 @@ func (q *Query) CompileConditions(conditions map[string][]WhereParam) (sqlStr st
                 // Database operators are always uppercase
                 op = strings.ToUpper(op)
 
-                var min, max any    
+                var min, max any
 
                 //if (op == "BETWEEN" || op == "NOT BETWEEN") && is_array(value) {
                 if op == "BETWEEN" || op == "NOT BETWEEN" {
                     // BETWEEN always has exactly two arguments
-                    switch v := value.(type) {                    
+                    switch v := value.(type) {
                     case string:
                         valueArr := strings.Split(v, ",")
                         // trim一下兼容有空格写法：10,20 和 10, 20 都兼容
@@ -101,31 +104,27 @@ func (q *Query) CompileConditions(conditions map[string][]WhereParam) (sqlStr st
                     default:
                         logs.Error("Unsupported BETWEEN Type.")
                     }
-                    value = "? AND ?"
+                    valueSql = "? AND ?"
                     Vars = append(Vars, min, max)
 
                 } else if op == "IN" || op == "NOT IN" {
-                    switch v := value.(type) {                    
+                    values := make([]any, 0)
+                    switch v := value.(type) {
                     case string:
-                        valueArr := strings.Split(v, ",")
-                        min = strings.TrimSpace(valueArr[0])
-                        max = strings.TrimSpace(valueArr[1])
+                        values = util.CastSliceAny(strings.Split(v, ","))
                     case []string:
-                        min = strings.TrimSpace(v[0])
-                        max = strings.TrimSpace(v[1])
+                        values = util.CastSliceAny(v)
                     case []int:
-                        min = v[0]
-                        max = v[1]
+                        values = util.CastSliceAny(v)
                     case []int64:
-                        min = v[0]
-                        max = v[1]
+                        values = util.CastSliceAny(v)
                     case []float64:
-                        min = v[0]
-                        max = v[1]
+                        values = util.CastSliceAny(v)
                     default:
                         logs.Error("Unsupported IN Or NOT IN Type.")
                     }
-                    Vars = append(Vars, min, max)
+                    valueSql = "(" + strings.Join(strings.Split(strings.Repeat("?", len(values)), ""), ", ") + ")"
+                    Vars = append(Vars, values...)
                 } else {
                     for _, table := range tables {
                         if cryptFields, ok := q.cryptFields[table]; ok && q.Dialector.Name() == "mysql" && q.cryptKey != "" && InSlice(column, &cryptFields) {
@@ -146,7 +145,7 @@ func (q *Query) CompileConditions(conditions map[string][]WhereParam) (sqlStr st
                 }
 
                 // Append the statement to the query
-                sqlStr += fmt.Sprintf("%s %s ?", column, op)
+                sqlStr += fmt.Sprintf("%s %s %s", column, op, valueSql)
             }
 
             // lastCondition = conditionStr

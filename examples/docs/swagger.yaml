@@ -335,7 +335,7 @@ paths:
       - default: 1
         description: 账号ID
         in: path
-        name: ids
+        name: id
         type: integer
       responses:
         "200":
