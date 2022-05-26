@@ -172,6 +172,7 @@ func (a *Mux) AddRoute(pattern string, m map[string]string, c Interface) {
 // type Handler interface {
 //     ServeHTTP(ResponseWriter, *Request)
 // }
+
 func (a *Mux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
     // 不想走这里的时候才需要使用注入
     // if a.Handler != nil { // 有注入 Handler 时只使用注入的 Handler，不走默认逻辑
@@ -213,58 +214,71 @@ func (a *Mux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    var matchRouted bool
+    var mactchRoute *Route
+    var params Params
 
-    // find a matching Route
+    // 优先精准匹配
     for _, route := range a.routes {
-        // check if Route pattern matches url
-        if !route.Regex.MatchString(requestPath) {
-            continue
+        if route.Regex.String() == requestPath {
+            mactchRoute = route
+            break
         }
+    }
 
-        // get submatches (params)
-        matches := route.Regex.FindStringSubmatch(requestPath)
-
-        // double check that the Route matches the URL pattern.
-        if len(matches[0]) != len(requestPath) {
-            continue
-        }
-
-        params := make(Params, len(route.Params))
-
-        if len(route.Params) > 0 {
-            // add url parameters to the query param map
-            values := r.URL.Query()
-            for i, match := range matches[1:] {
-                values.Add(route.Params[i], match)
-                params[i] = Param[string]{route.Params[i], match}
+    // 精准匹配未找到则正则匹配
+    if mactchRoute == nil {
+        // find a matching Route
+        for _, route := range a.routes {
+            // check if Route pattern matches url
+            if !route.Regex.MatchString(requestPath) {
+                continue
             }
 
-            // reassemble query params and add to RawQuery
-            // r.URL.RawQuery = url.Values(values).Encode() + "&" + r.URL.RawQuery
-            // r.URL.RawQuery = url.Values(values).Encode()
-        }
+            // get submatches (params)
+            matches := route.Regex.FindStringSubmatch(requestPath)
 
+            // double check that the Route matches the URL pattern.
+            if len(matches[0]) != len(requestPath) {
+                continue
+            }
+
+            mactchRoute = route
+            params = make(Params, len(route.Params))
+
+            if len(route.Params) > 0 {
+                // add url parameters to the query param map
+                values := r.URL.Query()
+                for i, match := range matches[1:] {
+                    values.Add(route.Params[i], match)
+                    params[i] = Param[string]{route.Params[i], match}
+                }
+
+                // reassemble query params and add to RawQuery
+                // r.URL.RawQuery = url.Values(values).Encode() + "&" + r.URL.RawQuery
+                // r.URL.RawQuery = url.Values(values).Encode()
+            }
+        }
+    }
+
+    if mactchRoute != nil {
         var ok bool
         var m string
         // Request callback
-        if m, ok = route.Methods[r.Method]; !ok {
+        if m, ok = mactchRoute.Methods[r.Method]; !ok {
             http.NotFound(w, r)
 
             // 错误数 +1
             atomic.AddUint32(&a.notFoundCount, 1)
             return
         }
-
-        a.controllerMethodCall(route.ControllerType, m, w, r, params)
-        matchRouted = true
+        a.controllerMethodCall(mactchRoute.ControllerType, m, w, r, params)
     }
 
     // 相应数 +1
     atomic.AddUint32(&a.responseCount, 1)
 
     // if no matches to url, throw a not found exception
-    if matchRouted == false {
+    if mactchRoute == nil {
         http.NotFound(w, r)
     }
 }
