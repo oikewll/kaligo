@@ -16,6 +16,7 @@ type Validate struct {
 // @Description 表单组件属性 Property
 type Props struct {
     Type string     `json:"type"`   // 类型: text、password
+    Range bool      `json:"range"`  // 日期范围
 }
 
 // @Description checkbox、select、radio 选项
