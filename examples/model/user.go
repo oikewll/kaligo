@@ -113,12 +113,14 @@ func (m *User) Create(u User) (ID, error) {
         "realname",
         "groups",
         "email",
+        "status",
     }).Values([]any{
         u.Username, 
         password,
         u.Realname,
         u.Groups,
         u.Email,
+        u.Status,
     }).Execute()
     return ID(q.LastInsertId), err
 }

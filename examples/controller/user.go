@@ -92,7 +92,7 @@ func (c *User) Detail() {
 // @Param   realname  formData  string  true   "姓名"       default(test)
 // @Param   groups    formData  []int   true   "所属组IDs"  collectionFormat(mutil) default(1, 2) Enums(1, 2, 3)
 // @Param   email     formData  string  false  "邮箱"       default(test@gmail.com)
-// @Param   status    formData  integer false  "状态"       default(1)
+// @Param   status    formData  integer false  "状态"       default(1) Enums(-1, 0, 1)
 // @Success 200 {object} []model.User
 // @Router  /user/{id} [PUT]
 func (c *User) Update() {
@@ -103,7 +103,7 @@ func (c *User) Update() {
     user.Realname = c.FormValue("realname")
     user.Groups   = c.FormValue("groups")
     user.Email    = c.FormValue("email")
-    user.Status   = c.FormInt("Status")
+    user.Status   = c.FormInt("status")
 
     data, err := (&model.User{}).Update(user)
     result(c.Context, data, err)
@@ -116,7 +116,7 @@ func (c *User) Update() {
 // @Param   realname  formData  string  true   "姓名"       default(test)
 // @Param   groups    formData  []int   true   "所属组IDs"  collectionFormat(mutil) default(1) Enums(1, 2, 3)
 // @Param   email     formData  string  false  "邮箱"       default(test@gmail.com)
-// @Param   status    formData  integer false  "状态"       default(1)
+// @Param   status    formData  integer false  "状态"       default(1) Enums(-1, 0, 1)
 // @Success 200 {object} model.User
 // @Router  /user [POST]
 func (c *User) Create() {
@@ -126,6 +126,7 @@ func (c *User) Create() {
     user.Realname = c.FormValue("realname")
     user.Groups   = c.FormValue("groups")
     user.Email    = c.FormValue("email")
+    user.Status   = c.FormInt("status")
     data, err := (&model.User{}).Create(user)
     result(c.Context, data, err)
 }

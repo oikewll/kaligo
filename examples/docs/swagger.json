@@ -312,6 +312,11 @@
                         "in": "formData"
                     },
                     {
+                        "enum": [
+                            -1,
+                            0,
+                            1
+                        ],
                         "type": "integer",
                         "default": 1,
                         "description": "状态",
@@ -440,6 +445,11 @@
                         "in": "formData"
                     },
                     {
+                        "enum": [
+                            -1,
+                            0,
+                            1
+                        ],
                         "type": "integer",
                         "default": 1,
                         "description": "状态",
