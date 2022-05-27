@@ -222,15 +222,18 @@ paths:
         name: realname
         required: true
         type: string
-      - description: 所属组IDs
-        enum:
-        - "1"
-        - "2"
-        - "3"
+      - default: 1
+        description: 所属组IDs
         in: formData
+        items:
+          enum:
+          - 1
+          - 2
+          - 3
+          type: integer
         name: groups
         required: true
-        type: string
+        type: array
       - default: test@gmail.com
         description: 邮箱
         in: formData
@@ -308,14 +311,16 @@ paths:
         required: true
         type: string
       - description: 所属组IDs
-        enum:
-        - "1"
-        - "2"
-        - "3"
         in: formData
+        items:
+          enum:
+          - 1
+          - 2
+          - 3
+          type: integer
         name: groups
         required: true
-        type: string
+        type: array
       - default: test@gmail.com
         description: 邮箱
         in: formData

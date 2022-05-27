@@ -18,6 +18,13 @@ type Props struct {
     Type string     `json:"type"`   // 类型: text、password
 }
 
+// @Description checkbox、select、radio 选项
+type Option struct {
+    Value    any     `json:"value"`      // 选项值
+    Label    string  `json:"label"`      // 标签
+    Disabled bool    `json:"disabled"`   // 禁用
+}
+
 // @Description 表单组件
 // http://form-create.com/v2/element-ui/components/input.html
 type Component struct {
@@ -25,7 +32,8 @@ type Component struct {
     Field string        `json:"field"`          // 字段
     Title string        `json:"title"`          // 标题
     Props Props         `json:"props"`          // 属性
-    Value string        `json:"value"`          // 默认值
+    Value any           `json:"value"`          // 默认值
+    Options []Option    `json:"options"`        // 选项
     Validate Validate   `json:"validate"`       // 验证: required、numeric ..., 详细看本页最下面
     Tips  string        `json:"tips"`           // 提示信息
     Placeholder string  `json:"placeholder"`    // 输入框占位文本
@@ -63,7 +71,7 @@ type TableGlobalOperate struct {
 type TableListOperate struct {
     UpdateButton     TableButton     `json:"update_button"`    // 修改按钮
     ResetMFAButton   TableButton     `json:"reset_button"`     // 重置MFA
-    TerminateButton TableButton     `json:"terminate_button"`  // 终止session
+    TerminateButton TableButton      `json:"terminate_button"`  // 终止session
 }
 
 // @Description Table 表格

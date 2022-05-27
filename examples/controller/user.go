@@ -84,7 +84,7 @@ func (c *User) Detail() {
 // @Param   username  formData  string  true   "账号"       default(test)
 // @Param   password  formData  string  true   "密码"       default(test)
 // @Param   realname  formData  string  true   "姓名"       default(test)
-// @Param   groups    formData  string  true   "所属组IDs"  Enums(1, 2, 3)
+// @Param   groups    formData  []int   true   "所属组IDs"  collectionFormat(mutil) default(1, 2) Enums(1, 2, 3)
 // @Param   email     formData  string  false  "邮箱"       default(test@gmail.com)
 // @Param   status    formData  integer false  "状态"       default(1)
 // @Success 200 {object} []model.User
@@ -107,7 +107,7 @@ func (c *User) Update() {
 // @Param   username  formData  string  true   "账号"       default(test)
 // @Param   password  formData  string  true   "密码"       default(test)
 // @Param   realname  formData  string  true   "姓名"       default(test)
-// @Param   groups    formData  string  true   "所属组IDs"  Enums(1, 2, 3)
+// @Param   groups    formData  []int   true   "所属组IDs"  collectionFormat(mutil) default(1) Enums(1, 2, 3)
 // @Param   email     formData  string  false  "邮箱"       default(test@gmail.com)
 // @Param   status    formData  integer false  "状态"       default(1)
 // @Success 200 {object} model.User
@@ -125,6 +125,7 @@ func (c *User) Create() {
 
 // @Summary CreateForm 用户添加表单
 // @Tags    User
+// 不返回 Success, 因为 Swagger 无法解析包外的, 如果把 Form 放 model, 那 page.go 又无法使用, 两难
 // @Router  /user/createform [GET]
 func (c *User) CreateForm() {
     table := form.Form{
@@ -134,27 +135,39 @@ func (c *User) CreateForm() {
         Csrf:   model.DefaultAuth(c.Context).MakeCsrfToken(),
     }
     table.Components = append(table.Components, form.Component{
-        Title: "账号",
+        Type:  "input",
         Field: "username",
-        Type:  "text",
+        Title: "账号",
         Validate: form.Validate{Required: true, Message: "请输入账号", Trigger: "change"},
     })
     table.Components = append(table.Components, form.Component{
-        Title: "密码",
+        Type:  "checkbox",
+        Field: "groups",
+        Title: "用户组",
+        Value: []string{"1"},
+        Options: []form.Option{
+            {Value:"1", Label:"一", Disabled: false},
+            {Value:"2", Label:"二", Disabled: false},
+            {Value:"3", Label:"三", Disabled: false},
+        },
+        Props: form.Props{Type: "checkbox"},
+    })
+    table.Components = append(table.Components, form.Component{
+        Type:  "input",
         Field: "password",
-        Type:  "password",
+        Title: "密码",
         Validate: form.Validate{Required: true, Message: "请输入密码", Trigger: "change"},
     })
     table.Components = append(table.Components, form.Component{
-        Title: "姓名",
+        Type:  "input",
         Field: "realname",
-        Type:  "text",
+        Title: "姓名",
         Validate: form.Validate{Required: true, Message: "请输入姓名", Trigger: "change"},
     })
     table.Components = append(table.Components, form.Component{
-        Title: "邮箱",
+        Type:  "input",
         Field: "email",
-        Type:  "text",
+        Title: "邮箱",
         Validate: form.Validate{Required: true, Message: "请输入邮箱", Trigger: "change", Type: "email"},
     })
 
@@ -173,31 +186,44 @@ func (c *User) UpdateForm() {
         Csrf:   model.DefaultAuth(c.Context).MakeCsrfToken(),
     }
     table.Components = append(table.Components, form.Component{
-        Title: "账号",
+        Type:  "input",
         Field: "username",
+        Title: "账号",
         Value: "username",
-        Type:  "text",
         Validate: form.Validate{Required: true, Message: "请输入账号", Trigger: "change"},
     })
     table.Components = append(table.Components, form.Component{
-        Title: "密码",
+        Type:  "checkbox",
+        Field: "groups",
+        Title: "用户组",
+        Value: []string{"1", "2"},
+        Options: []form.Option{
+            {Value:"1", Label:"一", Disabled: false},
+            {Value:"2", Label:"二", Disabled: false},
+            {Value:"3", Label:"三", Disabled: false},
+        },
+        Props: form.Props{Type: "checkbox"},
+    })
+    table.Components = append(table.Components, form.Component{
+        Type:  "input",
         Field: "password",
+        Title: "密码",
         Value: "password",
-        Type:  "password",
+        Props: form.Props{Type: "password"},
         Validate: form.Validate{Required: true, Message: "请输入密码", Trigger: "change"},
     })
     table.Components = append(table.Components, form.Component{
-        Title: "姓名",
+        Type:  "input",
         Field: "realname",
+        Title: "姓名",
         Value: "realname",
-        Type:  "text",
         Validate: form.Validate{Required: true, Message: "请输入姓名", Trigger: "change"},
     })
     table.Components = append(table.Components, form.Component{
-        Title: "邮箱",
+        Type:  "input",
         Field: "email",
+        Title: "邮箱",
         Value: "email",
-        Type:  "text",
         Validate: form.Validate{Required: true, Message: "请输入邮箱", Trigger: "change", Type: "email"},
     })
 
