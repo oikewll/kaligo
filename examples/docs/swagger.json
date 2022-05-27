@@ -365,20 +365,17 @@
                 "parameters": [
                     {
                         "type": "integer",
-                        "default": 1,
-                        "description": "账号ID",
+                        "description": "UserID",
                         "name": "id",
-                        "in": "path"
+                        "in": "path",
+                        "required": true
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/model.User"
                         }
                     }
                 }

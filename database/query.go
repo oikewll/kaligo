@@ -213,6 +213,8 @@ func (q *Query) Execute() (*Query, error) {
     // Execute the query
     q.queryCount++
 
+    logs.Debug(sqlStr)
+
     // 生成预处理 SQL
     var stmt *sql.Stmt
     stmt, err = q.StdDB.Prepare(sqlStr)

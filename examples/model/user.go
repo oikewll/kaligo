@@ -99,7 +99,7 @@ func (m User) List(currPage, pageSize int64, orderBy map[string]string, keywords
 }
 
 // Detail 获取单条数据详情
-func (m *User) Detail(id string) (u User, err error) {
+func (m *User) Detail(id int) (u User, err error) {
     _, err = DB.Select("*").From(m.Table()).Where("id", "=", id).Scan(&u).Execute()
     return
 }
