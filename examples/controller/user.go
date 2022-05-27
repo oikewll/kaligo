@@ -38,17 +38,22 @@ func (c *User) List() {
         Csrf:   model.DefaultAuth(c.Context).MakeCsrfToken(),
     }
     table.SearchComponents = append(table.SearchComponents, form.Component{
+        Type:  "input",
+        Field: "keywords",
         Title: "关键字",
         Placeholder: "账号/昵称",
-        Field: "keywords",
-        Type:  "input",
     })
-    // table.SearchComponents = append(table.SearchComponents, form.Component{
-    //     Title: "是否启用",
-    //     Placeholder: "是否启用",
-    //     Field: "status",
-    //     Type:  "select",
-    // })
+    table.SearchComponents = append(table.SearchComponents, form.Component{
+        Type:  "select",
+        Field: "status",
+        Title: "是否启用",
+        Value: []string{"0","1"},
+        Options: []form.Option{
+            {Value:"0", Label:"禁用"},
+            {Value:"1", Label:"启用"},
+        },
+        Placeholder: "是否启用",
+    })
     table.TableGlobalOperate = form.TableGlobalOperate{
         CreateButton:  form.TableButton{Name:"添加", Path:"/api/user", Method:"POST", Form:"/api/user/createform"},
         DeleteButton:  form.TableButton{Name:"删除", Path:"/api/user/:id", Method:"DELETE"},
@@ -92,7 +97,7 @@ func (c *User) Detail() {
 // @Param   realname  formData  string  true   "姓名"       default(test)
 // @Param   groups    formData  []int   true   "所属组IDs"  collectionFormat(mutil) default(1, 2) Enums(1, 2, 3)
 // @Param   email     formData  string  false  "邮箱"       default(test@gmail.com)
-// @Param   status    formData  integer false  "状态"       default(1) Enums(-1, 0, 1)
+// @Param   status    formData  integer false  "状态"       default(1) Enums(0, 1)
 // @Success 200 {object} []model.User
 // @Router  /user/{id} [PUT]
 func (c *User) Update() {
@@ -116,7 +121,7 @@ func (c *User) Update() {
 // @Param   realname  formData  string  true   "姓名"       default(test)
 // @Param   groups    formData  []int   true   "所属组IDs"  collectionFormat(mutil) default(1) Enums(1, 2, 3)
 // @Param   email     formData  string  false  "邮箱"       default(test@gmail.com)
-// @Param   status    formData  integer false  "状态"       default(1) Enums(-1, 0, 1)
+// @Param   status    formData  integer false  "状态"       default(1) Enums(0, 1)
 // @Success 200 {object} model.User
 // @Router  /user [POST]
 func (c *User) Create() {

@@ -27,6 +27,7 @@ type Menu struct {
 // 菜单显示信息
 type Meta struct {
     Name string `json:"name" xml:"name,attr"`
+    Lang string `json:"lang" xml:"lang,attr"`
     Icon string `json:"icon" xml:"icon,attr"`
 }
 

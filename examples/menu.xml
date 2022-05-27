@@ -1,13 +1,12 @@
 <xml>
     <!-- //这里的子菜单为隐性项目 -->
     <menu name='常用' icon='fa fa-th-list'>    
-        <menu name='内容管理' icon='fa fa-file'>
-            <menu name='内容列表' path='/content' method='GET' show='1' reload='1' top='1' />
-            <menu name='内容添加' path='/content' method='POST' />
-            <menu name='内容修改' path='/content/:id' method='PUT' />
-            <menu name='内容删除' path='/content/:id' method='DELETE' />
-            <menu name='内容详情' path='/content/:id' method='GET' />
-            <!-- <menu name='{lang.menu_content_detail}' path='content' method='GET' /> -->
+        <menu name='内容管理' lang='menu.content_manage' icon='fa fa-file'>
+            <menu name='内容列表' lang='menu.content_list' path='/content' method='GET' show='1' reload='1' top='1' />
+            <menu name='内容添加' lang='menu.content_create' path='/content' method='POST' />
+            <menu name='内容修改' lang='menu.content_update' path='/content/:id' method='PUT' />
+            <menu name='内容删除' lang='menu.content_delete' path='/content/:id' method='DELETE' />
+            <menu name='内容详情' lang='menu.content_detail' path='/content/:id' method='GET' />
         </menu>
         <menu name='会员管理' icon='fa fa-users'>
             <menu name='会员列表' path='/member' method='GET' show='1' reload='1' />
