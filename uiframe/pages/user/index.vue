@@ -120,7 +120,7 @@
                 ref="formSubmit"
                 :model="formData"
                 :rules="formRules"
-                label-width="60px"
+                label-width="80px"
             >
                 <el-form-item
                     :label="item.title"
@@ -141,8 +141,7 @@
                             <el-checkbox 
                                 v-for="(option, _idx) in item.options" 
                                 :key="_idx"
-                                :label="option.label" 
-                                :value="option.value"
+                                :label="option.value" 
                                 :disabled="option.disabled"
                             >
                             </el-checkbox>
@@ -175,9 +174,7 @@ export default {
             getFormData: {
                 name: "",
             },
-            formData: {
-                groups: []
-            },
+            formData: {},
             formRules: {
                 username: [
                     {
@@ -207,22 +204,38 @@ export default {
             const { data } = await this.$api.user.getForm();
             this.getFormData = data.data;
 
-            let formRules = {};
+            let formRules = {}; // 校验规则
+            let formData = {};  // 提交表单
             data.data.components.forEach((item) => {
                 formRules[item.field] = [
-                    Object.assign({ trigger: "change" }, item.validate),
+                    Object.assign({}, item.validate),
                 ];
+                formData[item.field] = item.value;
             });
             this.formRules = formRules;
+            this.formData = formData;
+
             this.dialogVisible = true;
         },
+        // 编辑状态是，先渲染动态列表的表单，在根据表单的内容拼接表单数据，两步
         async handleEdit(id){
             this.editMod = true;
             const {data: retForm} = await this.$api.user.getForm(id);
-            console.log(retForm.data);
 
             const {data: retUser} = await this.$api.user.get(id);
-            console.log(retUser.data);
+            retUser.data.groups = retUser.data.groups.split(',');
+
+            this.getFormData = retForm.data;
+            let formRules = {}; // 校验规则
+            retForm.data.components.forEach((item) => {
+                formRules[item.field] = [
+                    Object.assign({}, item.validate),
+                ];
+            });
+            this.formRules = formRules;
+            this.formData = retUser.data;
+            
+            this.dialogVisible = true;
         },
         async handleDelete(idx, row){
             const {id} = row;
@@ -232,20 +245,28 @@ export default {
                 this.initList();
             }
         },
+        // 新增和编辑都在这里，动态获取方法和path
         async onSubmitForm() {
             this.formLoading = true;
             this.$refs.formSubmit.validate(async (valid) => {
+                // #TODO 验证规则还不完善，要去掉valid
                 if (!valid) {
-                    const { getFormData, formData } = this;
-                    const rs = await this.$axios[
-                        getFormData["method"].toLocaleLowerCase()
-                    ](getFormData["path"], formData);
-                    if (rs) {
+                    const { getFormData, formData, editMod } = this;
+
+                    let ret = null;
+                    // formData.groups = formData.groups.join(",");
+                    if(editMod){
+                        ret = await this.$api.user.put(formData.id, formData);
+                    } else{
+                        ret = await this.$axios[getFormData["method"].toLocaleLowerCase()](getFormData["path"], formData);
+                    }
+                    if (ret) {
                         this.$message.success("Successfully");
                         // this.$router.push("/");
                     }
                 }
                 this.formLoading = false;
+                this.dialogVisible = false;
             });
         },
     },
