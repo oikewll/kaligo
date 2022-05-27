@@ -16,7 +16,7 @@ type Update struct {
 }
 
 // Set the values to update with an associative array
-func (q *Query) Set(pairs map[string]string) *Query {
+func (q *Query) Set(pairs map[string]any) *Query {
     for column, value := range pairs {
         q.Value(column, value)
     }
@@ -24,7 +24,7 @@ func (q *Query) Set(pairs map[string]string) *Query {
 }
 
 // Value Set the value of a single column.
-func (q *Query) Value(column string, value string) *Query {
+func (q *Query) Value(column string, value any) *Query {
     q.U.sets = append(q.U.sets, set{column: column, value: value})
     return q
 }

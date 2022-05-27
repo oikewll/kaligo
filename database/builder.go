@@ -63,7 +63,7 @@ func (q *Query) CompileConditions(conditions map[string][]WhereParam) (sqlStr st
                 column := condition.column
                 op := condition.op
                 value := condition.value
-                valueSql := value
+                valueSql := "?"
                 // value 传 NULL 字符串过来，要把等号(=)换成 IS
                 if value == "NULL" {
                     if op == "=" {

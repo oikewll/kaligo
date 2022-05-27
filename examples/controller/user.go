@@ -65,17 +65,23 @@ func (c *User) List() {
 }
 
 // @Summary Detail 用户信息
-// @Tags    User
-// @Param   id        path      integer false  "账号ID"     default(1)
+// @tags    User
+// @Param   id       path integer true "UserID"
+// @Success 200 {object} model.User
 // @Router  /user/{id} [GET]
-// @Success 200 {object} map[string]string
 func (c *User) Detail() {
+    id := c.ParamInt("id")
+    if id == 0 {
+        result(c.Context, nil, errors.New("id is required"))
+    }
+    data, err := (&model.User{}).Detail(id)
+    result(c.Context, data, err)
+
     session := sessions.Default(c.Context)
     uid := session.Get("UID")
 
     logs.Debug("UID === ", uid)
-
-    c.JSON(200, kaligo.H{"UID": uid})
+    // c.JSON(200, kaligo.H{"UID": uid})
 }
 
 // @Summary Update 更新单条或多条数据
@@ -97,6 +103,7 @@ func (c *User) Update() {
     user.Realname = c.FormValue("realname")
     user.Groups   = c.FormValue("groups")
     user.Email    = c.FormValue("email")
+    user.Status   = c.FormInt("Status")
 
     data, err := (&model.User{}).Update(user)
     result(c.Context, data, err)
@@ -151,6 +158,7 @@ func (c *User) CreateForm() {
             {Value:"3", Label:"三", Disabled: false},
         },
         Props: form.Props{Type: "checkbox"},
+        Validate: form.Validate{Required: true, Message: "请选择用户组", Trigger: "change", Type: "array"},
     })
     table.Components = append(table.Components, form.Component{
         Type:  "input",
@@ -203,6 +211,7 @@ func (c *User) UpdateForm() {
             {Value:"3", Label:"三", Disabled: false},
         },
         Props: form.Props{Type: "checkbox"},
+        Validate: form.Validate{Required: true, Message: "请选择用户组", Trigger: "change", Type: "array"},
     })
     table.Components = append(table.Components, form.Component{
         Type:  "input",

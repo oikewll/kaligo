@@ -99,7 +99,7 @@ func (m User) List(currPage, pageSize int64, orderBy map[string]string, keywords
 }
 
 // Detail 获取单条数据详情
-func (m *User) Detail(id string) (u User, err error) {
+func (m *User) Detail(id int) (u User, err error) {
     _, err = DB.Select("*").From(m.Table()).Where("id", "=", id).Scan(&u).Execute()
     return
 }
@@ -127,12 +127,13 @@ func (m *User) Create(u User) (ID, error) {
 func (m *User) Update(u User) (ID, error) {
     password, err := util.PasswordHash(u.Password)
 
-    q, err := DB.Update(m.Table()).Set(map[string]string{
+    q, err := DB.Update(m.Table()).Set(map[string]any{
         "username": u.Username,
         "password": password,
         "realname": u.Realname,
         "groups":   u.Groups,
         "email":    u.Email,
+        "status":   u.Status,
     }).Where("id", "=", u.Id).Execute()
     return ID(q.RowsAffected), err
 }

@@ -35,6 +35,7 @@ function build() {
 
     swag init
     rm -f docs/docs.go
+    rm -f docs/swagger.yaml
 }
 
 case "$1" in
