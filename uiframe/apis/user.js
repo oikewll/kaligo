@@ -23,7 +23,10 @@ export default (app) => ({
     getList: ({ page = 1, size = 20 } = {})=>{
         return app.$axios.get('/api/user', { params: { page, size } })
     },
-    getForm: () =>{
+    getForm: (id = '') =>{
+        if (!!id){
+            return app.$axios.get(`/api/user/updateform/${id}`);
+        }
         return app.$axios.get("/api/user/createform");
     },
     // 根据id获取用户信息

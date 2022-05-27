@@ -128,12 +128,26 @@
                     :key="idx"
                     :prop="item.field"
                 >
-                    <el-input
-                        v-model="formData[item.field]"
-                        :type="item.type"
-                        @keyup.enter.native="onSubmitForm"
-                        :placeholder="item.placeholder"
-                    ></el-input>
+                    <template v-if="item.type === 'input'">
+                        <el-input
+                            v-model="formData[item.field]"
+                            :type="item.type"
+                            @keyup.enter.native="onSubmitForm"
+                            :placeholder="item.placeholder"
+                        ></el-input>
+                    </template>
+                    <template v-else-if="item.type === 'checkbox'">
+                        <el-checkbox-group v-model="formData[item.field]">
+                            <el-checkbox 
+                                v-for="(option, _idx) in item.options" 
+                                :key="_idx"
+                                :label="option.label" 
+                                :value="option.value"
+                                :disabled="option.disabled"
+                            >
+                            </el-checkbox>
+                        </el-checkbox-group>
+                    </template>
                 </el-form-item>
             </el-form>
             <div slot="footer" class="dialog-footer">
@@ -161,7 +175,9 @@ export default {
             getFormData: {
                 name: "",
             },
-            formData: {},
+            formData: {
+                groups: []
+            },
             formRules: {
                 username: [
                     {
@@ -202,8 +218,11 @@ export default {
         },
         async handleEdit(id){
             this.editMod = true;
-            const {data} = await this.$api.user.get(id);
-            console.log(data.data);
+            const {data: retForm} = await this.$api.user.getForm(id);
+            console.log(retForm.data);
+
+            const {data: retUser} = await this.$api.user.get(id);
+            console.log(retUser.data);
         },
         async handleDelete(idx, row){
             const {id} = row;
