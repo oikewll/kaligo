@@ -127,12 +127,13 @@ func (m *User) Create(u User) (ID, error) {
 func (m *User) Update(u User) (ID, error) {
     password, err := util.PasswordHash(u.Password)
 
-    q, err := DB.Update(m.Table()).Set(map[string]string{
+    q, err := DB.Update(m.Table()).Set(map[string]any{
         "username": u.Username,
         "password": password,
         "realname": u.Realname,
         "groups":   u.Groups,
         "email":    u.Email,
+        "status":   u.Status,
     }).Where("id", "=", u.Id).Execute()
     return ID(q.RowsAffected), err
 }

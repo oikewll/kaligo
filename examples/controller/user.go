@@ -103,6 +103,7 @@ func (c *User) Update() {
     user.Realname = c.FormValue("realname")
     user.Groups   = c.FormValue("groups")
     user.Email    = c.FormValue("email")
+    user.Status   = c.FormInt("Status")
 
     data, err := (&model.User{}).Update(user)
     result(c.Context, data, err)
