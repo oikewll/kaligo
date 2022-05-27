@@ -33,11 +33,6 @@ func ErrorHandler() kaligo.HandlerFunc {
                     "data": err.Error(),
                 })
             }
-            // 不需要了,因为是最后一个了
-            // return
         }
-
-        // 不需要了,因为是最后一个了
-        // c.Next()
     }
 }
