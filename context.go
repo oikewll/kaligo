@@ -44,6 +44,12 @@ type Context struct {
     // Keys map[string]any
     Keys sync.Map
 
+	// Errors is a list of errors attached to all the handlers/middlewares who used this context.
+	Errors errorMsgs
+
+	// Accepted defines a list of manually accepted formats for content negotiation.
+	Accepted []string
+
     // QueryCache caches the query result from c.Request.URL.Query().
     QueryCache util.UrlValues
 
@@ -72,9 +78,20 @@ func (c *Context) Reset() {
 
     c.fullPath = ""
     c.Keys = sync.Map{}
+    c.Errors = c.Errors[0:0]
+    c.Accepted = nil
     c.QueryCache = nil
     c.FormCache = nil
     c.sameSite = 0
+}
+
+// FullPath returns a matched route full path. For not found routes
+// returns an empty string.
+//     router.GET("/user/:id", func(c *gin.Context) {
+//         c.FullPath() == "/user/:id" // true
+//     })
+func (c *Context) FullPath() string {
+    return c.fullPath
 }
 
 /************************************/
@@ -112,21 +129,13 @@ func (c *Context) AbortWithStatusJSON(code int, jsonObj any) {
     c.JSON(code, jsonObj)
 }
 
-// // AbortWithStatusJSON calls `Abort()` and then `JSON` internally.
-// // This method stops the chain, writes the status code and return a JSON body.
-// // It also sets the Content-Type as "application/json".
-// func (c *Context) AbortWithStatusJSON(code int, jsonObj interface{}) {
-//     c.Abort()
-//     c.JSON(code, jsonObj)
-// }
-//
-// // AbortWithError calls `AbortWithStatus()` and `Error()` internally.
-// // This method stops the chain, writes the status code and pushes the specified error to `c.Errors`.
-// // See Context.Error() for more details.
-// func (c *Context) AbortWithError(code int, err error) *Error {
-//     c.AbortWithStatus(code)
-//     return c.Error(err)
-// }
+// AbortWithError calls `AbortWithStatus()` and `Error()` internally.
+// This method stops the chain, writes the status code and pushes the specified error to `c.Errors`.
+// See Context.Error() for more details.
+func (c *Context) AbortWithError(code int, err error) *Error {
+    c.AbortWithStatus(code)
+    return c.Error(err)
+}
 
 /************************************/
 /********* ERROR MANAGEMENT *********/
@@ -137,22 +146,22 @@ func (c *Context) AbortWithStatusJSON(code int, jsonObj any) {
 // A middleware can be used to collect all the errors and push them to a database together,
 // print a log, or append it in the HTTP response.
 // Error will panic if err is nil.
-// func (c *Context) Error(err error) *Error {
-//     if err == nil {
-//         panic("err is nil")
-//     }
-//
-//     parsedError, ok := err.(*Error)
-//     if !ok {
-//         parsedError = &Error{
-//             Err:  err,
-//             Type: ErrorTypePrivate,
-//         }
-//     }
-//
-//     c.Errors = append(c.Errors, parsedError)
-//     return parsedError
-// }
+func (c *Context) Error(err error) *Error {
+    if err == nil {
+        panic("err is nil")
+    }
+
+    parsedError, ok := err.(*Error)
+    if !ok {
+        parsedError = &Error{
+            Err:  err,
+            Type: ErrorTypePrivate,
+        }
+    }
+
+    c.Errors = append(c.Errors, parsedError)
+    return parsedError
+}
 
 // CallController 调用其他接口（非异步）
 func (a *Context) CallController(controller Interface, method string, params Params) (ret any, err error) {
@@ -160,43 +169,6 @@ func (a *Context) CallController(controller Interface, method string, params Par
         return a.mux.CallController(controller, method, params)
     }
     return nil, errors.New("service not initialized.")
-}
-
-// FullPath returns a matched route full path. For not found routes
-// returns an empty string.
-//     router.GET("/user/:id", func(c *gin.Context) {
-//         c.FullPath() == "/user/:id" // true
-//     })
-func (c *Context) FullPath() string {
-    return c.fullPath
-}
-
-// ClientIP returns a client ip. returns 127.0.0.1 if request from local machine
-// 需要重构
-func (c *Context) ClientIP() (ip string) {
-    if c.Request == nil {
-        return ""
-    }
-    remoteAddr := c.requestHeader("Remote_addr")
-    if remoteAddr == "" {
-        remoteAddr = c.Request.RemoteAddr
-    }
-
-    if remoteAddr != "" {
-        remoteAddrArr := strings.Split(remoteAddr, ":")
-        ip = remoteAddrArr[0]
-    }
-    if ip == "" || ip == "[" {
-        ip = "127.0.0.1"
-    }
-    return
-}
-
-func (c *Context) requestHeader(key string) string {
-    if c.Request != nil {
-        return c.Request.Header.Get(key)
-    }
-    return ""
 }
 
 /************************************/
@@ -512,6 +484,34 @@ func (c *Context) SaveUploadedFile(file *multipart.FileHeader, dst string) error
     return err
 }
 
+// ClientIP returns a client ip. returns 127.0.0.1 if request from local machine
+// 需要重构
+func (c *Context) ClientIP() (ip string) {
+    if c.Request == nil {
+        return ""
+    }
+    remoteAddr := c.requestHeader("Remote_addr")
+    if remoteAddr == "" {
+        remoteAddr = c.Request.RemoteAddr
+    }
+
+    if remoteAddr != "" {
+        remoteAddrArr := strings.Split(remoteAddr, ":")
+        ip = remoteAddrArr[0]
+    }
+    if ip == "" || ip == "[" {
+        ip = "127.0.0.1"
+    }
+    return
+}
+
+func (c *Context) requestHeader(key string) string {
+    if c.Request != nil {
+        return c.Request.Header.Get(key)
+    }
+    return ""
+}
+
 // """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 // => RESPONSE RENDERING
 // """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -599,7 +599,7 @@ func (c *Context) Render(code int, r render.Render) {
 
     if !bodyAllowedForStatus(code) {
         r.WriteContentType(c.ResponseWriter)
-        // c.ResponseWriter.WriteHeader()
+        c.Status(code)
         // c.ResponseWriter.WriteHeaderNow()
         return
     }
@@ -692,9 +692,9 @@ func (c *Context) NowTimestamp() int64 {
 }
 
 // SetAccepted sets Accept header data.
-// func (c *Context) SetAccepted(formats ...string) {
-//     c.Accepted = formats
-// }
+func (c *Context) SetAccepted(formats ...string) {
+    c.Accepted = formats
+}
 
 /************************************/
 /***** GOLANG.ORG/X/NET/CONTEXT *****/
