@@ -6,11 +6,19 @@ import (
 )
 
 type Page[T any] struct {
-    Page   int64      `json:"page"`  // 当前页
-    Size   int64      `json:"size"`  // 单页数
-    Total  int64      `json:"total"` // 总条数
-    Data   []T        `json:"data"`  // 数据
-    Table  form.Table `json:"table"` // 表格
+    Page    int64      `json:"page"`     // 当前页(1 开始)
+    Size    int64      `json:"size"`     // 单页数
+    Total   int64      `json:"total"`    // 总条数
+    Data    []T        `json:"data"`     // 数据
+    Table   form.Table `json:"table"`    // 表格
+    HasPrev bool       `json:"has_prev"` // 是否有上一页
+    HasNext bool       `json:"has_next"` // 是否有下一页
+}
+
+func (p *Page[T]) UpdateTotal(total int64) {
+    p.Total = total
+    p.HasPrev = p.Page > 1
+    p.HasPrev = total > p.Page*p.Size
 }
 
 type PageResponse[T any] struct {
@@ -37,6 +45,7 @@ func (page *Page[T]) SelectPage(db *DB, columns []any, table string, wrapper fun
     }
     // var model T
     db.Select(db.Expr("COUNT(*) AS `count`")).From(table).WhereWrapper(where(true)).Scan(&page.Total).Execute()
+    page.UpdateTotal(page.Total)
     // DB.Model(&model).Where(wrapper).Count(&page.Total)
     if page.Total == 0 {
         // 没有符合条件的数据，直接返回一个T类型的空列表
