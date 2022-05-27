@@ -6,6 +6,7 @@ type Error struct {
 	Data any
 }
 
+// StatusNotAcceptable 客户端要的资源类型服务端无法提供, 比如要 XML, 但是接口只有 JSON
 var (
 	LOGIN_UNKNOWN = NewError(202, "User does not exist")
 	LOGIN_ERROR   = NewError(203, "Wrong account or password")

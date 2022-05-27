@@ -289,12 +289,16 @@
                         "required": true
                     },
                     {
-                        "enum": [
-                            "1",
-                            "2",
-                            "3"
-                        ],
-                        "type": "string",
+                        "type": "array",
+                        "items": {
+                            "enum": [
+                                1,
+                                2,
+                                3
+                            ],
+                            "type": "integer"
+                        },
+                        "default": 1,
                         "description": "所属组IDs",
                         "name": "groups",
                         "in": "formData",
@@ -417,12 +421,15 @@
                         "required": true
                     },
                     {
-                        "enum": [
-                            "1",
-                            "2",
-                            "3"
-                        ],
-                        "type": "string",
+                        "type": "array",
+                        "items": {
+                            "enum": [
+                                1,
+                                2,
+                                3
+                            ],
+                            "type": "integer"
+                        },
                         "description": "所属组IDs",
                         "name": "groups",
                         "in": "formData",
