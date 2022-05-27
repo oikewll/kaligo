@@ -25,5 +25,15 @@ export default (app) => ({
     },
     getForm: () =>{
         return app.$axios.get("/api/user/createform");
-    }
+    },
+    // 根据id获取用户信息
+    get: (id) => {
+        return app.$axios.get(`/api/user/${id}`);
+    },
+    put: (id, params) => {
+        return app.$axios.put(`/api/user/${id}`, params);
+    },
+    delete: (id) => {
+        return app.$axios.delete(`/api/user/${id}`);
+    },
 });
