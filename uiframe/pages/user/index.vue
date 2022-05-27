@@ -43,6 +43,7 @@
                         type="primary"
                         round
                         plain
+                        @click="initList()"
                         >刷新</el-button
                     >
                 </li>
@@ -80,10 +81,11 @@
                         type="primary"
                         round
                         plain
+                        @click="handleEdit(scope.row.id)"
                         >编辑</el-button
                     >
                     <el-popconfirm
-                        title="确定删除吗？"
+                        :title="`确定删除${scope.row.id}吗？`"
                         @confirm="handleDelete(scope.$index, scope.row)"
                     >
                         <el-button
@@ -136,7 +138,7 @@
             </el-form>
             <div slot="footer" class="dialog-footer">
                 <div class="btn-list">
-                    <el-button type="primary" :loading="formLoading" @click="onSubmitForm">立即创建</el-button>
+                    <el-button type="primary" :loading="formLoading" @click="onSubmitForm">{{editMod ? '提交修改' : '立即创建'}}</el-button>
                     <el-button @click="dialogVisible = false">取消</el-button>
                 </div>
             </div>
@@ -152,6 +154,7 @@ export default {
     components: { Wrap },
     data: () => {
         return {
+            editMod: false,
             pageSize: 19,
             dialogVisible: false,
             dataUser: {},
@@ -172,14 +175,17 @@ export default {
         };
     },
     computed: {},
-    async created() {
-        const {data: retUser} = await this.$api.user.getList({
-            size: this.pageSize
-        });
-        console.log(retUser)
-        this.dataUser = retUser.data;
+    created() {
+        this.initList();
     },
     methods: {
+        async initList(){
+            const {data: retUser} = await this.$api.user.getList({
+                size: this.pageSize
+            });
+            console.log(retUser)
+            this.dataUser = retUser.data;
+        },
         async handleAddDialog(){
             // 获取动态表单
             const { data } = await this.$api.user.getForm();
@@ -193,6 +199,19 @@ export default {
             });
             this.formRules = formRules;
             this.dialogVisible = true;
+        },
+        async handleEdit(id){
+            this.editMod = true;
+            const {data} = await this.$api.user.get(id);
+            console.log(data.data);
+        },
+        async handleDelete(idx, row){
+            const {id} = row;
+            const {data} = await this.$api.user.delete(id);
+            if(data.code === 0){
+                this.$message.success('delete successfully');
+                this.initList();
+            }
         },
         async onSubmitForm() {
             this.formLoading = true;
