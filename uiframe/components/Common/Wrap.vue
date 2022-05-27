@@ -1,7 +1,7 @@
 <template>
     <div class="mod-wrap" :class="{'is-fillout': fillout}">
         <h6 class="title" v-if="!!title">{{title}}</h6>
-        <slot name="content" />
+        <slot />
     </div>
 </template>
 
