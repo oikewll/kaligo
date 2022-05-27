@@ -13,13 +13,13 @@ import (
     "github.com/owner888/kaligo/logs"
     "github.com/owner888/kaligo/sessions"
     "github.com/owner888/kaligo/sessions/cookie"
-    // "github.com/owner888/kaligo/sessions/redis"
     "github.com/owner888/kaligo/middlewares"
 )
 
 // swag 不要集成到项目,直接安装工具包即可
 // go install github.com/swaggo/swag/cmd/swag@latest
 // 文档: https://github.com/swaggo/swag#api-operation
+// go:generate swag init
 
 // @title Kaligo Example API
 // @description 
@@ -29,8 +29,7 @@ import (
 func main() {
     loadConfig()
     setupLog()
-    db := setupDatabase()
-    run(db)
+    run()
 }
 
 func loadConfig() {
@@ -65,19 +64,17 @@ func setupDatabase() *database.DB {
     return db
 }
 
-func run(db *database.DB) {
+func run() {
     r := kaligo.NewRouter()
+    r.AddDB(setupDatabase())
 
     // 中间件
+    // r.Use(middlewares.ErrorHandler())    // 错误处理中间件放第一位
     r.Use(middlewares.CORS())
-    // r.Use(middlewares.CSRF())    // 防止CSRF攻击
-    // 创建基于cookie的存储引擎，secret 参数是用于加密的密钥
-    store := cookie.NewStore([]byte("secret"))
-    // store, _ := redis.NewStore(10, "tcp", "localhost:6379", "", []byte("secret"))
-    r.Use(sessions.Sessions("mysession", store))
-    r.Use(auth.Auth())
-
-    r.AddDB(db)
-    AddRoutes(r)
+    // r.Use(middlewares.CSRF())
+    r.Use(sessions.Sessions("GOSESSIONID", cookie.NewStore([]byte("yoursecret"))))
+    setPulicRouter(r)   // 公共路由不需要cookie认证，在权限验证中间件之前注册
+    r.Use(auth.Auth())  // r.Use(middleware.Cookie())
+    setPrivateRouter(r) // 私有路由
     kaligo.Run(r, ":"+config.String("app.server.port", "80"))
 }
