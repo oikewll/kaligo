@@ -189,7 +189,6 @@ export default {
             margin-right: 30px;
             display: flex;
             align-items: center;
-            display: none;
             .avatar-wrapper {
                 display: flex;
                 position: relative;

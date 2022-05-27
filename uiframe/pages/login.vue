@@ -118,8 +118,7 @@ export default {
     height: 100%;
     top: 0;
     left: 0;
-    background: url("data:image/gif;base64,R0lGODlhAQABAIAAAAUEBAAAACwAAAAAAQABAAACAkQBADs=")
-        no-repeat center center;
+    background: url("@/assets/images/login.jpg") no-repeat center center;
     background-size: cover;
 
     /deep/.el-form {

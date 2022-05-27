@@ -7,6 +7,6 @@ export default (app) => ({
         return app.$axios.get("/api/init");
     },
     login: (params) => {
-        return app.$axios.post("/auth/login", params);
+        return app.$axios.post("/api/auth/login", params);
     }
 });

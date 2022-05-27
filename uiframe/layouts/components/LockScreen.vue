@@ -61,8 +61,7 @@ export default {
         width: 100%;
         height: 100%;
     }
-    background: url("data:image/gif;base64,R0lGODlhAQABAIAAAAUEBAAAACwAAAAAAQABAAACAkQBADs=")
-        no-repeat center center;
+    background: url("@/assets/images/bg-lock.jpeg") no-repeat center center;
     background-size: cover;
     position: fixed;
     z-index: 1002;
