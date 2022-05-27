@@ -23,7 +23,7 @@ export default {
 <style lang="less" scoped>
 .mod-wrap {
     margin-bottom: 20px;
-    padding: 30px;
+    padding: 20px;
     background-color: #fff;
     display: flex;
     flex-direction: column;

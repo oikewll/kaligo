@@ -1,6 +1,106 @@
 <template>
     <Wrap :title="getFormData.name" fillout>
         <template slot="content">
+            <div class="mod-operation">
+                <div class="search">
+                    <el-input type="text" size="mini" placeholder="请输入关键词" />
+                    <el-button
+                        size="mini"
+                        type="primary"
+                        >搜索</el-button
+                    >
+                </div>
+                <ul class="btn-list">
+                    <li class="item">
+                        <el-button
+                            size="mini"
+                            type="primary"
+                            round
+                            plain
+                            >添加</el-button
+                        >
+                        <el-button
+                            size="mini"
+                            type="primary"
+                            round
+                            plain
+                            >删除</el-button
+                        >
+                        <el-button
+                            size="mini"
+                            type="primary"
+                            round
+                            plain
+                            >禁用</el-button
+                        >
+                        <el-button
+                            size="mini"
+                            type="primary"
+                            round
+                            plain
+                            >激活</el-button
+                        >
+                        <el-button
+                            size="mini"
+                            type="primary"
+                            round
+                            plain
+                            >刷新</el-button
+                        >
+                    </li>
+                </ul>
+            </div>
+            <el-table
+               
+                :data="userList"
+                style="width: 100%">
+                <!-- <el-table-column
+                    prop="id"
+                    sortable
+                    fixed
+                    label="编号id">
+                </el-table-column> -->
+                <el-table-column
+                    prop="username"
+                    label="用户名">
+                </el-table-column>
+                <el-table-column
+                    prop="realname"
+                    label="真实姓名">
+                </el-table-column>
+                <el-table-column
+                    prop="email"
+                    label="邮箱">
+                </el-table-column>
+                <el-table-column
+                    prop="created_at"
+                    label="创建时间">
+                </el-table-column>
+                <el-table-column label="操作" align="right" width="180">
+                    <template slot-scope="scope">
+                        <el-button
+                            size="mini"
+                            type="primary"
+                            round
+                            plain
+                            >编辑</el-button
+                        >
+                        <el-popconfirm
+                            title="确定删除吗？"
+                            @confirm="handleDelete(scope.$index, scope.row)"
+                        >
+                            <el-button
+                                slot="reference"
+                                size="mini"
+                                type="danger"
+                                round
+                                plain
+                                >删除</el-button
+                            >
+                        </el-popconfirm>
+                    </template>
+                </el-table-column>
+            </el-table>
             <el-form
                 ref="formSubmit"
                 :model="formData"
@@ -42,6 +142,12 @@ export default {
     components: { Wrap },
     data: () => {
         return {
+            userList: [{
+                created_at: '2016-05-02',
+                username: '王小虎',
+                realname: '上海ddd',
+                email: '@gmail',
+            }],
             getFormData: {
                 name: "",
             },
@@ -53,14 +159,7 @@ export default {
                         message: "请输入用户名",
                         trigger: "change",
                     },
-                ],
-                password: [
-                    {
-                        required: true,
-                        message: "请输入密码",
-                        trigger: "change",
-                    },
-                ],
+                ]
             },
             formLoading: false,
         };
@@ -77,6 +176,10 @@ export default {
             ];
         });
         this.formRules = formRules;
+
+        const {data: retUser} = await this.$api.user.getList();
+        console.log(retUser)
+        this.userList = retUser.data.data;
     },
     methods: {
         async onSubmitForm() {
@@ -100,4 +203,14 @@ export default {
 </script>
 
 <style scoped lang="less">
+.mod-operation{
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #efefef;;
+    .search{
+        display: flex;
+    }
+}
 </style>

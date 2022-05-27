@@ -20,6 +20,9 @@ export default (app) => ({
     addByForm: (params) =>{
         return app.$axios.post("/api/user", params)
     },
+    getList: ({ page = 1, size = 20 } = {})=>{
+        return app.$axios.get('/api/user', { params: { page, size } })
+    },
     getForm: () =>{
         return app.$axios.get("/api/user/createform");
     }
