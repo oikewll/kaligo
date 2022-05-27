@@ -1,7 +1,7 @@
 <template>
     <div class="mod-wrap" :class="{'is-fillout': fillout}">
         <h6 class="title" v-if="!!title">{{title}}</h6>
-        <slot name="content" />
+        <slot />
     </div>
 </template>
 
@@ -23,7 +23,7 @@ export default {
 <style lang="less" scoped>
 .mod-wrap {
     margin-bottom: 20px;
-    padding: 30px;
+    padding: 20px;
     background-color: #fff;
     display: flex;
     flex-direction: column;

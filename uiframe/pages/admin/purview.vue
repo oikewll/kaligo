@@ -1,19 +1,25 @@
 <template>
     <Wrap title="权限管理" :fillout="true">
         <template slot="content">
-            <section class="item-section" v-for="(item, idx) in permissionList" :key="idx">
+            <section class="item-section" 
+                v-for="(item, idx) in permissionList" :key="idx">
                 <el-checkbox 
-                    v-model="checkAll[idx]" 
+                    disabled
                     @change="handleCheckAllChange($event, idx)">{{item.name}}</el-checkbox>
                 <el-checkbox-group v-model="arrayCate" @change="handleCheckedChangeCate($event, idx)">
-                    <el-checkbox v-for="(_item, _idx) in item.children" :label="_item" :key="_idx">
-                        <div class="item-inner">
-                            <span class="txt">{{_item.name}}</span>
-                            <el-checkbox-group v-model="arraySubmit" @change="handleCheckedChangeSubmit($event, _idx)">
-                                <el-checkbox v-for="(__item, __idx) in _item.children" :label="__item" :key="__idx">{{__item.name}}</el-checkbox>
-                            </el-checkbox-group>
-                        </div>
-                    </el-checkbox>
+                    <section class="section-inner"
+                        v-for="(_item, _idx) in item.children" :key="_idx">
+                        <el-checkbox 
+                            disabled
+                            :label="_item">
+                            <div class="item-inner">
+                                <span class="txt">{{_item.name}}</span>
+                                <el-checkbox-group v-model="arraySubmit" @change="handleCheckedChangeSubmit($event, _idx)">
+                                    <el-checkbox v-for="(__item, __idx) in _item.children" :label="__item" :key="__idx">{{__item.name}}</el-checkbox>
+                                </el-checkbox-group>
+                            </div>
+                        </el-checkbox>
+                    </section>
                 </el-checkbox-group>
             </section>
             <footer class="footer-section">
@@ -26,7 +32,6 @@
 
 <script>
 import Wrap from "@/components/Common/Wrap";
-import { mapState } from "vuex";
 
 export default {
     name: "admin",
@@ -80,6 +85,7 @@ export default {
             console.log(this.arraySubmit)
         },
         async handleSubmit(){
+            console.warn('submit data length: '+this.arraySubmit.length)
             this.datalistSubmit = this.arraySubmit.map(item=>{
                 return `${item.method}-${item.path}`
             }).join(',');
@@ -98,6 +104,11 @@ export default {
     padding-left: 15px;
     display: flex;
     flex-direction: column;
+    flex: 1;
+}
+.section-inner{
+    margin-bottom: 15px;
+    border-bottom: 1px solid #efefef;
 }
 .item-inner{
     display: flex;
